@@ -14,6 +14,7 @@ export default function ContactPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const officialEmail = "abhirajdigitalinnovationhead@gmail.com";
@@ -24,15 +25,33 @@ export default function ContactPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setErrorMessage(null);
 
-    // Simulate clean submission feedback
-    setTimeout(() => {
+    const form = e.currentTarget;
+
+    try {
+      const response = await fetch("/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams(new FormData(form) as any).toString(),
+      });
+
+      if (response.ok) {
+        setSubmitted(true);
+      } else {
+        throw new Error(`Netlify form submission failed with status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Netlify form submission error:", error);
+      setErrorMessage("Unable to send your message at this time. Please try again or reach out to us directly via email.");
+    } finally {
       setIsSubmitting(false);
-      setSubmitted(true);
-    }, 600);
+    }
   };
 
   return (
@@ -133,6 +152,7 @@ export default function ContactPage() {
                       type="button"
                       onClick={() => {
                         setSubmitted(false);
+                        setErrorMessage(null);
                         setFormData({ name: "", email: "", subject: "", message: "" });
                       }}
                       className="px-5 py-2.5 rounded-lg text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors"
@@ -148,7 +168,22 @@ export default function ContactPage() {
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form
+                  name="contact"
+                  method="POST"
+                  data-netlify="true"
+                  data-netlify-honeypot="bot-field"
+                  onSubmit={handleSubmit}
+                  className="space-y-5"
+                >
+                  {/* Netlify Form Hidden Inputs */}
+                  <input type="hidden" name="form-name" value="contact" />
+                  <p className="hidden">
+                    <label>
+                      Don’t fill this out if you're human: <input name="bot-field" />
+                    </label>
+                  </p>
+
                   <div className="space-y-1">
                     <h2 className="text-xl sm:text-2xl font-bold text-white font-heading">
                       Send a Message
@@ -158,6 +193,12 @@ export default function ContactPage() {
                     </p>
                   </div>
 
+                  {errorMessage && (
+                    <div className="p-3.5 rounded-xl bg-red-950/60 border border-red-800/80 text-xs text-red-300 leading-relaxed">
+                      {errorMessage}
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label htmlFor="name" className="block text-xs font-medium text-slate-300">
@@ -165,6 +206,7 @@ export default function ContactPage() {
                       </label>
                       <input
                         id="name"
+                        name="name"
                         type="text"
                         required
                         value={formData.name}
@@ -180,6 +222,7 @@ export default function ContactPage() {
                       </label>
                       <input
                         id="email"
+                        name="email"
                         type="email"
                         required
                         value={formData.email}
@@ -196,6 +239,7 @@ export default function ContactPage() {
                     </label>
                     <input
                       id="subject"
+                      name="subject"
                       type="text"
                       required
                       value={formData.subject}
@@ -211,6 +255,7 @@ export default function ContactPage() {
                     </label>
                     <textarea
                       id="message"
+                      name="message"
                       rows={5}
                       required
                       value={formData.message}
