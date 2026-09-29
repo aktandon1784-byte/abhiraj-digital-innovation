@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { Mail, Send, CheckCircle2, ArrowLeft, MessageSquare, Copy, Check } from "lucide-react";
 
@@ -12,17 +12,10 @@ export default function ContactPage() {
     message: "",
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("success") === "true") {
-        setSubmitted(true);
-      }
-    }
-  }, []);
 
   const officialEmail = "abhirajdigitalinnovationhead@gmail.com";
 
@@ -30,6 +23,37 @@ export default function ContactPage() {
     navigator.clipboard.writeText(officialEmail);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    const form = e.currentTarget;
+
+    try {
+      const response = await fetch("/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams(new FormData(form) as any).toString(),
+      });
+
+      if (response.ok) {
+        setSubmitted(true);
+      } else {
+        throw new Error(`Netlify form submission failed with status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Netlify form submission error:", error);
+      setErrorMessage(
+        "Unable to send your message right now. Please try again or contact us directly via email."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -130,9 +154,7 @@ export default function ContactPage() {
                       type="button"
                       onClick={() => {
                         setSubmitted(false);
-                        if (typeof window !== "undefined") {
-                          window.history.replaceState({}, "", "/contact");
-                        }
+                        setErrorMessage(null);
                         setFormData({ name: "", email: "", subject: "", message: "" });
                       }}
                       className="px-5 py-2.5 rounded-lg text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors"
@@ -151,9 +173,9 @@ export default function ContactPage() {
                 <form
                   name="contact"
                   method="POST"
-                  action="/contact?success=true"
                   data-netlify="true"
                   data-netlify-honeypot="bot-field"
+                  onSubmit={handleSubmit}
                   className="space-y-5"
                 >
                   {/* Netlify Form Hidden Inputs */}
@@ -172,6 +194,12 @@ export default function ContactPage() {
                       Fill out the form below or email us directly at <span className="text-slate-300 font-mono">{officialEmail}</span>
                     </p>
                   </div>
+
+                  {errorMessage && (
+                    <div className="p-3.5 rounded-xl bg-red-950/60 border border-red-800/80 text-xs text-red-300 leading-relaxed">
+                      {errorMessage}
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
@@ -241,10 +269,17 @@ export default function ContactPage() {
 
                   <button
                     type="submit"
-                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/25 transition-all cursor-pointer"
+                    disabled={isSubmitting}
+                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/25 transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
                   >
-                    <span>Send Message</span>
-                    <Send className="w-4 h-4" />
+                    {isSubmitting ? (
+                      <span>Sending Message...</span>
+                    ) : (
+                      <>
+                        <span>Send Message</span>
+                        <Send className="w-4 h-4" />
+                      </>
+                    )}
                   </button>
                 </form>
               )}
