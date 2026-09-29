@@ -31,6 +31,20 @@ export default function ContactPage() {
     setErrorMessage(null);
 
     const form = e.currentTarget;
+    const bodyData = new FormData(form);
+
+    // Explicitly guarantee all fields required by Netlify are populated
+    bodyData.set("form-name", "contact");
+    bodyData.set("name", formData.name);
+    bodyData.set("email", formData.email);
+    bodyData.set("subject", formData.subject);
+    bodyData.set("message", formData.message);
+
+    // Ensure bot-field honeypot is empty for normal human submissions
+    const botVal = bodyData.get("bot-field");
+    if (!botVal || typeof botVal !== "string" || botVal.trim() === "") {
+      bodyData.set("bot-field", "");
+    }
 
     try {
       const response = await fetch("/", {
@@ -38,7 +52,7 @@ export default function ContactPage() {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: new URLSearchParams(new FormData(form) as any).toString(),
+        body: new URLSearchParams(bodyData as any).toString(),
       });
 
       if (response.ok) {
@@ -180,9 +194,10 @@ export default function ContactPage() {
                 >
                   {/* Netlify Form Hidden Inputs */}
                   <input type="hidden" name="form-name" value="contact" />
-                  <p className="hidden">
+                  <p className="hidden" aria-hidden="true">
                     <label>
-                      Don’t fill this out if you're human: <input name="bot-field" />
+                      Don’t fill this out if you're human:{" "}
+                      <input name="bot-field" tabIndex={-1} autoComplete="off" />
                     </label>
                   </p>
 
