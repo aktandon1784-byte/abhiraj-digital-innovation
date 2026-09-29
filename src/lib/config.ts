@@ -23,7 +23,7 @@ export const siteConfig = {
 
   // Authentic Contact Information
   contact: {
-    email: "abhirajdigitalinnovationhead@gmail.com",
+    email: "abhirajdigitalinnovation@gmail.com",
     phone: null,
     address: null,
   },

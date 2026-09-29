@@ -225,7 +225,7 @@ export default function AboutPage() {
             </p>
             <div className="pt-1 flex items-center gap-2 text-xs font-mono text-blue-400 justify-center md:justify-start">
               <Mail className="w-4 h-4" />
-              <span>abhirajdigitalinnovationhead@gmail.com</span>
+              <span>abhirajdigitalinnovation@gmail.com</span>
             </div>
           </div>
           <Link

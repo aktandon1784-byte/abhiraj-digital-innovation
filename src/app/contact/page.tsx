@@ -17,7 +17,7 @@ export default function ContactPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const officialEmail = "abhirajdigitalinnovationhead@gmail.com";
+  const officialEmail = "abhirajdigitalinnovation@gmail.com";
 
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(officialEmail);

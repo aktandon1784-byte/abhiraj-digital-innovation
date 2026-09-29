@@ -21,11 +21,11 @@ export function Footer() {
             </p>
             <div className="pt-1">
               <a
-                href="mailto:abhirajdigitalinnovationhead@gmail.com"
+                href="mailto:abhirajdigitalinnovation@gmail.com"
                 className="inline-flex items-center gap-2 text-xs font-mono text-slate-300 hover:text-blue-400 transition-colors"
               >
                 <Mail className="w-3.5 h-3.5 text-blue-400" />
-                <span>abhirajdigitalinnovationhead@gmail.com</span>
+                <span>abhirajdigitalinnovation@gmail.com</span>
               </a>
             </div>
           </div>
