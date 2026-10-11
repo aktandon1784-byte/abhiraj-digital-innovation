@@ -30,6 +30,7 @@ import {
   Server,
   Lock,
   Info,
+  Clock,
 } from "lucide-react";
 import { OPDAssistantLogo } from "@/components/brand/OPDAssistantLogo";
 import { PlansAndDownloadSection } from "@/components/opd/PlansAndDownloadSection";
@@ -296,6 +297,80 @@ export default function OPDAssistantAIPage() {
               <p className="text-xs text-slate-400">
                 All generated information is intended exclusively for clinical review by qualified personnel.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2.5 DEVELOPMENT STATUS & VERIFIED CAPABILITIES SUMMARY */}
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="p-8 sm:p-10 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="text-xs font-mono font-semibold uppercase tracking-wider text-blue-400">
+                Development Transparency
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-heading">
+                Development Status &amp; Scope Overview
+              </h2>
+            </div>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono self-start sm:self-auto">
+              <Clock className="w-3.5 h-3.5" />
+              <span>Google Play Release — Coming Soon</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+            {/* Implemented */}
+            <div className="p-5 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-bold text-emerald-400">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Verified Implemented Capabilities</span>
+              </div>
+              <ul className="space-y-2 text-xs text-slate-300">
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-400 font-bold">•</span>
+                  <span><strong>Medical Chat Box Interface:</strong> Conversational clinical inquiry processing designed for point-of-care lookups.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-400 font-bold">•</span>
+                  <span><strong>25 Clinical Reference Modules:</strong> Categorized clinical reference data covering General Medicine, Emergency, Labs, Pediatrics, and more.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-400 font-bold">•</span>
+                  <span><strong>18 Assistance Frameworks:</strong> Structured differential considerations, medication reference, and triage guidelines.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-400 font-bold">•</span>
+                  <span><strong>Clinical Safety Boundaries:</strong> Strict disclaimers preventing diagnostic claims and enforcing human review.</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Planned & Roadmap */}
+            <div className="p-5 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-bold text-amber-400">
+                <Info className="w-4 h-4" />
+                <span>Development Milestones &amp; Upcoming Scope</span>
+              </div>
+              <ul className="space-y-2 text-xs text-slate-300">
+                <li className="flex items-start gap-2">
+                  <span className="text-amber-400 font-bold">•</span>
+                  <span><strong>Google Play Store Listing:</strong> Currently in compliance preparation and internal testing; public launch coming soon.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-amber-400 font-bold">•</span>
+                  <span><strong>Intended Audience Exclusivity:</strong> Tailored exclusively for Qualified Medical Practitioners, RMAs, CHOs, and Nurses.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-amber-400 font-bold">•</span>
+                  <span><strong>Strict Decision-Support Role:</strong> Assists clinical reference lookup; does not prescribe medication or issue final diagnoses.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-amber-400 font-bold">•</span>
+                  <span><strong>Inquiries &amp; Evaluation:</strong> Clinicians and clinics may submit inquiries via our <Link href="/contact" className="text-blue-400 hover:underline">contact form</Link> or email.</span>
+                </li>
+              </ul>
             </div>
           </div>
         </div>

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/brand/Logo";
-import { ChevronDown, Menu, X, Smartphone, Code2, Globe } from "lucide-react";
+import { ChevronDown, Menu, X, Smartphone, Code2, Globe, Send } from "lucide-react";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -36,20 +36,22 @@ export function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-800/80 bg-[#060B18] backdrop-blur-md">
+      <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-[72px]">
           {/* Brand Logo */}
           <div className="flex-shrink-0">
             <BrandLogo size="md" />
           </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2" aria-label="Main Navigation">
+          {/* Desktop Navigation Links - Centered */}
+          <nav className="hidden md:flex items-center space-x-6 lg:space-x-8" aria-label="Main Navigation">
             <Link
               href="/"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                pathname === "/" ? "text-white bg-slate-900" : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+              className={`relative py-1 text-sm font-medium transition-colors ${
+                pathname === "/"
+                  ? "text-white after:absolute after:bottom-[-4px] after:left-1/2 after:-translate-x-1/2 after:w-7 after:h-[2.5px] after:bg-blue-500 after:rounded-full"
+                  : "text-slate-300 hover:text-white"
               }`}
             >
               Home
@@ -57,8 +59,10 @@ export function Navbar() {
 
             <Link
               href="/about"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                pathname === "/about" ? "text-white bg-slate-900" : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+              className={`relative py-1 text-sm font-medium transition-colors ${
+                pathname === "/about"
+                  ? "text-white after:absolute after:bottom-[-4px] after:left-1/2 after:-translate-x-1/2 after:w-7 after:h-[2.5px] after:bg-blue-500 after:rounded-full"
+                  : "text-slate-300 hover:text-white"
               }`}
             >
               About
@@ -70,20 +74,20 @@ export function Navbar() {
               onMouseEnter={() => setServicesDropdownOpen(true)}
               onMouseLeave={() => setServicesDropdownOpen(false)}
             >
-              <div className="flex items-center">
+              <div className="flex items-center gap-1">
                 <Link
                   href="/services"
-                  className={`px-3 py-2 rounded-l-md text-sm font-medium transition-colors ${
-                    pathname === "/services" ? "text-white bg-slate-900" : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+                  className={`py-1 text-sm font-medium transition-colors ${
+                    pathname === "/services"
+                      ? "text-white after:absolute after:bottom-[-4px] after:left-1/2 after:-translate-x-1/2 after:w-7 after:h-[2.5px] after:bg-blue-500 after:rounded-full"
+                      : "text-slate-300 hover:text-white"
                   }`}
                 >
                   Services
                 </Link>
                 <button
                   type="button"
-                  className={`p-2 rounded-r-md text-slate-400 hover:text-white hover:bg-slate-900/60 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                    pathname === "/services" ? "bg-slate-900 text-white" : ""
-                  }`}
+                  className="p-1 text-slate-400 hover:text-white focus:outline-none"
                   aria-expanded={servicesDropdownOpen}
                   aria-label="Toggle Services Menu"
                   onClick={() => setServicesDropdownOpen(!servicesDropdownOpen)}
@@ -93,7 +97,7 @@ export function Navbar() {
               </div>
 
               {servicesDropdownOpen && (
-                <div className="absolute left-0 mt-1 w-72 rounded-xl bg-slate-900 border border-slate-800 shadow-xl py-2 z-50 animate-in fade-in duration-150">
+                <div className="absolute left-0 mt-2 w-72 rounded-xl bg-slate-900 border border-slate-800 shadow-2xl py-2 z-50 animate-in fade-in duration-150">
                   <div className="px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400 border-b border-slate-800/80 flex items-center justify-between">
                     <span>What We Do</span>
                     <Link
@@ -139,33 +143,43 @@ export function Navbar() {
             </div>
 
             <Link
-              href="/opd-assistant-ai"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                pathname === "/opd-assistant-ai" || pathname === "/application"
-                  ? "text-white bg-slate-900"
-                  : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+              href="/#products-projects"
+              className="py-1 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+            >
+              Our Products
+            </Link>
+
+            <Link
+              href="/portfolio"
+              className={`relative py-1 text-sm font-medium transition-colors ${
+                pathname.startsWith("/portfolio")
+                  ? "text-white after:absolute after:bottom-[-4px] after:left-1/2 after:-translate-x-1/2 after:w-7 after:h-[2.5px] after:bg-blue-500 after:rounded-full"
+                  : "text-slate-300 hover:text-white"
               }`}
             >
-              Our Application
+              Portfolio
             </Link>
 
             <Link
               href="/contact"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                pathname === "/contact" ? "text-white bg-slate-900" : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+              className={`relative py-1 text-sm font-medium transition-colors ${
+                pathname === "/contact"
+                  ? "text-white after:absolute after:bottom-[-4px] after:left-1/2 after:-translate-x-1/2 after:w-7 after:h-[2.5px] after:bg-blue-500 after:rounded-full"
+                  : "text-slate-300 hover:text-white"
               }`}
             >
               Contact
             </Link>
           </nav>
 
-          {/* Primary Action Button */}
+          {/* Primary Action Button - Right */}
           <div className="hidden md:flex items-center">
             <Link
               href="/contact"
-              className="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#1865F2] hover:bg-blue-600 shadow-md shadow-blue-600/30 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 active:scale-95"
             >
-              Contact Us
+              <Send className="w-4 h-4 fill-white" />
+              <span>Get in Touch</span>
             </Link>
           </div>
 
@@ -186,7 +200,7 @@ export function Navbar() {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-slate-800 bg-slate-950 px-4 pt-3 pb-6 space-y-3">
+        <div className="md:hidden border-b border-slate-800 bg-[#070D1E] px-4 pt-3 pb-6 space-y-3">
           <Link
             href="/"
             onClick={() => setMobileMenuOpen(false)}
@@ -224,11 +238,18 @@ export function Navbar() {
             ))}
           </div>
           <Link
-            href="/opd-assistant-ai"
+            href="/#products-projects"
             onClick={() => setMobileMenuOpen(false)}
             className="block px-3 py-2 rounded-md text-base font-medium text-slate-200 hover:bg-slate-800"
           >
-            Our Application (OPD Assistant AI)
+            Our Products
+          </Link>
+          <Link
+            href="/portfolio"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-md text-base font-medium text-slate-200 hover:bg-slate-800"
+          >
+            Portfolio
           </Link>
           <Link
             href="/contact"
@@ -241,9 +262,9 @@ export function Navbar() {
             <Link
               href="/contact"
               onClick={() => setMobileMenuOpen(false)}
-              className="block w-full text-center px-4 py-2.5 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500"
+              className="block w-full text-center px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/30"
             >
-              Contact Us
+              Get in Touch
             </Link>
           </div>
         </div>

@@ -74,8 +74,28 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/#products-projects" className="hover:text-white transition-colors">
+                  Our Products
+                </Link>
+              </li>
+              <li>
+                <Link href="/portfolio" className="hover:text-white transition-colors">
+                  Portfolio
+                </Link>
+              </li>
+              <li>
                 <Link href="/opd-assistant-ai" className="hover:text-white transition-colors">
-                  Our Application
+                  OPD Assistant AI
+                </Link>
+              </li>
+              <li>
+                <Link href="/gharmitra" className="hover:text-white transition-colors">
+                  GharMitra (घर मित्र)
+                </Link>
+              </li>
+              <li>
+                <Link href="/colony-mitra" className="hover:text-white transition-colors">
+                  Colony Mitra (कॉलोनी मित्र)
                 </Link>
               </li>
               <li>

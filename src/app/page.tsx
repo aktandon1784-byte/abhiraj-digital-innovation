@@ -5,15 +5,42 @@ import {
   Code2,
   Globe,
   ArrowRight,
-  Stethoscope,
+  ExternalLink,
   CheckCircle2,
   Zap,
   Layers,
-  Terminal,
-  MessageSquare,
-  Play,
+  Sparkles,
+  Users,
+  ShieldCheck,
+  TrendingUp,
   Mail,
+  ChevronRight,
+  Home,
+  Sun,
+  Stethoscope,
+  Rocket,
+  Clock,
+  FileText,
+  HeartPulse,
+  MessageSquareHeart,
+  UserCheck,
+  RefreshCw,
+  Monitor,
+  Lightbulb,
+  Settings,
+  BarChart3,
+  Play,
+  MessageSquare,
+  Terminal,
+  Building2,
+  Bell,
 } from "lucide-react";
+import { OPDCardVisual } from "@/components/home/OPDCardVisual";
+import { GharMitraCardVisual } from "@/components/home/GharMitraCardVisual";
+import { KumarSolarCardVisual } from "@/components/home/KumarSolarCardVisual";
+import { ColonyMitraCardVisual } from "@/components/home/ColonyMitraCardVisual";
+import { PlayStoreIcon } from "@/components/home/PlayStoreIcon";
+import { HeroDevicesMockup } from "@/components/home/HeroDevicesMockup";
 
 export default function HomePage() {
   const services = [
@@ -62,6 +89,33 @@ export default function HomePage() {
     },
   ];
 
+  const valueStripItems = [
+    {
+      icon: Sparkles,
+      title: "Innovative Approach",
+      desc: "Creative solutions for real-world problems",
+      accent: "text-blue-400 bg-blue-950/80 border-blue-800/60",
+    },
+    {
+      icon: Users,
+      title: "Client Focused",
+      desc: "Your success is our priority",
+      accent: "text-sky-400 bg-sky-950/80 border-sky-800/60",
+    },
+    {
+      icon: ShieldCheck,
+      title: "Quality Development",
+      desc: "Modern, scalable and reliable solutions",
+      accent: "text-emerald-400 bg-emerald-950/80 border-emerald-800/60",
+    },
+    {
+      icon: TrendingUp,
+      title: "Growing Together",
+      desc: "Building a better digital future",
+      accent: "text-amber-400 bg-amber-950/80 border-amber-800/60",
+    },
+  ];
+
   const approachPillars = [
     {
       number: "01",
@@ -96,182 +150,469 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="relative space-y-24 sm:space-y-32 py-10 lg:py-16 bg-grid-pattern">
+    <div className="relative pb-16 bg-[#060B18]">
       {/* Ambient Lighting Glow */}
       <div className="ambient-hero-glow" aria-hidden="true" />
 
-      {/* 1. HERO SECTION */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-          {/* Hero Left: Narrative & Positioning */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full text-xs font-mono bg-blue-950/80 border border-blue-800/60 text-blue-300 badge-glow">
-              <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
-              <span>DIGITAL APPLICATIONS & MOBILE DEVELOPMENT</span>
+      {/* ========================================================= */}
+      {/* 1. HERO SECTION (~386-390px tall at desktop)              */}
+      {/* ========================================================= */}
+      <section className="relative z-10 w-full max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 h-auto lg:h-[386px] min-h-[386px] flex items-center pt-2 pb-4 lg:py-0">
+        <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-4">
+          {/* Hero Left: Narrative & CTAs (around 42% width) */}
+          <div className="w-full lg:w-[42%] lg:max-w-[500px] flex-shrink-0 space-y-3">
+            {/* Tagline Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-blue-950/70 border border-blue-800/60 text-sky-300">
+              <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+              <span>Innovative Digital Solutions</span>
             </div>
 
-            <div className="space-y-2">
-              <span className="block text-xs font-mono uppercase tracking-[0.2em] text-blue-400 font-semibold">
-                ABHIRAJ DIGITAL INNOVATION
-              </span>
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.12] font-heading text-gradient">
-                Building Practical Digital Applications
-              </h1>
-            </div>
+            {/* Main Headline */}
+            <h1 className="text-3xl sm:text-4xl lg:text-[38px] xl:text-[40px] font-extrabold tracking-tight text-white leading-[1.14] font-heading">
+              Building Smart<br />
+              Apps &amp; Websites<br />
+              for a <span className="text-[#38BDF8]">Better Tomorrow</span>
+            </h1>
 
-            <p className="text-base sm:text-lg text-slate-300 max-w-2xl leading-relaxed">
-              We focus on creating useful mobile applications, software and websites that solve real-world problems.
+            {/* Supporting Description */}
+            <p className="text-sm text-slate-300 max-w-[460px] leading-relaxed">
+              At Abhiraj Digital Innovation, we create modern mobile applications
+              and professional websites that solve real-world problems and help
+              businesses grow in the digital world.
             </p>
 
-            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-              <Link
-                href="/opd-assistant-ai"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/25 hover:shadow-blue-500/35 transition-all duration-200 active:scale-95"
+            {/* Hero CTAs */}
+            <div className="pt-1 flex flex-wrap items-center gap-3">
+              <a
+                href="#products-projects"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#1865F2] hover:bg-blue-600 shadow-md shadow-blue-600/30 transition-all duration-200 active:scale-95"
               >
-                <span>Explore OPD Assistant AI</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                href="/services"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold text-slate-200 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 transition-all duration-200"
+                <Rocket className="w-4 h-4" />
+                <span>Explore Our Work</span>
+              </a>
+              <a
+                href="#application"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-slate-200 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 transition-all duration-200"
               >
-                <span>Explore Services</span>
-              </Link>
+                <Play className="w-4 h-4 fill-white text-white" />
+                <span>Watch Video</span>
+              </a>
             </div>
 
             {/* Practical Focus Checkpoints */}
-            <div className="pt-8 border-t border-slate-800/80 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs text-slate-400">
+            <div className="pt-2.5 border-t border-slate-800/80 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] sm:text-xs text-slate-400">
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-blue-950/80 border border-blue-800/50 flex items-center justify-center text-blue-400">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                <div className="w-4 h-4 rounded-full bg-blue-950/90 border border-blue-800/60 flex items-center justify-center text-blue-400">
+                  <CheckCircle2 className="w-3 h-3" />
                 </div>
                 <span className="text-slate-200 font-medium">Android Mobile Apps (Primary Focus)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-blue-400">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                <div className="w-4 h-4 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-blue-400">
+                  <CheckCircle2 className="w-3 h-3" />
                 </div>
                 <span>Software Development</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-blue-400">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                <div className="w-4 h-4 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-blue-400">
+                  <CheckCircle2 className="w-3 h-3" />
                 </div>
                 <span>Website Development</span>
               </div>
             </div>
           </div>
 
-          {/* Hero Right: Console Visual */}
-          <div className="lg:col-span-5">
-            <div className="relative rounded-2xl p-1 bg-gradient-to-b from-blue-500/20 via-slate-800/40 to-slate-900/80 shadow-2xl">
-              <div className="rounded-[15px] bg-slate-950/90 border border-slate-800/80 p-6 sm:p-7 space-y-6 backdrop-blur-xl">
-                {/* Console Header */}
-                <div className="flex items-center justify-between pb-4 border-b border-slate-800 text-xs font-mono text-slate-400">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                    <span className="text-slate-300 font-medium">Active Focus: Android Applications</span>
-                  </div>
-                  <span className="px-2 py-0.5 rounded bg-blue-950/90 border border-blue-800/60 text-blue-300 text-[10px]">
-                    Production Ready
-                  </span>
-                </div>
+          {/* Hero Right: Laptop & Smartphone Mockups (around 58% width) */}
+          <div className="w-full lg:w-[58%] flex items-center justify-end pr-0 lg:pr-3 overflow-visible">
+            <HeroDevicesMockup />
+          </div>
+        </div>
+      </section>
 
-                {/* Featured Application Spotlight Card */}
-                <div className="p-4 rounded-xl bg-slate-900/80 border border-blue-900/40 space-y-3 relative overflow-hidden group">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-400 group-hover:scale-105 transition-transform">
-                        <Stethoscope className="w-5 h-5" />
+      {/* ========================================================= */}
+      {/* 2. OUR PRODUCTS & PROJECTS SECTION (Light Background)    */}
+      {/* ========================================================= */}
+      <section
+        id="products-projects"
+        className="relative z-10 w-full bg-[#F4F6FB] pt-7 pb-8 border-t border-slate-200/90 text-slate-900 scroll-mt-20"
+      >
+        <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Header */}
+          <div className="text-center max-w-3xl mx-auto mb-6 space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold bg-white text-blue-600 border border-blue-200 shadow-2xs">
+              <Layers className="w-3.5 h-3.5 text-blue-600" />
+              <span>Our Products &amp; Projects</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-[34px] font-extrabold text-[#0B1930] font-heading tracking-tight">
+              Our Innovations &amp; Creations
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 max-w-xl mx-auto">
+              Mobile Applications and Website Projects developed by Abhiraj Digital Innovation.
+            </p>
+          </div>
+
+          {/* Products & Projects Showcase Grid (3 Columns on Desktop, 4th card wraps naturally) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-5 items-stretch">
+            {/* ----------------------------------------------------- */}
+            {/* CARD 1: OPD ASSISTANT AI */}
+            {/* ----------------------------------------------------- */}
+            <Link
+              href="/opd-assistant-ai"
+              className="group block bg-[#EEF5FF] rounded-2xl border border-[#CFE2FE] hover:border-blue-400 shadow-sm hover:shadow-xl hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 transition-all duration-300 p-4 sm:p-5 overflow-hidden relative min-h-[365px] cursor-pointer"
+              aria-label="View OPD Assistant AI medical chat box product details"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 h-full">
+                {/* Left Column: Text & Features */}
+                <div className="sm:col-span-7 flex flex-col justify-between z-10 space-y-2">
+                  <div>
+                    {/* Status Pill Badge */}
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFB703] text-slate-900 text-[10px] font-bold tracking-wide uppercase shadow-2xs">
+                      <PlayStoreIcon className="w-3 h-3 flex-shrink-0" />
+                      <span>COMING SOON ON GOOGLE PLAY</span>
+                    </div>
+
+                    {/* Title with Stethoscope */}
+                    <div className="flex items-start gap-2 mt-2">
+                      <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0 mt-0.5 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <Stethoscope className="w-4 h-4" />
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-white flex items-center gap-1.5">
-                          <span>OPD Assistant AI</span>
-                          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-blue-900/60 text-blue-300">
-                            Android
-                          </span>
-                        </div>
-                        <div className="text-xs text-slate-400">Medical Chat Box</div>
+                        <h3 className="text-lg sm:text-xl font-extrabold text-[#0B1930] group-hover:text-blue-700 transition-colors leading-tight font-heading">
+                          OPD Assistant AI
+                        </h3>
+                        <p className="text-xs font-semibold text-blue-600 leading-tight">
+                          Medical Chat Box
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed mt-1.5">
+                      An upcoming AI-powered medical chat and clinical quick-reference application designed for healthcare professionals.
+                    </p>
+
+                    {/* 4 Feature Bullets */}
+                    <div className="space-y-1.5 mt-2">
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <FileText className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                        <span>Clinical Quick Reference</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <ShieldCheck className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                        <span>Medical Information</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <HeartPulse className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                        <span>Healthcare Support</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <MessageSquareHeart className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                        <span>Easy &amp; Smart Chat Experience</span>
                       </div>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed border-t border-slate-800/80 pt-2.5">
-                    An AI-assisted Medical Chat Box and Clinical Reference & Decision-Support Application for healthcare professionals.
-                  </p>
-                  <div className="pt-1">
+
+                  {/* Bottom Action Pill */}
+                  <div className="pt-2">
+                    <div className="w-full flex items-center justify-between px-3 py-1.5 rounded-full bg-white border border-blue-200 text-blue-600 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 text-xs font-semibold shadow-2xs transition-colors">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>View Details • Coming Soon</span>
+                      </span>
+                      <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Visual Mockup */}
+                <div className="sm:col-span-5 flex items-center justify-center relative group-hover:scale-[1.02] transition-transform duration-300">
+                  <OPDCardVisual />
+                </div>
+              </div>
+            </Link>
+
+            {/* ----------------------------------------------------- */}
+            {/* CARD 2: GHARMITRA */}
+            {/* ----------------------------------------------------- */}
+            <Link
+              href="/gharmitra"
+              className="group block bg-[#EDF8F2] rounded-2xl border border-[#C7EBD7] hover:border-emerald-400 shadow-sm hover:shadow-xl hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 transition-all duration-300 p-4 sm:p-5 overflow-hidden relative min-h-[365px] cursor-pointer"
+              aria-label="View GharMitra complete home solution product details"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 h-full">
+                {/* Left Column: Text & Features */}
+                <div className="sm:col-span-7 flex flex-col justify-between z-10 space-y-2">
+                  <div>
+                    {/* Status Pill Badge */}
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFB703] text-slate-900 text-[10px] font-bold tracking-wide uppercase shadow-2xs">
+                      <PlayStoreIcon className="w-3 h-3 flex-shrink-0" />
+                      <span>COMING SOON ON GOOGLE PLAY</span>
+                    </div>
+
+                    {/* Title with House Icon */}
+                    <div className="flex items-start gap-2 mt-2">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0 mt-0.5 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                        <Home className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg sm:text-xl font-extrabold text-[#0B1930] group-hover:text-emerald-800 transition-colors leading-tight font-heading">
+                          GharMitra (घर मित्र)
+                        </h3>
+                        <p className="text-xs font-semibold text-emerald-600 leading-tight">
+                          Home Services Marketplace
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-[11px] sm:text-slate-600 text-xs leading-relaxed mt-1.5">
+                      An upcoming Home Services Marketplace application being developed to bring trusted household services together in one convenient platform. Initial target market: Baloda Bazar District, Chhattisgarh.
+                    </p>
+
+                    {/* 4 Feature Bullets */}
+                    <div className="space-y-1.5 mt-2">
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <Home className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                        <span>Home Services Booking</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <UserCheck className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                        <span>Verified Professionals</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <Layers className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                        <span>Multiple Home Solutions</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <RefreshCw className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                        <span>Easy &amp; Reliable Support</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Action Pill */}
+                  <div className="pt-2">
+                    <div className="w-full flex items-center justify-between px-3 py-1.5 rounded-full bg-white border border-emerald-200 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 text-xs font-semibold shadow-2xs transition-colors">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>View Details • Coming Soon</span>
+                      </span>
+                      <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Visual Mockup */}
+                <div className="sm:col-span-5 flex items-center justify-center relative group-hover:scale-[1.02] transition-transform duration-300">
+                  <GharMitraCardVisual />
+                </div>
+              </div>
+            </Link>
+
+            {/* ----------------------------------------------------- */}
+            {/* CARD 3: KUMAR SOLAR PANEL WEBSITE */}
+            {/* ----------------------------------------------------- */}
+            <div className="group relative bg-[#FFFDEB] rounded-2xl border border-[#FDE68A] hover:border-amber-400 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 sm:p-5 flex flex-col justify-between overflow-hidden min-h-[365px] cursor-pointer">
+              {/* Primary Card Link covering the entire card */}
+              <Link
+                href="/portfolio/kumar-solar-panel"
+                className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                aria-label="View Kumar Solar Panel Website project details"
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 h-full relative z-0">
+                {/* Left Column: Text & Features */}
+                <div className="sm:col-span-7 flex flex-col justify-between z-10 space-y-2">
+                  <div>
+                    {/* Badge: CLIENT PROJECT */}
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#1865F2] text-white text-[10px] font-bold tracking-wide uppercase shadow-2xs">
+                      <Users className="w-3 h-3 flex-shrink-0" />
+                      <span>CLIENT PROJECT</span>
+                    </div>
+
+                    {/* Title */}
+                    <div className="mt-2">
+                      <h3 className="text-lg sm:text-xl font-extrabold text-[#0B1930] group-hover:text-blue-700 transition-colors leading-tight font-heading">
+                        Kumar Solar Panel Website
+                      </h3>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed mt-1.5">
+                      A website project developed for Kumar Solar Panel Services, showcasing their solar solutions, services and business information.
+                    </p>
+
+                    {/* 4 Feature Bullets */}
+                    <div className="space-y-1.5 mt-2">
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <Clock className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                        <span>Modern &amp; Professional Design</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <Monitor className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                        <span>Responsive Website</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <Sun className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                        <span>Showcase of Solar Services</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <Sparkles className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                        <span>Built with Latest Technology</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Actions Row (relative z-20 to allow direct interaction without duplicate click) */}
+                  <div className="pt-2 flex items-center gap-2 relative z-20">
                     <Link
-                      href="/opd-assistant-ai"
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-400 hover:text-blue-300"
+                      href="/portfolio/kumar-solar-panel"
+                      className="flex-1 inline-flex items-center justify-between px-3 py-2 rounded-xl bg-white hover:bg-amber-50 border border-amber-300 text-slate-800 text-xs font-semibold shadow-2xs transition-colors"
                     >
-                      <span>Explore Dedicated Product Page</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <span>Project Details</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-amber-600 group-hover:translate-x-0.5 transition-transform" />
                     </Link>
+
+                    <a
+                      href="https://kumar-solar-panel-website.vercel.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#1865F2] hover:bg-blue-600 text-white text-xs font-semibold shadow-md shadow-blue-500/20 transition-all active:scale-95 flex-shrink-0"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Live Demo</span>
+                    </a>
                   </div>
                 </div>
 
-                {/* Technical Focus Stack */}
-                <div className="space-y-2.5">
-                  <div className="text-[11px] font-mono uppercase tracking-wider text-slate-400 flex items-center justify-between">
-                    <span>Technical Focus Distribution</span>
-                    <span className="text-blue-400 text-[10px]">CURRENT FOCUS</span>
-                  </div>
+                {/* Right Column: Visual Mockup */}
+                <div className="sm:col-span-5 flex items-center justify-center relative group-hover:scale-[1.02] transition-transform duration-300">
+                  <KumarSolarCardVisual />
+                </div>
+              </div>
+            </div>
 
-                  {/* Primary: Mobile (Android) */}
-                  <div className="p-3 rounded-lg bg-slate-900/60 border border-blue-900/50 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-1.5 rounded-md bg-blue-950 text-blue-400">
-                        <Smartphone className="w-4 h-4" />
+            {/* ----------------------------------------------------- */}
+            {/* CARD 4: COLONY MITRA */}
+            {/* ----------------------------------------------------- */}
+            <Link
+              href="/colony-mitra"
+              className="group block bg-[#F5F3FF] rounded-2xl border border-[#DDD6FE] hover:border-indigo-400 shadow-sm hover:shadow-xl hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 transition-all duration-300 p-4 sm:p-5 overflow-hidden relative min-h-[365px] cursor-pointer"
+              aria-label="View Colony Mitra residential colony and society platform product details"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 h-full">
+                {/* Left Column: Text & Features */}
+                <div className="sm:col-span-7 flex flex-col justify-between z-10 space-y-2">
+                  <div>
+                    {/* Status Pill Badge */}
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFB703] text-slate-900 text-[10px] font-bold tracking-wide uppercase shadow-2xs">
+                      <Clock className="w-3 h-3 flex-shrink-0" />
+                      <span>IN ACTIVE DEVELOPMENT</span>
+                    </div>
+
+                    {/* Title with Building Icon */}
+                    <div className="flex items-start gap-2 mt-2">
+                      <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 flex-shrink-0 mt-0.5 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                        <Building2 className="w-4 h-4" />
                       </div>
                       <div>
-                        <div className="text-xs font-semibold text-slate-200">Mobile Applications</div>
-                        <div className="text-[10px] text-slate-400">Android Application Development</div>
+                        <h3 className="text-lg sm:text-xl font-extrabold text-[#0B1930] group-hover:text-indigo-700 transition-colors leading-tight font-heading">
+                          Colony Mitra (कॉलोनी मित्र)
+                        </h3>
+                        <p className="text-xs font-semibold text-indigo-600 leading-tight">
+                          Residential Colony &amp; Society Platform
+                        </p>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800/60">
-                      PRIMARY
-                    </span>
+
+                    {/* Description */}
+                    <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed mt-1.5">
+                      An upcoming residential colony and society management application designed to centralize notices, resident directories, and community operations.
+                    </p>
+
+                    {/* 4 Feature Bullets */}
+                    <div className="space-y-1.5 mt-2">
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <Building2 className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
+                        <span>Colony Digital Hub</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <Users className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
+                        <span>Resident &amp; Directory Coordination</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <Bell className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
+                        <span>Society Notices &amp; Circulars</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
+                        <span>Structured Community Operations</span>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Secondary: Software */}
-                  <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800/80 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-1.5 rounded-md bg-slate-800 text-slate-400">
-                        <Code2 className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold text-slate-300">Software Development</div>
-                        <div className="text-[10px] text-slate-400">Custom Software & Digital Tools</div>
-                      </div>
+                  {/* Bottom Action Pill */}
+                  <div className="pt-2">
+                    <div className="w-full flex items-center justify-between px-3 py-1.5 rounded-full bg-white border border-indigo-200 text-indigo-700 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 text-xs font-semibold shadow-2xs transition-colors">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>View Details • In Development</span>
+                      </span>
+                      <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800/80 text-slate-400">
-                      SECONDARY
-                    </span>
-                  </div>
-
-                  {/* Secondary: Websites */}
-                  <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800/80 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-1.5 rounded-md bg-slate-800 text-slate-400">
-                        <Globe className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold text-slate-300">Website Development</div>
-                        <div className="text-[10px] text-slate-400">Responsive Modern Websites</div>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800/80 text-slate-400">
-                      SECONDARY
-                    </span>
                   </div>
                 </div>
 
-                {/* Console Footer */}
-                <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400">
-                  <span className="flex items-center gap-1.5">
-                    <Terminal className="w-3.5 h-3.5 text-blue-400" />
-                    <span>Practical Utility</span>
-                  </span>
-                  <span className="text-slate-400">Real-World Solutions</span>
+                {/* Right Column: Visual Mockup */}
+                <div className="sm:col-span-5 flex items-center justify-center relative group-hover:scale-[1.02] transition-transform duration-300">
+                  <ColonyMitraCardVisual />
+                </div>
+              </div>
+            </Link>
+          </div>
+
+          {/* ========================================================= */}
+          {/* 3. BOTTOM BENEFITS STRIP (Compact light strip)           */}
+          {/* ========================================================= */}
+          <div className="mt-6 py-3.5 px-6 rounded-xl bg-[#EDF4FD] border border-[#D5E3F7]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                  <Lightbulb className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Innovative Approach</h4>
+                  <p className="text-[11px] text-slate-500 leading-snug mt-0.5">Creative solutions for real-world problems</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                  <Users className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Client Focused</h4>
+                  <p className="text-[11px] text-slate-500 leading-snug mt-0.5">Your success is our priority</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                  <Settings className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Quality Development</h4>
+                  <p className="text-[11px] text-slate-500 leading-snug mt-0.5">Modern, scalable and reliable solutions</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                  <BarChart3 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Growing Together</h4>
+                  <p className="text-[11px] text-slate-500 leading-snug mt-0.5">Building a better digital future</p>
                 </div>
               </div>
             </div>
@@ -279,15 +620,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. CURRENT APPLICATION INTRODUCTION CARD (Clean & Uncluttered) */}
-      <section id="application" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+      {/* ========================================================= */}
+      {/* 3. CURRENT APPLICATION DEEP DIVE (OPD Assistant AI)       */}
+      {/* ========================================================= */}
+      <section id="application" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-24 scroll-mt-24">
         <div className="relative rounded-2xl p-1 bg-gradient-to-b from-blue-500/30 via-slate-800/40 to-slate-900 border border-slate-800/80 overflow-hidden shadow-2xl">
           <div className="rounded-[15px] bg-[#0A101D] p-6 sm:p-10 lg:p-12 space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               {/* Product Left: Clean Narrative */}
               <div className="lg:col-span-7 space-y-5">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-blue-950/80 border border-blue-800/60 text-blue-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
                   <span>CURRENT APPLICATION</span>
                 </div>
 
@@ -296,12 +639,12 @@ export default function HomePage() {
                     OPD Assistant AI
                   </h2>
                   <p className="text-sm sm:text-base font-medium text-blue-400 mt-1">
-                    AI-Assisted Clinical Reference & Decision-Support Application
+                    AI-Assisted Clinical Reference &amp; Decision-Support Application
                   </p>
                 </div>
 
                 <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-                  An AI-assisted Medical Chat Box and Clinical Reference & Decision-Support Application developed by Abhiraj Digital Innovation, designed to help appropriately qualified healthcare professionals access, organize and understand relevant clinical information.
+                  An AI-assisted Medical Chat Box and Clinical Reference &amp; Decision-Support Application developed by Abhiraj Digital Innovation, designed to help appropriately qualified healthcare professionals access, organize and understand relevant clinical information.
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
@@ -397,7 +740,7 @@ export default function HomePage() {
                       href="/opd-assistant-ai"
                       className="text-xs font-mono text-blue-400 hover:text-blue-300 inline-flex items-center gap-1"
                     >
-                      <span>View full clinical modules & disclaimers →</span>
+                      <span>View full clinical modules &amp; disclaimers →</span>
                     </Link>
                   </div>
                 </div>
@@ -407,8 +750,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 3. OUR SERVICES SECTION */}
-      <section id="services" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+      {/* ========================================================= */}
+      {/* 4. OUR SERVICES SECTION */}
+      {/* ========================================================= */}
+      <section
+        id="services"
+        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-24 scroll-mt-24"
+      >
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 pb-5 border-b border-slate-800">
           <div className="space-y-1">
             <div className="text-xs font-mono font-semibold uppercase tracking-wider text-blue-400">
@@ -419,7 +767,8 @@ export default function HomePage() {
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-slate-400 max-w-md">
-            We focus on three practical areas: Android mobile applications, software development and website development.
+            We focus on three practical areas: Android mobile applications,
+            software development and website development.
           </p>
         </div>
 
@@ -429,24 +778,27 @@ export default function HomePage() {
             return (
               <div
                 key={service.title}
-                className={`relative rounded-2xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 group ${
-                  service.isPrimary
+                className={`relative rounded-2xl p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 group ${service.isPrimary
                     ? "bg-slate-900/90 border-2 border-blue-500/40 shadow-xl shadow-blue-950/30"
                     : "bg-slate-900/60 border border-slate-800 hover:border-slate-700"
-                }`}
+                  }`}
               >
                 <div className="space-y-5">
                   <div className="flex items-center justify-between">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
-                      service.isPrimary ? "bg-blue-600/20 text-blue-400 border border-blue-500/40" : "bg-slate-800 text-slate-400 border border-slate-700/60"
-                    }`}>
+                    <div
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${service.isPrimary
+                          ? "bg-blue-600/20 text-blue-400 border border-blue-500/40"
+                          : "bg-slate-800 text-slate-400 border border-slate-700/60"
+                        }`}
+                    >
                       <Icon className="w-6 h-6" />
                     </div>
-                    <span className={`text-[10px] font-mono px-2.5 py-1 rounded-full font-semibold border ${
-                      service.isPrimary
-                        ? "bg-blue-950 text-blue-300 border-blue-800/80 badge-glow"
-                        : "bg-slate-800 text-slate-400 border-slate-700"
-                    }`}>
+                    <span
+                      className={`text-[10px] font-mono px-2.5 py-1 rounded-full font-semibold border ${service.isPrimary
+                          ? "bg-blue-950 text-blue-300 border-blue-800/80 badge-glow"
+                          : "bg-slate-800 text-slate-400 border-slate-700"
+                        }`}
+                    >
                       {service.badge}
                     </span>
                   </div>
@@ -489,8 +841,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 4. ABOUT SECTION */}
-      <section id="about" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+      {/* ========================================================= */}
+      {/* 5. ABOUT SECTION */}
+      {/* ========================================================= */}
+      <section
+        id="about"
+        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24"
+      >
         <div className="rounded-2xl p-8 sm:p-12 bg-slate-900/60 border border-slate-800 backdrop-blur-xl space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-5 space-y-3">
@@ -500,7 +857,7 @@ export default function HomePage() {
               <h2 className="text-2xl sm:text-4xl font-extrabold text-white font-heading text-gradient">
                 About Abhiraj Digital Innovation
               </h2>
-              <div className="h-1 w-16 bg-blue-600 rounded-full mt-2"></div>
+              <div className="h-1 w-16 bg-blue-600 rounded-full mt-2" />
             </div>
 
             <div className="lg:col-span-7 space-y-4 text-sm sm:text-base text-slate-300 leading-relaxed">
@@ -508,7 +865,7 @@ export default function HomePage() {
                 <strong className="text-white">Abhiraj Digital Innovation</strong> is focused on building practical digital applications, software solutions and modern websites around real-world requirements.
               </p>
               <p className="text-slate-300">
-                Our current primary focus is mobile application development, with OPD Assistant AI as our current application.
+                Our current primary focus is mobile application development, with OPD Assistant AI as our current application, alongside impactful client projects like the Kumar Solar Panel website.
               </p>
               <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
                 Alongside mobile applications, we work on practical software and website solutions with an emphasis on purposeful functionality, clear interfaces and useful digital experiences.
@@ -553,8 +910,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 5. WHY CHOOSE US / OUR APPROACH */}
-      <section id="why-us" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+      {/* ========================================================= */}
+      {/* 6. WHY CHOOSE US / OUR APPROACH */}
+      {/* ========================================================= */}
+      <section
+        id="why-us"
+        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24"
+      >
         <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
           <div className="text-xs font-mono uppercase tracking-wider text-blue-400 font-semibold">
             Our Approach
@@ -626,8 +988,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 6. CONTACT BANNER */}
-      <section id="contact" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+      {/* ========================================================= */}
+      {/* 7. CONTACT BANNER */}
+      {/* ========================================================= */}
+      <section
+        id="contact"
+        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24"
+      >
         <div className="rounded-2xl p-8 sm:p-12 bg-gradient-to-r from-blue-950/60 via-slate-900 to-slate-900 border border-blue-800/40 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="space-y-2 text-center md:text-left">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-heading">
