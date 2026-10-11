@@ -302,7 +302,7 @@ export default function OPDAssistantAIPage() {
       </section>
 
       {/* 3. HOW OPD ASSISTANT AI WORKS (Workflow) */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="medical-chat-box" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
         <div className="text-center max-w-3xl mx-auto mb-10 space-y-2">
           <div className="text-xs font-mono uppercase tracking-wider text-blue-400 font-semibold">
             Workflow Architecture
