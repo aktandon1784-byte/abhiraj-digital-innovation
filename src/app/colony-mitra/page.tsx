@@ -220,7 +220,7 @@ export default function ColonyMitraPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-            <div className="pt-1">
+            <div className="pt-1 flex flex-wrap gap-3">
               <Link
                 href="/colony-mitra/purchase"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/25 transition-all"
@@ -228,6 +228,15 @@ export default function ColonyMitraPage() {
                 <CreditCard className="w-4 h-4" />
                 <span>Buy Colony Mitra · ख़रीदें</span>
               </Link>
+              <a
+                href="/colony-mitra/demo.html"
+                target="_blank"
+                rel="noopener"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold text-indigo-200 bg-slate-900 hover:bg-slate-800 border border-indigo-500/60 transition-all"
+              >
+                <Smartphone className="w-4 h-4" />
+                <span>Live Demo देखें · डेमो</span>
+              </a>
             </div>
           </div>
 
