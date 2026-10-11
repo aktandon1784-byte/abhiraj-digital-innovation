@@ -2,11 +2,12 @@
  * Colony Mitra (कॉलोनी मित्र) — monthly colony subscription.
  *
  * Kept separate from the OPD Assistant AI plans in ./plans.ts.
- * The price is set ONLY on the server through the environment variable
- * COLONY_MITRA_MONTHLY_PRICE_INR (whole rupees, e.g. "999").
- * While it is unset, the purchase page shows "price to be announced"
- * and the order API refuses to create orders.
+ * The price is decided ONLY on the server: ₹1,999 per colony per month by default,
+ * optionally overridden by the environment variable COLONY_MITRA_MONTHLY_PRICE_INR
+ * (whole rupees). Client-sent amounts are never used.
  */
+
+const DEFAULT_MONTHLY_PRICE_INR = "1999";
 
 export const COLONY_MITRA_FIRST_COLONY = "लक्ष्मण विहार";
 
@@ -19,7 +20,7 @@ export interface ColonyMitraPlan {
 }
 
 export function getColonyMitraPlan(): ColonyMitraPlan | null {
-  const raw = (process.env.COLONY_MITRA_MONTHLY_PRICE_INR || "").trim();
+  const raw = (process.env.COLONY_MITRA_MONTHLY_PRICE_INR || DEFAULT_MONTHLY_PRICE_INR).trim();
   if (!/^\d{1,6}$/.test(raw)) return null;
   const rupees = Number(raw);
   if (rupees < 1) return null;
