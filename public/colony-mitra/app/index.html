@@ -23,20 +23,20 @@
   --display:"Tiro Devanagari Hindi","Noto Serif Devanagari",Georgia,serif;
   --body:"Mukta","Noto Sans Devanagari",system-ui,sans-serif;
   --r:10px;
-  --t-home:#D9480F; --t-houses:#1864AB; --t-parking:#7048E8; --t-maint:#2B8A3E; --t-comp:#C2255C; --t-acct:#0C8599; --t-polls:#4C3FD1; --t-gallery:#A61E8C; --t-admin:#9A6700; --t-svc:#5C7F0A; --t-team:#A33A12; --t-cctv:#30577F; --tc-ink:#FFFFFF;
+  --t-home:#D9480F; --t-houses:#1864AB; --t-parking:#7048E8; --t-maint:#2B8A3E; --t-comp:#C2255C; --t-acct:#0C8599; --t-polls:#4C3FD1; --t-gallery:#A61E8C; --t-admin:#9A6700; --t-svc:#5C7F0A; --t-team:#A33A12; --t-cctv:#30577F; --t-myhouse:#0B7285; --t-tenants:#5F3DC4; --t-fees:#B35C00; --t-msgs:#087F5B; --tc-ink:#FFFFFF;
   --tc:var(--accent);
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#111816; --surface:#19221F; --ink:#E6ECE9; --muted:#9AA8A2; --line:#2C3833;
   --accent:#5CC2A5; --accent-ink:#0B1A15; --accent-soft:#1D3A32; --marigold:#E8AE4A; --marigold-soft:#3A2D14;
   --ok:#6FD08E; --ok-soft:#173222; --bad:#F2867D; --bad-soft:#3D1D1B; --warn:#EDBE5C; --warn-soft:#3A2E12; --info:#8AB8EE; --info-soft:#1A2A3F;
-  --t-home:#FF8F5A; --t-houses:#74B3F5; --t-parking:#A98BFF; --t-maint:#5FD27A; --t-comp:#FF7FA8; --t-acct:#45CBDD; --t-polls:#9D95FF; --t-gallery:#EB7FD8; --t-admin:#F2C14E; --t-svc:#A9E34B; --t-team:#FFA07A; --t-cctv:#8DB8E8; --tc-ink:#10141A;
+  --t-home:#FF8F5A; --t-houses:#74B3F5; --t-parking:#A98BFF; --t-maint:#5FD27A; --t-comp:#FF7FA8; --t-acct:#45CBDD; --t-polls:#9D95FF; --t-gallery:#EB7FD8; --t-admin:#F2C14E; --t-svc:#A9E34B; --t-team:#FFA07A; --t-cctv:#8DB8E8; --t-myhouse:#4FC9DB; --t-tenants:#B197FC; --t-fees:#FFA94D; --t-msgs:#63E6BE; --tc-ink:#10141A;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#111816; --surface:#19221F; --ink:#E6ECE9; --muted:#9AA8A2; --line:#2C3833;
   --accent:#5CC2A5; --accent-ink:#0B1A15; --accent-soft:#1D3A32; --marigold:#E8AE4A; --marigold-soft:#3A2D14;
   --ok:#6FD08E; --ok-soft:#173222; --bad:#F2867D; --bad-soft:#3D1D1B; --warn:#EDBE5C; --warn-soft:#3A2E12; --info:#8AB8EE; --info-soft:#1A2A3F;
-  --t-home:#FF8F5A; --t-houses:#74B3F5; --t-parking:#A98BFF; --t-maint:#5FD27A; --t-comp:#FF7FA8; --t-acct:#45CBDD; --t-polls:#9D95FF; --t-gallery:#EB7FD8; --t-admin:#F2C14E; --t-svc:#A9E34B; --t-team:#FFA07A; --t-cctv:#8DB8E8; --tc-ink:#10141A;
+  --t-home:#FF8F5A; --t-houses:#74B3F5; --t-parking:#A98BFF; --t-maint:#5FD27A; --t-comp:#FF7FA8; --t-acct:#45CBDD; --t-polls:#9D95FF; --t-gallery:#EB7FD8; --t-admin:#F2C14E; --t-svc:#A9E34B; --t-team:#FFA07A; --t-cctv:#8DB8E8; --t-myhouse:#4FC9DB; --t-tenants:#B197FC; --t-fees:#FFA94D; --t-msgs:#63E6BE; --tc-ink:#10141A;
   color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
@@ -191,6 +191,18 @@ button.role{cursor:pointer;font:inherit;font-size:13.5px;font-weight:600}
 .upibox .qr{flex:none;width:150px;background:#fff;border-radius:8px;padding:4px}
 .upibox .qr svg{display:block;width:100%;height:auto}
 @media (max-width:460px){.upibox{flex-direction:column}.upibox .qr{width:180px;align-self:center}}
+.tn{display:grid;gap:10px;align-content:start}
+.tn .top{display:flex;gap:12px;align-items:flex-start}
+.tn .av{width:72px;height:72px;border-radius:12px}
+.docs{display:flex;gap:8px;flex-wrap:wrap}
+.docs .ph{width:96px;height:72px}
+.msg{border-left:4px solid var(--tc);background:var(--surface);border-radius:8px;padding:10px 14px;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.msg h3{margin:0;font-size:17px}
+.msg p{margin:4px 0 0;white-space:pre-wrap}
+.hpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:4px 10px;max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px}
+.hpick label{display:flex;gap:6px;align-items:center;font-size:14.5px}
+.walist{display:grid;gap:6px;max-height:50vh;overflow:auto}
+.walist div{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line);padding:4px 0}
 code{font-size:.92em;background:var(--bg);padding:1px 5px;border-radius:4px}
 </style>
 </head>

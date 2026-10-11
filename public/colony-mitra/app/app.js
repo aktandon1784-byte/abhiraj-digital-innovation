@@ -58,7 +58,12 @@ function makeSupabaseBackend() {
       async add(row) { return chk(await sb.from('members').insert(row).select()) },
       async addMany(rows) { if (!rows.length) return []; return chk(await sb.from('members').insert(rows).select()) },
       async update(id, patch) { return chk(await sb.from('members').update(patch).eq('id', id).select()) },
-      async remove(id) { return chk(await sb.from('members').delete().eq('id', id)) }
+      async remove(id) { return chk(await sb.from('members').delete().eq('id', id)) },
+      async audit(cid) { return chk(await sb.from('member_audit').select('*').eq('colony_id', cid).order('at', { ascending: false }).limit(60)) }
+    },
+    joins: {
+      async list(cid) { return chk(await sb.from('join_requests').select('*').eq('colony_id', cid).eq('status', 'pending').order('created_at')) },
+      async set(id, status) { return chk(await sb.from('join_requests').update({ status }).eq('id', id).select()) }
     },
     docs: {
       async listAll(cid) {
@@ -85,9 +90,9 @@ function makeSupabaseBackend() {
       }
     },
     files: {
-      async upload(cid, blob) {
+      async upload(cid, blob, house) {
         const ext = (blob.type || 'image/jpeg').split('/')[1].replace('jpeg', 'jpg');
-        const path = cid + '/' + Date.now() + '-' + newId().slice(0, 8) + '.' + ext;
+        const path = cid + '/' + (house ? 'h/' + house + '/' : '') + Date.now() + '-' + newId().slice(0, 8) + '.' + ext;
         chk(await sb.storage.from('colony').upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: false }));
         return { id: path };
       },
@@ -153,7 +158,7 @@ function makeDb(cid) {
   let unsub = null, poll = null;
   const onVis = () => { if (document.visibilityState === 'visible') refreshAll().catch(console.warn) };
   return {
-    doc, collection,
+    doc, collection, refresh: c => refresh(c),
     async start() { await refreshAll(); unsub = B.docs.subscribe(cid, soon); poll = setInterval(() => refreshAll().catch(console.warn), 90000); document.addEventListener('visibilitychange', onVis) },
     stop() { unsub && unsub(); clearInterval(poll); document.removeEventListener('visibilitychange', onVis) }
   };
@@ -216,7 +221,7 @@ function loginScreen(msg) {
   showAuth(`
     <h2 class="atitle">लॉगिन करें</h2>
     <p class="muted" style="margin:0 0 14px">अपना वही मोबाइल नंबर या ईमेल डालें जो कमेटी ने ऐप में जोड़ा है।</p>
-    ${CFG.DEMO?'<div class="banner" style="margin:0 0 14px;display:block">🧪 <b>डेमो:</b> कमेटी के लिए <b class="num">99999 00001</b>, निवासी के लिए <b class="num">99999 00002</b>। OTP हमेशा <b class="num">123456</b>।</div>':''}
+    ${CFG.DEMO?'<div class="banner" style="margin:0 0 14px;display:block">🧪 <b>डेमो (नकली डेटा):</b> कमेटी अध्यक्ष <b class="num">99999 00001</b> · कोषाध्यक्ष <b class="num">99999 00003</b> · निवासी A-1 <b class="num">99999 00002</b> · निवासी A-2 <b class="num">99999 00004</b>। OTP हमेशा <b class="num">123456</b>। डेमो में कोई असली SMS या WhatsApp नहीं जाता।</div>':''}
     ${hasPhone && hasEmail ? `<div class="seg" id="lmode" style="margin-bottom:14px"><button data-v="phone" aria-pressed="${mode === 'phone'}">📱 मोबाइल नंबर</button><button data-v="email" aria-pressed="${mode === 'email'}">✉️ ईमेल</button></div>` : ''}
     <form id="lform" class="aform">
       <div class="f" ${mode === 'phone' ? '' : 'hidden'} id="lphone"><label for="lph">मोबाइल नंबर</label><div class="phonein"><span>+91</span><input id="lph" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" placeholder="98765 43210"></div></div>
@@ -284,10 +289,20 @@ async function afterLogin() {
     let hasOwner = true; try { hasOwner = await B.rpc('cs_has_owner') } catch (_) {}
     return showAuth(`
       <h2 class="atitle">आपका नंबर किसी कॉलोनी में नहीं जुड़ा है</h2>
-      <p class="muted">आपने <b>${esc(meLabel())}</b> से लॉगिन किया है। अपनी कॉलोनी की कमेटी से कहें कि वे यह नंबर ऐप के <b>एडमिन → लॉगिन वाले सदस्य</b> में जोड़ दें। फिर दोबारा लॉगिन करें।</p>
+      <p class="muted">आपने <b>${esc(meLabel())}</b> से लॉगिन किया है। अपनी कॉलोनी की कमेटी से कहें कि वे यह नंबर ऐप के <b>एडमिन → लॉगिन वाले सदस्य</b> में जोड़ दें, या नीचे से <b>जुड़ने का अनुरोध</b> भेजें। कमेटी मंज़ूरी देगी, तभी ऐप खुलेगा।</p>
+      <form id="jform" class="aform" style="margin-top:10px"><h3 style="margin:0">जुड़ने का अनुरोध भेजें</h3>
+        <div class="f"><label for="jc">कॉलोनी कोड (कमेटी से पूछें)</label><input id="jc" required maxlength="10" placeholder="जैसे LV1234" style="text-transform:uppercase"></div>
+        <div class="f"><label for="jn">आपका नाम</label><input id="jn" required maxlength="80"></div>
+        <div class="f"><label for="jh">मकान नंबर</label><input id="jh" required maxlength="20" placeholder="जैसे A-12"></div>
+        <div class="f"><label for="jt">नोट (वैकल्पिक)</label><input id="jt" maxlength="200" placeholder="जैसे मकान मालिक / किराएदार, कब से रह रहे हैं"></div>
+        <div class="err" id="jerr"></div><button class="btn" type="submit">अनुरोध भेजें</button></form>
       ${hasOwner ? '' : `<div class="banner" style="margin:12px 0"><span>ऐप अभी नया है और इसका कोई मालिक नहीं बना है। अगर आप <b>${esc(CFG.COMPANY)}</b> हैं, तो नीचे दबाएँ।</span><button class="btn sm" id="claim">मैं इस ऐप का मालिक हूँ</button></div>`}
       <div class="actions"><button class="btn ghost" id="lo">दूसरे नंबर से लॉगिन करें</button></div>${supportLine()}`)
       , $('#lo').onclick = logout,
+      $('#jform').onsubmit = async e => { e.preventDefault(); const er = $('#jerr'); er.style.color = ''; er.textContent = '';
+        try { const n = await B.rpc('request_join', { p_code: $('#jc').value.trim(), p_name: $('#jn').value.trim(), p_house: $('#jh').value.trim(), p_note: $('#jt').value.trim() });
+          er.style.color = 'var(--ok)'; er.textContent = `✓ “${n}” की कमेटी को अनुरोध भेज दिया गया। मंज़ूरी मिलने के बाद दोबारा लॉगिन करें।` }
+        catch (x) { er.textContent = errMsg(mapErr(x)) } },
       $('#claim') && ($('#claim').onclick = async () => { try { if (await B.rpc('claim_platform_admin')) { isOwner = true; ownerScreen() } else alertBox('ऐप का मालिक पहले ही बन चुका है।') } catch (e) { alertBox(errMsg(mapErr(e))) } });
   }
   const last = LS.get('cs-colony');
@@ -324,7 +339,7 @@ async function ownerScreen() {
   AUTH.querySelectorAll('[data-open]').forEach(b => b.onclick = () => openColony(b.dataset.open, true));
   AUTH.querySelectorAll('[data-plan]').forEach(b => b.onclick = () => {
     const c = cols.find(x => x.id === b.dataset.plan);
-    openForm('प्लान / भुगतान · ' + esc(c.name), [{ k: 'plan', label: 'प्लान', type: 'select', options: [['trial', 'मुफ़्त ट्रायल'], ['small', 'छोटी (₹999)'], ['medium', 'मध्यम (₹1,999)'], ['large', 'बड़ी (₹2,999)'], ['custom', 'कस्टम']] },
+    openForm('प्लान / भुगतान · ' + esc(c.name), [{ k: 'plan', label: 'प्लान', type: 'select', options: [['trial', 'मुफ़्त ट्रायल'], ['monthly', 'मासिक (₹2,999 / महीना)'], ['yearly', 'सालाना (₹29,999 / साल)'], ['custom', 'कस्टम']] },
       { k: 'paid_until', label: 'भुगतान किस तारीख तक', type: 'date' }, { k: 'active', label: 'कॉलोनी चालू है', type: 'check' }], c,
       async v => { await B.colonies.update(c.id, { plan: v.plan, paid_until: v.paid_until || null, active: v.active }); setTimeout(ownerScreen, 50) });
   });
@@ -348,14 +363,19 @@ async function openColony(cid, viaOwner) {
   COLONY = cid; MEM = info; isAdmin = info.role === 'admin'; uid = ME && ME.id;
   LS.set('cs-colony', cid);
   assets = isAdmin ? { upload: blob => B.files.upload(cid, blob), delete: path => B.files.remove(path) } : null;
+  /* a house's private photos (tenant photo, Aadhaar copy, ID, complaint photo) go to <colony>/h/<house>/ */
+  houseFiles = { upload: (blob, house) => B.files.upload(cid, blob, house), delete: path => B.files.remove(path) };
   resetState();
   db = makeDb(cid);
   try { await db.start() } catch (e) { console.warn(e); return showAuth(`<h2 class="atitle">डेटा लोड नहीं हुआ</h2><p class="muted">${esc(errMsg(mapErr(e)))}</p><div class="actions"><button class="btn" id="re">फिर कोशिश करें</button><button class="btn ghost" id="lo">लॉगआउट</button></div>`), $('#re').onclick = () => openColony(cid, viaOwner), $('#lo').onclick = logout }
-  if (isAdmin) loadMembers();
+  if (isAdmin) { loadMembers(); loadJoins(); }
   startColony();
+  loadSummary();
   hideAuth();
 }
-async function loadMembers() { try { S.members = await B.members.list(COLONY) } catch (e) { console.warn(e); S.members = [] } renderBody() }
+async function loadMembers() { try { S.members = await B.members.list(COLONY) } catch (e) { console.warn(e); S.members = [] } try { S.audit = B.members.audit ? await B.members.audit(COLONY) : [] } catch (e) { console.warn(e); S.audit = [] } renderAll() }
+async function loadJoins() { try { S.joins = B.joins ? await B.joins.list(COLONY) : [] } catch (e) { console.warn(e); S.joins = [] } renderBody() }
+async function loadSummary() { try { S.summary = await B.rpc('colony_summary', { p_colony: COLONY }) } catch (e) { console.warn(e); S.summary = null } renderBody() }
 async function logout() { try { if (db && db.stop) db.stop() } catch (_) {} try { await B.auth.signOut() } catch (_) {} ME = null; MYCOL = []; MEM = null; isAdmin = false; isOwner = false; LS.del('cs-colony'); document.getElementById('main').innerHTML = ''; document.getElementById('tabs').innerHTML = ''; loginScreen() }
 
 function alertBox(msg) { dlg.innerHTML = `<div class="dbody"><p style="margin:0">${msg}</p><div class="dfoot"><button class="btn" data-close>ठीक है</button></div></div>`; dlg.showModal() }
@@ -363,7 +383,7 @@ function alertBox(msg) { dlg.innerHTML = `<div class="dbody"><p style="margin:0"
 function userMenu() {
   const others = MYCOL.filter(c => c.colony_id !== COLONY);
   dlg.innerHTML = `<div class="dbody"><h3>${esc(MEM.member_name || meLabel())}</h3>
-    <p class="muted" style="margin:0">${esc(meLabel())} · ${isAdmin ? '👑 कमेटी / एडमिन' : '🏠 निवासी'}${MEM.house ? ' · मकान ' + esc(MEM.house) : ''}</p>
+    <p class="muted" style="margin:0">${esc(meLabel())} · ${isAdmin ? '👑 कमेटी / एडमिन' + (MEM.post ? ' · ' + esc(MEM.post) : '') : '🏠 निवासी'}${MEM.house ? ' · मकान ' + esc(MEM.house) : ''}</p>
     <div class="list">
       ${!isStandalone() ? '<button class="btn ghost" id="um-inst">📲 फ़ोन में ऐप इंस्टॉल करें</button>' : ''}
       ${others.length ? '<button class="btn ghost" id="um-sw">🔁 दूसरी कॉलोनी खोलें</button>' : ''}
@@ -390,12 +410,19 @@ async function boot() {
   loginScreen();
 }
 
-const TABS=[['home','होम','🏠','कॉलोनी की ताज़ा जानकारी एक नज़र में'],['houses','घर व निवासी','🏘️','हर घर के मालिक और किराएदार की जानकारी'],['parking','पार्किंग','🚗','गाड़ियों का रजिस्टर, मालिक की खोज और पार्किंग के नियम'],
-  ['cctv','CCTV / सुरक्षा','📹','कैमरों की स्थिति, रिकॉर्डिंग और फुटेज देखने का अनुरोध'],['maint','मेंटेनेंस','💰',()=>`हर महीने 1 से ${DD()} तारीख तक · ${rs(S.cfg.charge)} प्रति घर`],['comp','शिकायत / सुझाव','📣','अपनी शिकायत या सुझाव दर्ज करें, कमेटी जवाब देगी'],['acct','हिसाब-किताब','📒','कॉलोनी फंड में कितना आया, कितना खर्च हुआ'],
-  ['polls','पोल / वोटिंग','🗳️','कॉलोनी के फ़ैसलों पर अपनी राय दें'],['gallery','फोटो गैलरी','📷','कॉलोनी के कार्यक्रमों की यादें'],['svc','सेवाएँ','🧰','प्लंबर, इलेक्ट्रीशियन, कामवाली, दूध वाला: भरोसेमंद लोगों के नंबर'],['team','कमेटी सदस्य','🤝','कॉलोनी की कमेटी: कौन किस पद पर है और किससे किस काम के लिए बात करें'],['admin','एडमिन','👑','सिर्फ़ कमेटी के लिए: ज़रूरी काम, सेटिंग्स और जानकारी']];
-function visTabs(){return TABS.filter(t=>t[0]!=='admin'||isAdmin)}
+const TABS=[['home','होम','🏠',()=>isAdmin?'कॉलोनी की ताज़ा जानकारी एक नज़र में':'आपके घर की ताज़ा जानकारी: बकाया, संदेश और सूचनाएँ','b'],
+  ['myhouse','मेरा घर','🏡','आपका घर, परिवार और आपके घर में रहने वाले किराएदारों की जानकारी','r'],
+  ['houses','घर व निवासी','🏘️','हर घर के मालिक और किराएदार की जानकारी','a'],['tenants','किराएदार रजिस्टर','🪪','सभी घरों के किराएदारों का बायोडाटा, दस्तावेज़ और कमेटी की जाँच','a'],
+  ['parking','पार्किंग','🚗','गाड़ियों का रजिस्टर, मालिक की खोज और पार्किंग के नियम','a'],
+  ['cctv','CCTV / सुरक्षा','📹','कैमरों की स्थिति, रिकॉर्डिंग और फुटेज देखने का अनुरोध','b'],['maint','मेंटेनेंस','💰',()=>isAdmin?`हर महीने 1 से ${DD()} तारीख तक · ${rs(S.cfg.charge)} प्रति घर`:`आपके घर का मेंटेनेंस, बकाया और रसीदें · हर महीने 1 से ${DD()} तारीख तक`,'b'],
+  ['fees','शुल्क / चंदा','🪔',()=>isAdmin?'त्योहार, कार्यक्रम और दूसरे शुल्क: किसने दिया, किसका बाकी है':'त्योहार और कार्यक्रम के शुल्क: आपका भुगतान और बकाया','b'],
+  ['comp','शिकायत / सुझाव','📣',()=>isAdmin?'निवासियों की शिकायतें और सुझाव: स्थिति बदलें और जवाब दें':'अपनी शिकायत भेजें और उसकी स्थिति देखें। आपकी शिकायत सिर्फ़ आप और कमेटी देख सकते हैं।','b'],
+  ['msgs','संदेश','✉️',()=>isAdmin?'सभी घरों, बकाया वाले घरों या चुने हुए घरों को संदेश भेजें':'कमेटी से आए आपके संदेश','b'],
+  ['acct','हिसाब-किताब','📒',()=>isAdmin?'कॉलोनी फंड में कितना आया, कितना खर्च हुआ':'कॉलोनी फंड का कुल हिसाब: कितना आया, कितना खर्च हुआ, कितना बचा','b'],
+  ['polls','पोल / वोटिंग','🗳️','कॉलोनी के फ़ैसलों पर अपनी राय दें','b'],['gallery','फोटो गैलरी','📷','कॉलोनी के कार्यक्रमों की यादें','b'],['svc','सेवाएँ','🧰','प्लंबर, इलेक्ट्रीशियन, कामवाली, दूध वाला: भरोसेमंद लोगों के नंबर','b'],['team','कमेटी सदस्य','🤝','कॉलोनी की कमेटी: कौन किस पद पर है और किससे किस काम के लिए बात करें','b'],['admin','एडमिन','👑','सिर्फ़ कमेटी के लिए: सदस्य, लॉगिन, ज़रूरी काम और सेटिंग्स','a']];
+function visTabs(){return TABS.filter(t=>t[4]==='b'||(t[4]==='a'?isAdmin:!isAdmin))}
 const OCC={self:'मालिक स्वयं रहते हैं',rent:'किराए पर',vacant:'खाली'};
-const CATS=['पार्किंग','सफाई','पानी','बिजली / स्ट्रीट लाइट','सुरक्षा','सड़क / नाली','पार्क','अन्य'];
+const CATS=['घर की लाइट / बिजली','स्ट्रीट लाइट','नाली सफ़ाई','कचरा गाड़ी','CCTV','पानी','सड़क','पार्किंग','सफाई','सुरक्षा','पार्क','अन्य'];
 const STAT={new:['नई','p-warn'],work:['काम चल रहा है','p-info'],done:['हल हो गई','p-ok']};
 const MODES=['नकद','UPI','चेक','बैंक ट्रांसफर'];
 const EXCATS=['सफाई कर्मचारी','चौकीदार','बिजली बिल','पानी / मोटर','मरम्मत','CCTV','कार्यक्रम / त्योहार','स्टेशनरी / प्रिंट','अन्य'];
@@ -410,21 +437,24 @@ const INCATS=['दान / चंदा','जुर्माना / लेट �
 /* cash book: opening balance + maintenance (one row per month of payment date) + other income − expenses */
 function isIn(e){return e.kind==='in'}
 function sumA(a){return a.reduce((s,x)=>s+Number(x.amount||0),0)}
-function fund(){return Number(S.cfg.openBal||0)+sumA(S.payList)+sumA(S.exp.filter(isIn))-sumA(S.exp.filter(e=>!isIn(e)))}
+function fund(){return Number(S.cfg.openBal||0)+sumA(S.payList)+sumA(S.feeList)+sumA(S.exp.filter(isIn))-sumA(S.exp.filter(e=>!isIn(e)))}
 function bookRows(){
   const rows=S.exp.map(e=>({date:e.date||'',title:e.title,cat:e.cat,inc:isIn(e)?Number(e.amount||0):0,out:isIn(e)?0:Number(e.amount||0),e}));
   const bym={};S.payList.forEach(p=>{const m=String(p.date||p.month).slice(0,7);(bym[m]=bym[m]||[]).push(p)});
   Object.entries(bym).forEach(([m,ps])=>{const last=ps.map(p=>p.date||m+'-01').sort().pop();rows.push({date:last,title:`मेंटेनेंस वसूली · ${mLong(m)}`,cat:`${ps.length} भुगतान`,inc:sumA(ps),out:0,maint:true,m})});
+  const byf={};S.feeList.forEach(p=>{(byf[p.fee]=byf[p.fee]||[]).push(p)});
+  Object.values(byf).forEach(ps=>{const last=ps.map(p=>p.date||'').sort().pop()||today();rows.push({date:last,title:`शुल्क / चंदा · ${ps[0].feeTitle||''}`,cat:`${ps.length} भुगतान`,inc:sumA(ps),out:0,fee:true})});
   rows.sort((a,b)=>a.date.localeCompare(b.date)||(a.maint?-1:1));
   let bal=Number(S.cfg.openBal||0);rows.forEach(r=>{bal+=r.inc-r.out;r.bal=bal});return rows}
-const S={cfg:{name:'लक्ष्मण विहार',charge:500,start:'2026-04',contacts:[]},houses:[],pay:{},payList:[],comp:[],notices:[],exp:[],polls:[],pv:{},photos:[],veh:[],svc:[],sv:{},team:[],cams:[],clog:[],cv:{},claims:[],members:[]};
+const S={cfg:{name:'लक्ष्मण विहार',charge:500,start:'2026-04',contacts:[]},houses:[],pay:{},payList:[],comp:[],notices:[],exp:[],polls:[],pv:{},photos:[],veh:[],svc:[],sv:{},team:[],cams:[],clog:[],cv:{},claims:[],members:[],
+  tenants:[],fees:[],feepay:{},feeList:[],inbox:[],summary:null,audit:[],joins:[]};
 const S0=JSON.stringify(S);
 function resetState(){Object.assign(S,JSON.parse(S0));tab='home'}
 const VT={car:['कार','🚗'],bike:['बाइक / स्कूटी','🏍️'],other:['अन्य','🚙']};
 const PARK=['घर के अंदर','घर के सामने','गली में','पार्किंग एरिया में'];
 const DEFAULT_RULES='1. अपनी गाड़ी अपने घर के अंदर या ठीक सामने ही खड़ी करें।\n2. किसी के गेट, मोड़ या गली के बीच में गाड़ी न खड़ी करें।\n3. मेहमानों की गाड़ी पार्क / खाली जगह के पास तय जगह पर लगवाएँ।\n4. रात में गली में डबल पार्किंग न करें, एम्बुलेंस का रास्ता खुला रहे।\n5. नई गाड़ी खरीदें तो कमेटी को नंबर बताएँ ताकि रजिस्टर में जुड़ जाए।';
-let assets=null,db=null,isAdmin=false,uid=null,tab='home',status='loading',ME=null,MYCOL=[],COLONY=null,MEM=null,isOwner=false;
-const F={q:'',occ:'all',view:'month',month:curMonth(),cstat:'all',ckind:'all',mq:'',am:'all',ak:'all',album:'all',vq:'',sq:'',scat:'all'};
+let houseFiles=null,assets=null,db=null,isAdmin=false,uid=null,tab='home',status='loading',ME=null,MYCOL=[],COLONY=null,MEM=null,isOwner=false;
+const F={tq:'',tf:'all',q:'',occ:'all',view:'month',month:curMonth(),cstat:'all',ckind:'all',mq:'',am:'all',ak:'all',album:'all',vq:'',sq:'',scat:'all'};
 function normV(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
 function vehOf(hid){return S.veh.filter(v=>v.house===hid)}
 
@@ -452,7 +482,7 @@ function lateCount(h){return S.payList.filter(p=>p.house===h.id&&isLate(p)).leng
 function ruleLine(){return `हर महीने की 1 से ${DD()} तारीख तक मेंटेनेंस जमा करना ज़रूरी है।${FEE()?` ${DD()} तारीख के बाद ${rs(FEE())} लेट फीस लगेगी।`:''}`}
 function sortHouses(a){return [...a].sort((x,y)=>String(x.no).localeCompare(String(y.no),'en',{numeric:true}))}
 function houseById(id){return S.houses.find(h=>h.id===id)}
-function hasExamples(){return [S.houses,S.payList,S.comp,S.notices,S.exp,S.polls,S.photos,S.veh,S.svc,S.team,S.clog].some(a=>a.some(d=>d.example))}
+function hasExamples(){return isAdmin&&[S.houses,S.payList,S.comp,S.notices,S.exp,S.polls,S.photos,S.veh,S.svc,S.team,S.clog,S.tenants,S.fees].some(a=>a.some(d=>d.example))}
 
 /* ---------- start a colony (after login) ---------- */
 function startColony(){
@@ -461,7 +491,7 @@ function startColony(){
   const err=e=>{console.warn(e);};
   db.doc('config/main').onSnapshot(s=>{if(s.exists)S.cfg={...S.cfg,...s.data()};document.getElementById('cname').textContent=S.cfg.name||MEM.name||CFG.APP_NAME;renderBody()},err);
   db.collection('houses').onSnapshot(q=>{S.houses=sortHouses(q.docs.map(d=>({id:d.id,...d.data()})));renderBody()},err);
-  db.collection('payments').onSnapshot(q=>{S.payList=q.docs.map(d=>({id:d.id,...d.data()}));S.pay={};S.payList.forEach(p=>S.pay[p.house+'_'+p.month]=p);renderBody()},err);
+  db.collection('payments').onSnapshot(q=>{S.payList=q.docs.map(d=>({id:d.id,...d.data()}));S.pay={};S.payList.forEach(p=>S.pay[p.house+'_'+p.month]=p);renderBody();summarySoon()},err);
   db.collection('complaints').onSnapshot(q=>{S.comp=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.date).localeCompare(String(a.date)));renderBody()},err);
   db.collection('notices').onSnapshot(q=>{S.notices=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.date).localeCompare(String(a.date)));renderBody()},err);
   db.collection('expenses').onSnapshot(q=>{S.exp=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.date).localeCompare(String(a.date)));renderBody()},err);
@@ -476,6 +506,10 @@ function startColony(){
   db.collection('gallery').onSnapshot(q=>{S.photos=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.date).localeCompare(String(a.date)));renderBody()},err);
   db.collection('compvotes').onSnapshot(q=>{S.cv={};q.docs.forEach(d=>S.cv[d.id]=d.data());renderBody()},err);
   db.collection('payclaims').onSnapshot(q=>{S.claims=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.date).localeCompare(String(a.date)));renderBody()},err);
+  db.collection('tenants').onSnapshot(q=>{S.tenants=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.houseNo).localeCompare(String(b.houseNo),'en',{numeric:true})||String(a.name).localeCompare(String(b.name)));renderBody();purgeOldTenants()},err);
+  db.collection('fees').onSnapshot(q=>{S.fees=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));renderBody()},err);
+  db.collection('feepay').onSnapshot(q=>{S.feeList=q.docs.map(d=>({id:d.id,...d.data()}));S.feepay={};S.feeList.forEach(p=>S.feepay[p.fee+'_'+p.house]=p);renderBody();summarySoon()},err);
+  db.collection('inbox').onSnapshot(q=>{S.inbox=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.at||'').localeCompare(String(a.at||'')));renderBody()},err);
   renderAll();
 }
 
@@ -517,15 +551,15 @@ const SHELL={
     <input class="grow" id="vq" type="search" placeholder="गाड़ी नंबर से मालिक खोजें, जैसे 1234 या MP09AB" value="${esc(F.vq)}">
     <button class="btn ghost" data-act="parkComp">गलत पार्किंग की शिकायत</button>
     ${isAdmin?'<button class="btn" data-act="addVeh">+ गाड़ी जोड़ें</button>':''}</div>`,
-  maint:()=>`<div class="toolbar">
+  maint:()=>!isAdmin?'':`<div class="toolbar">
     <div class="seg" id="mview">${[['month','महीने की सूची'],['ledger','खाता (6 महीने)'],['due','बकाया सूची']].map(([k,l])=>`<button data-v="${k}" aria-pressed="${F.view===k}">${l}</button>`).join('')}</div>
     <input id="mon" type="month" value="${F.month}" style="width:auto" ${F.view==='due'?'hidden':''}>
     <span class="grow"></span>${S.cfg.upiId?'<button class="btn" data-act="payOnline">💳 ऑनलाइन मेंटेनेंस जमा करें</button>':(isAdmin?'<button class="btn ghost" data-act="settings">💳 UPI ID जोड़ें (ऑनलाइन भुगतान)</button>':'')}</div>`,
   comp:()=>`<div class="toolbar">
     <div class="seg" id="ckind">${[['all','सभी'],['complaint','शिकायतें'],['suggestion','सुझाव']].map(([k,l])=>`<button data-v="${k}" aria-pressed="${F.ckind===k}">${l}</button>`).join('')}</div>
     <select id="cstat" style="width:auto"><option value="all">हर स्थिति</option>${Object.entries(STAT).map(([k,v])=>`<option value="${k}" ${F.cstat===k?'selected':''}>${v[0]}</option>`).join('')}</select>
-    <button class="btn" data-act="addComp">+ शिकायत / सुझाव दर्ज करें</button></div>`,
-  acct:()=>{const ms=[...new Set(bookRows().map(r=>r.date.slice(0,7)).filter(Boolean))].sort().reverse();
+    ${isAdmin?'':'<button class="btn ghost" data-act="parkComp">🚗 गलत पार्किंग</button>'}<button class="btn" data-act="addComp">+ शिकायत / सुझाव दर्ज करें</button></div>`,
+  acct:()=>{if(!isAdmin)return '';const ms=[...new Set(bookRows().map(r=>r.date.slice(0,7)).filter(Boolean))].sort().reverse();
     return `<div class="toolbar">
     <div class="seg" id="akind">${[['all','सभी एंट्री'],['in','आय (+)'],['out','खर्च (−)']].map(([k,l])=>`<button data-v="${k}" aria-pressed="${F.ak===k}">${l}</button>`).join('')}</div>
     <select id="amon" style="width:auto"><option value="all">सभी महीने</option>${ms.map(m=>`<option value="${m}" ${F.am===m?'selected':''}>${mLong(m)}</option>`).join('')}</select>
@@ -553,6 +587,7 @@ function bindShell(){
 /* ---------- bodies ---------- */
 const BODY={
 home(){
+  if(!isAdmin)return homeResident();
   const cm=curMonth(),H=S.houses;
   const rent=H.filter(h=>h.occ==='rent').length,vac=H.filter(h=>h.occ==='vacant').length;
   const paid=H.filter(h=>S.pay[h.id+'_'+cm]).length;
@@ -561,7 +596,7 @@ home(){
   const coll=S.payList.reduce((s,p)=>s+Number(p.amount||0),0),spent=S.exp.reduce((s,e)=>s+Number(e.amount||0),0);
   const win=dl>=0?`<b>${mLong(cm)} का मेंटेनेंस जमा करने का समय चल रहा है।</b> आख़िरी तारीख ${DD()} ${mLong(cm)} है${dl===0?', यानी <b>आज</b>।':`, यानी ${dl} दिन बाकी हैं।`} ${pend?pend+' घरों का अभी बाकी है।':''}`
     :`<b>${mLong(cm)} की आख़िरी तारीख (${DD()}) निकल चुकी है।</b> ${H.filter(h=>dueMonths(h).includes(cm)).length} घरों का इस महीने का मेंटेनेंस देरी से बकाया है।`;
-  const myH=MEM&&MEM.house?S.houses.find(h=>String(h.no).replace(/\s/g,'').toLowerCase()===String(MEM.house).replace(/\s/g,'').toLowerCase()):null;
+  const myH=myHouse();
   const myCard=myH?(()=>{const d=dueMonths(myH),p=S.pay[myH.id+'_'+cm];return `<section class="panel" style="margin-top:16px;border:1.5px solid var(--tc)"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><div><div class="muted" style="font-size:13.5px">आपका घर</div><div class="hno">${esc(myH.no)}</div></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${p?`<span class="pill p-ok">✓ ${mLong(cm)} जमा</span><button class="btn sm ghost" data-act="receipt" data-id="${myH.id}" data-m="${cm}">रसीद</button>`:`<span class="pill ${d.length?'p-bad':'p-warn'}">${d.length?d.length+' महीने बकाया · '+rs(dueAmt(myH)):mLong(cm)+' का बाकी · '+DD()+' तारीख तक'}</span>`}
     ${(!p||d.length)&&S.cfg.upiId?`<button class="btn sm" data-act="payOnline" data-id="${myH.id}">💳 अभी जमा करें</button>`:''}</div></div></section>`})():'';
@@ -593,14 +628,14 @@ houses(){
   return `<p class="muted" style="margin:0 0 10px;font-size:14px">${list.length} घर</p><div class="list">${list.map(h=>{
     const d=dueMonths(h).length;
     return `<article class="card"><div class="row"><div><div class="hno">${esc(h.no)}</div><div class="muted" style="font-size:14px">${esc(h.owner)}${h.example?' · <span class="pill p-mar">उदाहरण</span>':''}</div></div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="pill ${h.occ==='rent'?'p-info':h.occ==='vacant'?'p-warn':'p-acc'}">${OCC[h.occ]||'—'}</span><span class="pill ${d?'p-bad':pendingNow(h)?'p-warn':'p-ok'}">${d?d+' महीने बकाया':pendingNow(h)?'इस महीने का बाकी':'मेंटेनेंस पूरा'}</span>${lateCount(h)>=2?`<span class="pill p-mar">${lateCount(h)} बार देर से दिया</span>`:''}</div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="pill ${h.occ==='rent'?'p-info':h.occ==='vacant'?'p-warn':'p-acc'}">${OCC[h.occ]||'—'}</span><span class="pill ${d?'p-bad':pendingNow(h)?'p-warn':'p-ok'}">${d?d+' महीने बकाया':pendingNow(h)?'इस महीने का बाकी':'मेंटेनेंस पूरा'}</span>${lateCount(h)>=2?`<span class="pill p-mar">${lateCount(h)} बार देर से दिया</span>`:''}${(()=>{const t=tenantsOf(h.id),pn=t.filter(x=>!x.verified).length;return t.length?`<span class="pill p-info">🪪 ${t.length} किराएदार${pn?' · '+pn+' की जाँच बाकी':''}</span>`:''})()}</div></div>
       <div class="kv">
         <div><span>मालिक का मोबाइल: </span><span class="num">${esc(h.ownerPhone||'—')}</span></div>
         <div><span>सदस्य: </span>${esc(h.members||'—')}</div>
         ${h.occ==='rent'?`<div><span>किराएदार: </span>${esc(h.tenant||'—')}</div><div><span>किराएदार मोबाइल: </span><span class="num">${esc(h.tenantPhone||'—')}</span></div><div><span>कब से: </span>${dFmt(h.tenantSince)||'—'}</div><div><span>पुलिस वेरिफिकेशन: </span>${h.police?'<span class="pill p-ok">हो गया</span>':'<span class="pill p-bad">नहीं हुआ</span>'}</div>`:''}
         <div><span>गाड़ियाँ: </span>${vehOf(h.id).length?vehOf(h.id).map(v=>(VT[v.type]?.[1]||'')+' '+esc(v.number)).join(', '):esc(h.vehicle||'—')}</div>
       </div>
-      ${isAdmin?`<div class="actions"><button class="btn sm ghost" data-act="editHouse" data-id="${h.id}">बदलें</button><button class="btn sm danger" data-act="delHouse" data-id="${h.id}">हटाएँ</button></div>`:''}
+      ${isAdmin?`<div class="actions"><button class="btn sm ghost" data-act="editHouse" data-id="${h.id}">बदलें</button><button class="btn sm ghost" data-act="houseTenants" data-id="${h.id}">🪪 किराएदार</button><button class="btn sm danger" data-act="delHouse" data-id="${h.id}">हटाएँ</button></div>`:''}
     </article>`}).join('')}</div>`;
 },
 cctv(){
@@ -676,13 +711,16 @@ svc(){
 },
 admin(){
   if(!isAdmin)return '<div class="empty">यह टैब सिर्फ़ कमेटी के लिए है।</div>';
-  const cm=curMonth(),pend=S.houses.filter(h=>m0(h)).length,od=S.houses.filter(h=>dueMonths(h).length).length,open=S.comp.filter(c=>c.status!=='done').length,unver=S.houses.filter(h=>h.occ==='rent'&&!h.police).length;
+  const cm=curMonth(),pend=S.houses.filter(h=>m0(h)).length,od=S.houses.filter(h=>dueMonths(h).length).length,open=S.comp.filter(c=>c.status!=='done').length,unver=S.tenants.filter(t=>t.status!=='left'&&!t.verified).length,nopol=S.tenants.filter(t=>t.status!=='left'&&t.police!=='done').length;
   function m0(h){return cm>=hStart(h)&&!S.pay[h.id+'_'+cm]}
   const q=(t,e,l,d,act,extra='')=>`<button style="--tc:var(--t-${t})" data-act="${act}" ${extra}><span class="e">${e}</span><b>${l}</b><span class="muted" style="font-size:13px">${d}</span></button>`;
   return `${exBanner()}
   <h2>जल्दी के काम</h2>
   <div class="quick">
     ${q('houses','🏘️','नया घर जोड़ें','मालिक और किराएदार','addHouse')}
+    ${q('tenants','🪪','किराएदार जोड़ें','बायोडाटा और दस्तावेज़','addTenant')}
+    ${q('msgs','✉️','संदेश भेजें','सभी या चुने हुए घरों को','addMsg')}
+    ${q('fees','🪔','नया शुल्क / चंदा','नवरात्रि, जयंती, कार्यक्रम','addFee')}
     ${q('parking','🚗','गाड़ी जोड़ें','कार या बाइक का नंबर','addVeh')}
     ${q('maint','💰','मेंटेनेंस जमा करें','इस महीने की सूची खोलें','goto','data-id="maint" data-m="month"')}
     ${q('maint','⏰','बकाया सूची','याद दिलाने के संदेश भेजें','goto','data-id="maint" data-m="due"')}
@@ -701,7 +739,9 @@ admin(){
     <div class="stat" style="--tc:var(--t-maint)"><b>${pend}</b><span>घरों का ${mLong(cm)} का मेंटेनेंस बाकी</span></div>
     <div class="stat bad" style="--tc:var(--bad)"><b>${od}</b><span>घर जिनका पैसा देरी से बकाया है</span></div>
     <div class="stat" style="--tc:var(--t-comp)"><b>${open}</b><span>शिकायतें जिनका जवाब देना है</span></div>
-    <div class="stat" style="--tc:var(--t-houses)"><b>${unver}</b><span>किराएदार बिना पुलिस वेरिफिकेशन</span></div>
+    <div class="stat" style="--tc:var(--t-tenants)"><b>${unver}</b><span>किराएदार जिनकी कमेटी जाँच बाकी है</span></div>
+    <div class="stat" style="--tc:var(--t-tenants)"><b>${nopol}</b><span>किराएदार बिना पुलिस वेरिफिकेशन</span></div>
+    <div class="stat" style="--tc:var(--t-admin)"><b>${S.joins.length}</b><span>जुड़ने के अनुरोध</span></div>
   </div>
   <div class="grid2" style="margin-top:20px">
     <section class="panel"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><h2 style="margin:0">कॉलोनी की सेटिंग्स</h2><button class="btn sm" data-act="settings">बदलें</button></div>
@@ -716,13 +756,19 @@ admin(){
       </div></section>
     <section class="panel"><h2 style="margin:0">ऐप में लॉगिन</h2>
       <p style="margin:12px 0 0">जिन लोगों का मोबाइल नंबर या ईमेल नीचे <b>“लॉगिन वाले सदस्य”</b> में जुड़ा है, सिर्फ़ वही OTP से लॉगिन करके ऐप खोल सकते हैं।</p>
-      <ul style="margin:10px 0 0;padding-left:20px;display:grid;gap:4px"><li><b>👑 एडमिन:</b> सब कुछ जोड़ और बदल सकते हैं।</li><li><b>🏠 निवासी:</b> सब देख सकते हैं, शिकायत, वोट और भुगतान की सूचना भेज सकते हैं।</li></ul>
+      <ul style="margin:10px 0 0;padding-left:20px;display:grid;gap:4px"><li><b>👑 कमेटी (एडमिन):</b> सभी घर, किराएदार, बकाया और हिसाब देख और बदल सकते हैं। नया एडमिन सिर्फ़ <b>अध्यक्ष या सचिव</b> बना सकते हैं।</li><li><b>🏠 निवासी:</b> सिर्फ़ अपना घर, अपने किराएदार, अपना मेंटेनेंस और अपनी शिकायतें देख सकते हैं, और कॉलोनी की आम जानकारी (सूचना, पोल, कमेटी, सेवाएँ, कुल हिसाब)। दूसरे घरों की कोई जानकारी उन्हें नहीं दिखती।</li></ul>
+      ${MEM.code?`<p style="margin:12px 0 0">कॉलोनी कोड: <b class="num" style="font-size:18px;letter-spacing:.08em">${esc(MEM.code)}</b><br><span class="muted" style="font-size:13.5px">नया निवासी लॉगिन करके यह कोड डालकर जुड़ने का अनुरोध भेज सकता है। मंज़ूरी आप देंगे।</span></p>`:''}
+      <p class="muted" style="margin:10px 0 0;font-size:13.5px">आप: ${esc(MEM.member_name||meLabel())}${MEM.post?' · '+esc(MEM.post):''} · ${isChief()?'✓ आप एडमिन जोड़ / बदल सकते हैं':'एडमिन जोड़ने / बदलने का अधिकार सिर्फ़ अध्यक्ष / सचिव को है'}</p>
       ${isOwner?'<button class="btn sm ghost" style="margin-top:12px" data-act="ownerPanel">👑 ऐप मालिक पैनल (सभी कॉलोनियाँ)</button>':''}</section>
   </div>
+  ${joinBox()}
   <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;margin-top:28px"><h2 style="margin:0">लॉगिन वाले सदस्य <span class="muted" style="font-family:var(--body);font-size:15px">· ${S.members.length}</span></h2>
     <span class="actions" style="margin:0"><button class="btn sm ghost" data-act="bulkMem">🏘️ घरों के नंबर से सबको जोड़ें</button><button class="btn sm" data-act="addLogin">+ सदस्य जोड़ें</button></span></div>
   <div class="toolbar"><input class="grow" id="mq" type="search" placeholder="नाम, नंबर या मकान से खोजें" value="${esc(F.mq||'')}"></div>
-  ${S.members.length?`<div class="scroll"><table><thead><tr><th>नाम</th><th>मोबाइल / ईमेल</th><th>मकान</th><th>भूमिका</th><th></th></tr></thead><tbody>${S.members.filter(m=>{const q=(F.mq||'').trim().toLowerCase();return !q||[m.name,m.phone10,m.email,m.house].some(v=>String(v||'').toLowerCase().includes(q))}).map(m=>`<tr><td>${esc(m.name||'—')}</td><td class="num">${m.phone10?esc(m.phone10):''}${m.email?'<div class="muted" style="font-size:13px">'+esc(m.email)+'</div>':''}</td><td>${esc(m.house||'—')}</td><td><span class="pill ${m.role==='admin'?'p-mar':'p-acc'}">${m.role==='admin'?'👑 एडमिन':'🏠 निवासी'}</span></td><td><button class="btn sm ghost" data-act="editLogin" data-id="${m.id}">बदलें</button> <button class="btn sm danger" data-act="delLogin" data-id="${m.id}">हटाएँ</button></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">अभी कोई सदस्य नहीं जुड़ा। “घरों के नंबर से सबको जोड़ें” दबाएँ या एक-एक करके जोड़ें।</div>'}`;
+  ${S.members.length?`<div class="scroll"><table><thead><tr><th>नाम</th><th>मोबाइल / ईमेल</th><th>मकान</th><th>भूमिका / पद</th><th>स्थिति</th><th></th></tr></thead><tbody>${S.members.filter(m=>{const q=(F.mq||'').trim().toLowerCase();return !q||[m.name,m.phone10,m.email,m.house,m.post].some(v=>String(v||'').toLowerCase().includes(q))}).sort((a,b)=>(a.role==='admin'?0:1)-(b.role==='admin'?0:1)||postRank(a.post)-postRank(b.post)||String(a.house).localeCompare(String(b.house),'en',{numeric:true})).map(m=>{const lock=m.role==='admin'&&!isChief();const hl=m.house_id?houseById(m.house_id):null;
+    return `<tr><td>${esc(m.name||'—')}</td><td class="num">${m.phone10?esc(m.phone10):''}${m.email?'<div class="muted" style="font-size:13px">'+esc(m.email)+'</div>':''}</td><td>${esc((hl&&hl.no)||m.house||'—')}${m.house&&!m.house_id?' <span class="pill p-warn" title="घर से नहीं जुड़ा">घर नहीं जुड़ा</span>':''}</td><td><span class="pill ${m.role==='admin'?'p-mar':'p-acc'}">${m.role==='admin'?'👑 एडमिन':'🏠 निवासी'}</span>${m.post?' <span class="muted" style="font-size:13.5px">'+esc(m.post)+'</span>':''}</td><td>${m.blocked?'<span class="pill p-bad">🚫 रोका गया</span>':'<span class="pill p-ok">चालू</span>'}</td>
+    <td>${lock?'<span class="muted" style="font-size:13px">सिर्फ़ अध्यक्ष / सचिव</span>':`<button class="btn sm ghost" data-act="editLogin" data-id="${m.id}">बदलें</button> <button class="btn sm ghost" data-act="blockLogin" data-id="${m.id}">${m.blocked?'चालू करें':'रोकें'}</button> <button class="btn sm danger" data-act="delLogin" data-id="${m.id}">हटाएँ</button>`}</td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">अभी कोई सदस्य नहीं जुड़ा। “घरों के नंबर से सबको जोड़ें” दबाएँ या एक-एक करके जोड़ें।</div>'}
+  ${auditBox()}`;
 },
 parking(){
   const V=S.veh,cars=V.filter(v=>v.type==='car'),bikes=V.filter(v=>v.type==='bike'),out=V.filter(v=>v.parkAt==='गली में').length;
@@ -744,20 +790,20 @@ parking(){
   ${V.length?`<div class="scroll"><table><thead><tr><th>मकान</th><th>गाड़ी</th><th>नंबर</th><th>मॉडल / रंग</th><th>कहाँ खड़ी होती है</th>${isAdmin?'<th></th>':''}</tr></thead><tbody>${V.map(v=>`<tr><td><b>${esc((houseById(v.house)||{}).no||v.houseNo)}</b></td><td>${VT[v.type]?.[1]||''} ${esc(VT[v.type]?.[0]||'')}</td><td class="num"><b>${esc(v.number)}</b>${v.example?' <span class="pill p-mar">उदाहरण</span>':''}</td><td>${esc(v.model||'—')}</td><td>${v.parkAt==='गली में'?`<span class="pill p-bad">${esc(v.parkAt)}</span>`:esc(v.parkAt||'—')}</td>${isAdmin?`<td><button class="btn sm ghost" data-act="editVeh" data-id="${v.id}">बदलें</button> <button class="btn sm danger" data-act="delVeh" data-id="${v.id}">हटाएँ</button></td>`:''}</tr>`).join('')}</tbody></table></div>`
   :`<div class="empty">अभी कोई गाड़ी दर्ज नहीं है। ${isAdmin?'“गाड़ी जोड़ें” से हर घर की कार और बाइक के नंबर दर्ज करें।':''}</div>`}`;
 },
-maint(){return claimsBox()+maintMain()}
+maint(){return claimsBox()+(isAdmin?maintMain():maintMine())}
 };
 function claimsBox(){
   const pend=S.claims.filter(c=>c.status==='pending');
   if(isAdmin){
     if(!pend.length)return '';
     return `<section class="panel" style="margin-bottom:16px;border:1.5px solid var(--tc)"><h2 style="margin:0">🔔 भुगतान की पुष्टि बाकी <span class="pill p-warn">${pend.length}</span></h2><p class="muted" style="margin:4px 0 10px;font-size:14px">निवासियों ने UPI से भुगतान करके सूचना भेजी है। बैंक / UPI ऐप में पैसा आया है या नहीं, जाँचकर पुष्टि करें।</p>
-    <div class="list">${pend.map(c=>`<div class="card"><div class="row" style="align-items:center"><div><b>मकान ${esc(c.houseNo)}</b> · ${mLong(c.month)} · <b class="num">${rs(c.amount)}</b><div class="muted" style="font-size:13.5px">UTR / रेफ़रेंस: <b class="num">${esc(c.ref||'—')}</b> · ${dFmt(c.date)} · ${esc(c.name||'')}</div></div>
+    <div class="list">${pend.map(c=>`<div class="card"><div class="row" style="align-items:center"><div><b>मकान ${esc(c.houseNo)}</b> · ${c.fee?'🪔 '+esc(c.feeTitle||'शुल्क'):mLong(c.month)} · <b class="num">${rs(c.amount)}</b><div class="muted" style="font-size:13.5px">UTR / रेफ़रेंस: <b class="num">${esc(c.ref||'—')}</b> · ${dFmt(c.date)} · ${esc(c.name||'')}</div></div>
       <span class="actions" style="margin:0"><button class="btn sm" style="--tc:var(--ok);--tc-ink:var(--surface)" data-act="claimOk" data-id="${c.id}">✓ पैसा आ गया, पुष्टि करें</button><button class="btn sm danger" data-act="claimNo" data-id="${c.id}">✗ नहीं आया</button></span></div></div>`).join('')}</div></section>`;
   }
   const mine=S.claims.filter(c=>c.by===uid).slice(0,5);
   if(!mine.length)return '';
   const st={pending:['पुष्टि बाकी','p-warn'],approved:['✓ पुष्टि हो गई','p-ok'],rejected:['✗ पैसा नहीं मिला, कमेटी से बात करें','p-bad']};
-  return `<section class="panel" style="margin-bottom:16px"><h2 style="margin:0;font-size:20px">आपकी भेजी भुगतान सूचनाएँ</h2><div class="contacts" style="margin-top:10px">${mine.map(c=>`<div><span>मकान ${esc(c.houseNo)} · ${mLong(c.month)} · <b class="num">${rs(c.amount)}</b></span><span class="pill ${(st[c.status]||st.pending)[1]}">${(st[c.status]||st.pending)[0]}</span></div>`).join('')}</div></section>`;
+  return `<section class="panel" style="margin-bottom:16px"><h2 style="margin:0;font-size:20px">आपकी भेजी भुगतान सूचनाएँ</h2><div class="contacts" style="margin-top:10px">${mine.map(c=>`<div><span>मकान ${esc(c.houseNo)} · ${c.fee?'🪔 '+esc(c.feeTitle||'शुल्क'):mLong(c.month)} · <b class="num">${rs(c.amount)}</b></span><span class="pill ${(st[c.status]||st.pending)[1]}">${(st[c.status]||st.pending)[0]}</span></div>`).join('')}</div></section>`;
 }
 function maintMain(){
   if(!S.houses.length)return `<div class="empty">पहले “घर व निवासी” में घर जोड़ें, फिर यहाँ मेंटेनेंस दर्ज होगा।</div>`;
@@ -791,35 +837,37 @@ function maintMain(){
 Object.assign(BODY,{
 comp(){
   const list=S.comp.filter(c=>(F.ckind==='all'||c.kind===F.ckind)&&(F.cstat==='all'||c.status===F.cstat));
-  if(!S.comp.length)return `<div class="empty">अभी कोई शिकायत या सुझाव दर्ज नहीं है। ऊपर के बटन से पहली शिकायत दर्ज करें।</div>`;
+  if(!S.comp.length)return `<div class="empty">${isAdmin?'अभी कोई शिकायत या सुझाव दर्ज नहीं है।':'आपने अभी कोई शिकायत या सुझाव नहीं भेजा है। ऊपर “शिकायत / सुझाव दर्ज करें” दबाएँ, जैसे स्ट्रीट लाइट बंद है, नाली साफ़ नहीं हुई या कचरा गाड़ी नहीं आई।'}</div>`;
   if(!list.length)return `<div class="empty">इस फ़िल्टर में कुछ नहीं मिला।</div>`;
   return `<div class="list">${list.map(c=>{const st=STAT[c.status]||STAT.new;const v=Object.values(S.cv).filter(x=>x&&x[c.id]).length;const mine=uid&&S.cv[uid]&&S.cv[uid][c.id];
     return `<article class="card"><div class="row"><div style="min-width:0"><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px"><span class="pill ${c.kind==='suggestion'?'p-mar':'p-acc'}">${c.kind==='suggestion'?'सुझाव':'शिकायत'}</span><span class="pill p-info" style="background:var(--bg);color:var(--muted)">${esc(c.cat)}</span>${c.example?'<span class="pill p-mar">उदाहरण</span>':''}</div>
       <h3>${esc(c.title)}</h3></div><span class="pill ${st[1]}">${st[0]}</span></div>
       <p style="margin:6px 0;white-space:pre-wrap">${esc(c.text)}</p>
       <div class="muted" style="font-size:13.5px">मकान ${esc(c.house||'—')} · ${esc(c.name||'')} · ${dFmt(c.date)}</div>
+      ${c.photo?`<div class="docs" style="margin-top:8px"><button class="ph" data-act="viewComp" data-id="${c.id}" aria-label="शिकायत की फोटो"><img src="${PIX}" data-img="${esc(c.photo)}" alt="शिकायत की फोटो"></button></div>`:''}
       ${c.vnum?(()=>{const v=S.veh.find(x=>normV(x.number)===normV(c.vnum)||(normV(c.vnum).length>=4&&normV(x.number).endsWith(normV(c.vnum))));const h=v&&houseById(v.house);return `<div style="margin-top:6px;font-size:14px">गाड़ी <b>${esc(c.vnum)}</b>: ${h?`मकान <b>${esc(h.no)}</b> (${esc(h.owner)})${isAdmin&&h.ownerPhone?' · <span class="num">'+esc(h.ownerPhone)+'</span>':''}`:'<span class="muted">रजिस्टर में नहीं मिली, शायद बाहर की गाड़ी है</span>'}</div>`})():''}
       ${c.reply?`<div class="notice" style="margin:10px 0 0"><b style="font-size:14px">कमेटी का जवाब</b><p>${esc(c.reply)}</p></div>`:''}
-      <div class="actions">${uid?`<button class="btn sm ${mine?'':'ghost'}" data-act="vote" data-id="${c.id}" aria-pressed="${!!mine}">👍 सहमत ${v?'· '+v:''}</button>`:(v?`<span class="votes muted">👍 ${v} लोग सहमत</span>`:'')}
-      ${isAdmin?`<button class="btn sm ghost" data-act="handleComp" data-id="${c.id}">स्थिति / जवाब</button><button class="btn sm danger" data-act="delComp" data-id="${c.id}">हटाएँ</button>`:''}</div></article>`}).join('')}</div>`;
+      ${isAdmin?`<div class="actions"><button class="btn sm ghost" data-act="handleComp" data-id="${c.id}">स्थिति / जवाब</button><button class="btn sm danger" data-act="delComp" data-id="${c.id}">हटाएँ</button></div>`:''}</article>`}).join('')}</div>`;
 },
 acct(){
-  const ob=Number(S.cfg.openBal||0),mt=sumA(S.payList),oi=sumA(S.exp.filter(isIn)),sp=sumA(S.exp.filter(e=>!isIn(e))),bal=ob+mt+oi-sp;
+  if(!isAdmin)return acctResident();
+  const ob=Number(S.cfg.openBal||0),mt=sumA(S.payList),fe=sumA(S.feeList),oi=sumA(S.exp.filter(isIn)),sp=sumA(S.exp.filter(e=>!isIn(e))),bal=ob+mt+fe+oi-sp;
   const all=bookRows(),rows=all.filter(r=>(F.am==='all'||r.date.startsWith(F.am))&&(F.ak==='all'||(F.ak==='in'?r.inc>0:r.out>0)));
   const fIn=rows.reduce((s,r)=>s+r.inc,0),fOut=rows.reduce((s,r)=>s+r.out,0);
   const outs=S.exp.filter(e=>!isIn(e)&&(F.am==='all'||String(e.date).startsWith(F.am)));const byCat={};outs.forEach(e=>byCat[e.cat]=(byCat[e.cat]||0)+Number(e.amount||0));const ct=sumA(outs);
   const mset=[...new Set(all.map(r=>r.date.slice(0,7)).filter(Boolean))].sort();let run=ob;
   const msum=mset.map(m=>{const r=all.filter(x=>x.date.startsWith(m));const mi=r.filter(x=>x.maint).reduce((s,x)=>s+x.inc,0),o=r.filter(x=>!x.maint).reduce((s,x)=>s+x.inc,0),x=r.reduce((s,y)=>s+y.out,0);run+=mi+o-x;return {m,mi,o,x,net:mi+o-x,run}}).reverse();
-  const act=r=>r.maint?`<button class="btn sm ghost" data-act="goto" data-id="maint" data-m="month">देखें</button>`:`${r.e.bill?`<button class="btn sm ghost" data-act="viewBill" data-id="${r.e.id}">🧾 बिल</button> `:''}${isAdmin?`<button class="btn sm ghost" data-act="editExp" data-id="${r.e.id}">बदलें</button> <button class="btn sm danger" data-act="delExp" data-id="${r.e.id}">हटाएँ</button>`:''}`;
+  const act=r=>r.maint?`<button class="btn sm ghost" data-act="goto" data-id="maint" data-m="month">देखें</button>`:r.fee?`<button class="btn sm ghost" data-act="goto" data-id="fees">देखें</button>`:`${r.e.bill?`<button class="btn sm ghost" data-act="viewBill" data-id="${r.e.id}">🧾 बिल</button> `:''}${isAdmin?`<button class="btn sm ghost" data-act="editExp" data-id="${r.e.id}">बदलें</button> <button class="btn sm danger" data-act="delExp" data-id="${r.e.id}">हटाएँ</button>`:''}`;
   return `${exBanner()}
   <div class="stats" style="margin-top:${hasExamples()?'16px':'0'}">
     <div class="stat"><b>${rs(ob)}</b><span>शुरुआती बचत${isAdmin?' · <a href="#" data-act="setOpen" style="color:var(--tc)">बदलें</a>':''}</span></div>
     <div class="stat ok"><b>+${rs(mt)}</b><span>मेंटेनेंस से आय</span></div>
+    <div class="stat ok"><b>+${rs(fe)}</b><span>शुल्क / चंदा से आय</span></div>
     <div class="stat ok"><b>+${rs(oi)}</b><span>दूसरी आय (दान, जुर्माना…)</span></div>
     <div class="stat bad"><b>−${rs(sp)}</b><span>कुल खर्च</span></div>
     <div class="stat ${bal>=0?'ok':'bad'}" style="--tc:${bal>=0?'var(--ok)':'var(--bad)'}"><b>${rs(bal)}</b><span>अभी फंड में बची रकम</span></div>
   </div>
-  <p class="muted num" style="font-size:14px;margin:10px 0 0">हिसाब: ${rs(ob)} + ${rs(mt)} + ${rs(oi)} − ${rs(sp)} = <b style="color:var(--ink)">${rs(bal)}</b></p>
+  <p class="muted num" style="font-size:14px;margin:10px 0 0">हिसाब: ${rs(ob)} + ${rs(mt)} + ${rs(fe)} + ${rs(oi)} − ${rs(sp)} = <b style="color:var(--ink)">${rs(bal)}</b></p>
 
   <h2>रोकड़ बही (हर एंट्री के बाद बची रकम)</h2>
   ${rows.length?`<div class="scroll"><table><thead><tr><th>तारीख</th><th>विवरण</th><th>श्रेणी</th><th class="r">आय (+)</th><th class="r">खर्च (−)</th><th class="r">बाकी रकम</th><th></th></tr></thead><tbody>
@@ -864,9 +912,9 @@ const dlg=document.getElementById('dlg');
 function field(f,v){const id='f_'+f.k;v=v??f.def??'';
   if(f.type==='select')return `<div class="f"><label for="${id}">${f.label}</label><select id="${id}" name="${f.k}">${f.options.map(o=>{const [val,l]=Array.isArray(o)?o:[o,o];return `<option value="${esc(val)}" ${String(v)===String(val)?'selected':''}>${esc(l)}</option>`}).join('')}</select></div>`;
   if(f.type==='textarea')return `<div class="f"><label for="${id}">${f.label}</label><textarea id="${id}" name="${f.k}" placeholder="${esc(f.ph||'')}" ${f.req?'required':''}>${esc(v)}</textarea></div>`;
-  if(f.type==='file')return `<div class="f"><label for="${id}">${f.label}</label><input id="${id}" name="${f.k}" type="file" accept="image/*" multiple ${f.req?'required':''}></div>`;
-  if(f.type==='check')return `<div class="f check"><label><input type="checkbox" id="${id}" name="${f.k}" ${v?'checked':''}> ${f.label}</label></div>`;
-  return `<div class="f" ${f.show?`data-show="${f.show}"`:''}><label for="${id}">${f.label}</label><input id="${id}" name="${f.k}" type="${f.type||'text'}" value="${esc(v)}" placeholder="${esc(f.ph||'')}" ${f.req?'required':''} ${f.type==='number'?'min="0" step="1" inputmode="numeric"':''}></div>`}
+  if(f.type==='file')return `<div class="f"><label for="${id}">${f.label}</label><input id="${id}" name="${f.k}" type="file" accept="image/*" ${f.one?'':'multiple'} ${f.req?'required':''}></div>`;
+  if(f.type==='check')return `<div class="f check"><label><input type="checkbox" id="${id}" name="${f.k}" ${v?'checked':''} ${f.req?'required':''}> ${f.label}</label></div>`;
+  return `<div class="f" ${f.show?`data-show="${f.show}"`:''}><label for="${id}">${f.label}</label><input id="${id}" name="${f.k}" type="${f.type||'text'}" value="${esc(v)}" placeholder="${esc(f.ph||'')}" ${f.req?'required':''} ${f.type==='number'?'min="0" step="1" inputmode="numeric"':''} ${f.max?`maxlength="${f.max}"`:''} ${f.num?'inputmode="numeric"':''}></div>`}
 function openForm(title,fields,vals,onSave,extra){
   dlg.innerHTML=`<form id="frm"><h3>${title}</h3>${extra||''}${fields.map(f=>field(f,vals?.[f.k])).join('')}<div class="err" id="ferr"></div><div class="dfoot"><button type="button" class="btn ghost" data-close>रद्द करें</button><button class="btn" type="submit">सेव करें</button></div></form>`;
   const frm=dlg.querySelector('#frm');
@@ -893,6 +941,7 @@ const HOUSE_F=[
 
 /* ---------- actions ---------- */
 async function act(a,id,m){
+  if(ACT2[a])return ACT2[a](id,m);
   const ch=Number(S.cfg.charge||0);
   if(a==='addHouse')openForm('नया घर जोड़ें',HOUSE_F,{occ:'self'},async v=>{await db.collection('houses').add({...v,example:false})});
   if(a==='editHouse'){const h=houseById(id);openForm('घर की जानकारी बदलें · '+esc(h.no),HOUSE_F,h,async v=>{await db.doc('houses/'+id).update(v)})}
@@ -915,13 +964,16 @@ async function act(a,id,m){
     const ph=String(h.ownerPhone||'').replace(/\D/g,'').slice(-10);
     dlg.innerHTML=`<div class="dbody"><h3>याद दिलाने का संदेश</h3><div class="receipt" style="white-space:pre-wrap">${esc(txt)}</div><div class="err" id="ferr" style="color:var(--ok)"></div><div class="dfoot">${ph.length===10?`<a class="btn ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/91${ph}?text=${encodeURIComponent(txt)}">WhatsApp पर भेजें</a>`:''}${waApiBtn(ph)}<button class="btn ghost" id="cp">कॉपी करें</button><button class="btn" data-close>बंद करें</button></div></div>`;
     dlg.querySelector('#cp').onclick=()=>copyText(txt);bindWaApi(ph,'reminder',[h.owner,S.cfg.name,h.no,String(d.length),rs(dueAmt(h)),String(DD())]);dlg.showModal()}
-  if(a==='addComp')openForm('शिकायत या सुझाव दर्ज करें',[
+  if(a==='addComp'){const h=myHouse();const fl=[
       {k:'kind',label:'यह क्या है',type:'select',options:[['complaint','शिकायत'],['suggestion','सुझाव']]},{k:'cat',label:'विषय',type:'select',options:CATS},
-      {k:'title',label:'छोटा शीर्षक',req:true,ph:'जैसे गली नंबर 3 की लाइट खराब'},{k:'text',label:'पूरी जानकारी',type:'textarea',req:true},
-      {k:'house',label:'आपका मकान नंबर',req:true},{k:'name',label:'आपका नाम',req:true}],null,
-    async v=>{await db.collection('complaints').add({...v,status:'new',reply:'',date:today(),votes:{},example:false})});
+      {k:'title',label:'छोटा शीर्षक',req:true,ph:'जैसे गली नंबर 3 की स्ट्रीट लाइट बंद है'},{k:'text',label:'पूरी जानकारी',type:'textarea',req:true,ph:'जैसे 3 दिन से रात में लाइट नहीं जल रही'},...whoFields()];
+    if(h&&houseFiles)fl.push({k:'files',label:'फोटो (वैकल्पिक)',type:'file',one:true});
+    openForm('शिकायत या सुझाव दर्ज करें',fl,null,
+    async(v,btn)=>{const f=(v.files||[])[0];delete v.files;const w=who(v);if(f&&h){btn.textContent='फोटो अपलोड हो रही है…';v.photo=(await houseFiles.upload(await shrink(f),h.id)).id}
+      await db.collection('complaints').add({...v,...w,status:'new',reply:'',date:today(),example:false})},
+    isAdmin?'':`<p class="muted" style="margin:0;font-size:14px">🔒 आपकी शिकायत सिर्फ़ आप और कमेटी देख सकते हैं। ${h?'मकान <b>'+esc(h.no)+'</b> की ओर से दर्ज होगी।':''}</p>`)}
   if(a==='handleComp'){const c=S.comp.find(x=>x.id===id);openForm('स्थिति और जवाब · '+esc(c.title),[
-      {k:'status',label:'स्थिति',type:'select',options:Object.entries(STAT).map(([k,v])=>[k,v[0]])},{k:'reply',label:'कमेटी का जवाब (सबको दिखेगा)',type:'textarea'}],c,
+      {k:'status',label:'स्थिति',type:'select',options:Object.entries(STAT).map(([k,v])=>[k,v[0]])},{k:'reply',label:'कमेटी का जवाब (शिकायत करने वाले घर को दिखेगा)',type:'textarea'}],c,
     async v=>{await db.doc('complaints/'+id).update(v)})}
   if(a==='delComp')confirmBox('यह शिकायत / सुझाव हमेशा के लिए हट जाएगा।','हाँ, हटाएँ',()=>db.doc('complaints/'+id).delete());
   if(a==='vote'){if(!uid)return;const cur={...(S.cv[uid]||{})};cur[id]=!cur[id];try{await db.doc('compvotes/'+uid).set(cur)}catch(e){console.warn(e)}}
@@ -966,11 +1018,11 @@ async function act(a,id,m){
       if(toAcct&&v.cost>0)await db.collection('expenses').add({kind:'out',title:'CCTV '+(LOGK[v.kind]||'')+(v.text?': '+v.text:''),cat:'CCTV',amount:v.cost,date:v.date,mode:'नकद',note:'',example:false})});
   if(a==='delLog')confirmBox('यह रिकॉर्ड हटा दिया जाएगा। (हिसाब-किताब में जुड़ा खर्च वहाँ से अलग हटाना होगा।)','हाँ, हटाएँ',()=>db.doc('cctvlog/'+id).delete());
   if(a==='footReq')openForm('🎞️ फुटेज देखने का अनुरोध',[{k:'when',label:'किस दिन और लगभग किस समय की फुटेज',req:true,ph:'जैसे 8 अक्टूबर, रात 10 से 11 बजे'},{k:'cam',label:'कौन सा कैमरा',type:'select',options:[['all','पता नहीं / सभी'],...S.cams.map(c=>[c.id,c.name+(c.place?' · '+c.place:'')])]},
-      {k:'why',label:'क्यों देखनी है',type:'textarea',req:true,ph:'जैसे घर के बाहर से साइकिल चोरी हुई'},{k:'house',label:'आपका मकान नंबर',req:true},{k:'name',label:'आपका नाम',req:true}],null,
-    async v=>{const cn=v.cam==='all'?'':' · '+((S.cams.find(c=>c.id===v.cam)||{}).name||'');await db.collection('complaints').add({kind:'complaint',cat:'सुरक्षा',cctv:true,title:'CCTV फुटेज: '+v.when+cn,text:v.why,house:v.house,name:v.name,status:'new',reply:'',date:today(),votes:{},example:false})},
+      {k:'why',label:'क्यों देखनी है',type:'textarea',req:true,ph:'जैसे घर के बाहर से साइकिल चोरी हुई'},...whoFields()],null,
+    async v=>{const cn=v.cam==='all'?'':' · '+((S.cams.find(c=>c.id===v.cam)||{}).name||'');await db.collection('complaints').add({kind:'complaint',cat:'CCTV',cctv:true,title:'CCTV फुटेज: '+v.when+cn,text:v.why,...who(v),status:'new',reply:'',date:today(),example:false})},
     `<p class="muted" style="margin:0;font-size:14px">अनुरोध कमेटी को जाएगा। फुटेज कमेटी सदस्य की मौजूदगी में दिखाई जाएगी।</p>`);
-  if(a==='camFault')openForm('⚠️ कैमरा खराब होने की सूचना',[{k:'cam',label:'कौन सा कैमरा',type:'select',options:[['all','पता नहीं'],...S.cams.map(c=>[c.id,c.name+(c.place?' · '+c.place:'')])]},{k:'text',label:'क्या दिक्कत है',type:'textarea',req:true,ph:'जैसे कैमरे की लाइट बंद है, कैमरा मुड़ गया है'},{k:'house',label:'आपका मकान नंबर',req:true},{k:'name',label:'आपका नाम',req:true}],null,
-    async v=>{const cn=v.cam==='all'?'CCTV कैमरा':((S.cams.find(c=>c.id===v.cam)||{}).name||'CCTV कैमरा');await db.collection('complaints').add({kind:'complaint',cat:'सुरक्षा',title:cn+' खराब लग रहा है',text:v.text,house:v.house,name:v.name,status:'new',reply:'',date:today(),votes:{},example:false})});
+  if(a==='camFault')openForm('⚠️ कैमरा खराब होने की सूचना',[{k:'cam',label:'कौन सा कैमरा',type:'select',options:[['all','पता नहीं'],...S.cams.map(c=>[c.id,c.name+(c.place?' · '+c.place:'')])]},{k:'text',label:'क्या दिक्कत है',type:'textarea',req:true,ph:'जैसे कैमरे की लाइट बंद है, कैमरा मुड़ गया है'},...whoFields()],null,
+    async v=>{const cn=v.cam==='all'?'CCTV कैमरा':((S.cams.find(c=>c.id===v.cam)||{}).name||'CCTV कैमरा');await db.collection('complaints').add({kind:'complaint',cat:'CCTV',title:cn+' खराब लग रहा है',text:v.text,...who(v),status:'new',reply:'',date:today(),example:false})});
   if(a==='addMem'||a==='editMem'){const x=a==='editMem'?S.team.find(y=>y.id===id):{post:'सदस्य'};if(!x)return;
     const fl=[{k:'name',label:'नाम',req:true},{k:'post',label:'पद',type:'select',options:POSTS},{k:'house',label:'मकान नंबर',ph:'जैसे A-12'},{k:'phone',label:'मोबाइल नंबर',type:'tel'},
       {k:'duty',label:'ज़िम्मेदारी (वैकल्पिक)',ph:'जैसे मेंटेनेंस वसूली और बैंक का काम'},{k:'since',label:'कब से इस पद पर (वैकल्पिक)',ph:'जैसे अप्रैल 2025'}];
@@ -992,18 +1044,26 @@ async function act(a,id,m){
   if(a==='copyPhone'){const t=id;const btn=document.querySelector(`[data-act="copyPhone"][data-id="${CSS.escape(t)}"]`);
     try{await navigator.clipboard.writeText(t);if(btn)btn.textContent='कॉपी हुआ ✓'}catch(_){if(btn)btn.textContent='नंबर चुनकर कॉपी करें'}return}
   if(a==='ownerPanel'){ownerScreen();return}
-  if(a==='addLogin'||a==='editLogin'){const x=a==='editLogin'?S.members.find(y=>y.id===id):{role:'resident'};if(!x)return;
+  if(a==='addLogin'||a==='editLogin'){const x=a==='editLogin'?S.members.find(y=>y.id===id):{role:'resident'};if(!x)return;const chief=isChief();
+    if(x.role==='admin'&&!chief){alertBox('कमेटी (एडमिन) सदस्य की जानकारी सिर्फ़ अध्यक्ष या सचिव बदल सकते हैं।');return}
+    const roles=chief?[['resident','🏠 निवासी'],['admin','👑 कमेटी (एडमिन)']]:[['resident','🏠 निवासी']];
     openForm(a==='editLogin'?'सदस्य बदलें':'लॉगिन वाला सदस्य जोड़ें',[{k:'name',label:'नाम',req:true},{k:'phone10',label:'मोबाइल नंबर (10 अंक)',type:'tel'},{k:'email',label:'या ईमेल (वैकल्पिक)',type:'email'},
-      {k:'house',label:'मकान नंबर',ph:'जैसे A-12'},{k:'role',label:'भूमिका',type:'select',options:[['resident','🏠 निवासी'],['admin','👑 एडमिन (कमेटी)']]}],x,
-    async v=>{const row={name:v.name,phone10:phone10(v.phone10),email:v.email.toLowerCase(),house:v.house,role:v.role};if(!row.phone10&&!row.email)throw {code:'rule',message:'मोबाइल नंबर या ईमेल में से एक ज़रूर डालें।'};if(row.phone10&&row.phone10.length!==10)throw {code:'23514'};
+      {k:'house_id',label:'किस घर से जुड़े हैं (निवासी को सिर्फ़ इसी घर की जानकारी दिखेगी)',type:'select',options:[['','— कोई घर नहीं —'],...S.houses.map(h=>[h.id,h.no+' · '+h.owner])]},
+      {k:'role',label:'भूमिका',type:'select',options:roles},{k:'post',label:'कमेटी में पद (सिर्फ़ एडमिन के लिए)',type:'select',options:[['','—'],...POSTS.map(p=>[p,p])]}],{...x,house_id:x.house_id||((S.houses.find(h=>h.no===x.house)||{}).id)||''},
+    async v=>{const h=houseById(v.house_id);const row={name:v.name,phone10:phone10(v.phone10),email:v.email.toLowerCase(),house:h?h.no:(v.house_id?x.house:''),house_id:h?h.id:'',role:v.role,post:v.role==='admin'?v.post:''};
+      if(!row.phone10&&!row.email)throw {code:'rule',message:'मोबाइल नंबर या ईमेल में से एक ज़रूर डालें।'};if(row.phone10&&row.phone10.length!==10)throw {code:'23514'};
+      if(row.role==='admin'&&!row.post)throw {code:'rule',message:'कमेटी सदस्य का पद चुनें (जैसे अध्यक्ष, सचिव, कोषाध्यक्ष)।'};
+      if(row.role==='admin'&&!chief)throw {code:'rule',message:'नया एडमिन सिर्फ़ अध्यक्ष या सचिव बना सकते हैं।'};
       try{if(a==='editLogin')await B.members.update(id,row);else await B.members.add({...row,colony_id:COLONY})}catch(e){throw mapErr(e)}loadMembers()},
-    `<p class="muted" style="margin:0;font-size:14px">यही नंबर या ईमेल डालकर यह व्यक्ति OTP से लॉगिन करेगा।</p>`)}
-  if(a==='delLogin'){const x=S.members.find(y=>y.id===id);confirmBox(`<b>${esc(x.name)}</b> (${esc(x.phone10||x.email)}) अब ऐप में लॉगिन नहीं कर पाएँगे।`,'हाँ, हटाएँ',async()=>{try{await B.members.remove(id)}catch(e){throw mapErr(e)}loadMembers()})}
+    `<p class="muted" style="margin:0;font-size:14px">यही नंबर या ईमेल डालकर यह व्यक्ति OTP से लॉगिन करेगा। भूमिका और घर सर्वर पर दर्ज होते हैं, लॉगिन करने वाला इन्हें ख़ुद नहीं बदल सकता।</p>`)}
+  if(a==='blockLogin'){const x=S.members.find(y=>y.id===id);if(!x)return;if(x.role==='admin'&&!isChief()){alertBox('कमेटी (एडमिन) सदस्य को सिर्फ़ अध्यक्ष या सचिव रोक सकते हैं।');return}
+    confirmBox(x.blocked?`<b>${esc(x.name)}</b> फिर से लॉगिन कर पाएँगे।`:`<b>${esc(x.name)}</b> (${esc(x.phone10||x.email)}) तुरंत ऐप से बाहर हो जाएँगे और लॉगिन नहीं कर पाएँगे (जैसे फ़ोन खो जाने पर)। बाद में फिर चालू कर सकते हैं।`,x.blocked?'हाँ, चालू करें':'हाँ, रोकें',async()=>{try{await B.members.update(id,{blocked:!x.blocked})}catch(e){throw mapErr(e)}loadMembers()});return}
+  if(a==='delLogin'){const x=S.members.find(y=>y.id===id);if(x&&x.role==='admin'&&!isChief()){alertBox('कमेटी (एडमिन) सदस्य को सिर्फ़ अध्यक्ष या सचिव हटा सकते हैं।');return}confirmBox(`<b>${esc(x.name)}</b> (${esc(x.phone10||x.email)}) अब ऐप में लॉगिन नहीं कर पाएँगे।`,'हाँ, हटाएँ',async()=>{try{await B.members.remove(id)}catch(e){throw mapErr(e)}loadMembers()})}
   if(a==='bulkMem'){const have=new Set(S.members.map(m=>m.phone10).filter(Boolean));const rows=[];
-    S.houses.forEach(h=>{[[h.ownerPhone,h.owner],[h.occ==='rent'?h.tenantPhone:'',h.tenant]].forEach(([p,n])=>{const t=phone10(p);if(t.length===10&&!have.has(t)){have.add(t);rows.push({colony_id:COLONY,name:String(n||'').replace(/\s*\(उदाहरण\)/,''),phone10:t,house:h.no,role:'resident'})}})});
+    S.houses.forEach(h=>{[[h.ownerPhone,h.owner],[h.occ==='rent'?h.tenantPhone:'',h.tenant]].forEach(([p,n])=>{const t=phone10(p);if(t.length===10&&!have.has(t)){have.add(t);rows.push({colony_id:COLONY,name:String(n||'').replace(/\s*\(उदाहरण\)/,''),phone10:t,house:h.no,house_id:h.id,role:'resident'})}})});
     if(!rows.length){alertBox('सभी घरों के मालिक और किराएदारों के नंबर पहले से जुड़े हैं, या घरों में 10 अंकों के नंबर नहीं लिखे हैं।');return}
     confirmBox(`घरों की जानकारी से <b>${rows.length}</b> नए लोग (मालिक और किराएदार) निवासी के रूप में जोड़े जाएँगे। वे अपने नंबर से OTP डालकर लॉगिन कर सकेंगे।`,'हाँ, जोड़ें',async()=>{try{await B.members.addMany(rows)}catch(e){throw mapErr(e)}loadMembers()});return}
-  if(a==='payOnline'){if(!S.cfg.upiId)return;const myH=MEM&&MEM.house?S.houses.find(h=>String(h.no).replace(/\s/g,'').toLowerCase()===String(MEM.house).replace(/\s/g,'').toLowerCase()):null;
+  if(a==='payOnline'){if(!S.cfg.upiId)return;const myH=myHouse();
     const hid=id||(myH&&myH.id)||(S.houses[0]&&S.houses[0].id);if(!hid){alertBox('पहले कमेटी घरों की जानकारी जोड़े।');return}
     const h0=houseById(hid);const d0=dueMonths(h0);const m0=d0[0]||(S.pay[hid+'_'+curMonth()]?addM(curMonth(),1):curMonth());
     const amt=mm=>Number(S.cfg.charge||0)+(overdue(mm)?FEE():0);
@@ -1018,6 +1078,10 @@ async function act(a,id,m){
       let qr='';try{const q=qrcode(0,'M');q.addData(url);q.make();qr=q.createSvgTag({cellSize:4,margin:2,scalable:true})}catch(_){}
       box.innerHTML=`<div class="qr">${qr}</div><div style="min-width:0"><b>1.</b> इस QR को किसी भी UPI ऐप (PhonePe, Google Pay, Paytm, BHIM) से स्कैन करें, या फ़ोन पर नीचे का बटन दबाएँ।<div class="muted num" style="font-size:13.5px;margin:4px 0">UPI: ${esc(S.cfg.upiId)} · ${rs(a)}</div><a class="btn sm" href="${url}">📲 UPI ऐप से ${rs(a)} भरें</a><div style="margin-top:8px"><b>2.</b> भुगतान के बाद UTR नंबर नीचे लिखकर “सेव करें” दबाएँ। कमेटी पुष्टि करेगी।</div></div>`};
     ['house','month','amount'].forEach(k=>frm.elements[k].addEventListener('input',()=>{if(k!=='amount'){frm.elements.amount.value=amt(frm.elements.month.value)}draw()}));draw();return}
+  if(a==='claimOk'&&(S.claims.find(x=>x.id===id)||{}).fee){const c=S.claims.find(x=>x.id===id);const f=S.fees.find(x=>x.id===c.fee)||{title:c.feeTitle};
+    confirmBox(`मकान <b>${esc(c.houseNo)}</b> का <b>${esc(f.title||'')}</b> का <b>${rs(c.amount)}</b> जमा दर्ज होगा और रसीद बन जाएगी।`,'हाँ, पुष्टि करें',async()=>{
+      await db.doc('feepay/'+c.fee+'_'+c.house).set({fee:c.fee,feeTitle:f.title||c.feeTitle||'',house:c.house,houseNo:c.houseNo,amount:c.amount,date:c.date,mode:'UPI',note:'UTR '+(c.ref||''),receipt:feeReceiptNo(c.fee,c.houseNo),example:false});
+      await db.doc('payclaims/'+id).update({status:'approved'})});return}
   if(a==='claimOk'){const c=S.claims.find(x=>x.id===id);if(!c)return;const h=houseById(c.house);
     confirmBox(`मकान <b>${esc(c.houseNo)}</b> का ${mLong(c.month)} का <b>${rs(c.amount)}</b> जमा दर्ज होगा और रसीद बन जाएगी।`,'हाँ, पुष्टि करें',async()=>{
       await db.doc('payments/'+c.house+'_'+c.month).set({house:c.house,houseNo:c.houseNo,month:c.month,amount:c.amount,date:c.date,mode:'UPI',note:'UTR '+(c.ref||''),receipt:'LV/'+c.month.replace('-','')+'/'+String(c.houseNo).replace(/\s+/g,''),example:false});
@@ -1033,9 +1097,9 @@ async function act(a,id,m){
   if(a==='delVeh'){const v=S.veh.find(x=>x.id===id);confirmBox(`गाड़ी <b>${esc(v.number)}</b> रजिस्टर से हटा दी जाएगी।`,'हाँ, हटाएँ',()=>db.doc('vehicles/'+id).delete())}
   if(a==='parkComp')openForm('गलत पार्किंग की शिकायत',[
       {k:'vnum',label:'गाड़ी नंबर (जितना दिखे)',req:true,ph:'जैसे MP09 AB 1234 या सिर्फ़ 1234'},{k:'where',label:'गाड़ी कहाँ खड़ी है',req:true,ph:'जैसे मेरे गेट के सामने, गली नंबर 2'},
-      {k:'text',label:'और जानकारी (वैकल्पिक)',type:'textarea',ph:'जैसे सुबह से खड़ी है, गाड़ी बाहर नहीं निकल पा रही'},{k:'house',label:'आपका मकान नंबर',req:true},{k:'name',label:'आपका नाम',req:true}],null,
-    async v=>{await db.collection('complaints').add({kind:'complaint',cat:'पार्किंग',title:'गलत पार्किंग: '+v.vnum.toUpperCase()+' · '+v.where,text:v.text||v.where,vnum:v.vnum.toUpperCase(),house:v.house,name:v.name,status:'new',reply:'',date:today(),votes:{},example:false})},
-    `<p class="muted" style="margin:0;font-size:14px">शिकायत कमेटी को दिखेगी। अगर गाड़ी कॉलोनी की है तो कमेटी को उसके मालिक का नंबर अपने आप दिख जाएगा।</p>`);
+      {k:'text',label:'और जानकारी (वैकल्पिक)',type:'textarea',ph:'जैसे सुबह से खड़ी है, गाड़ी बाहर नहीं निकल पा रही'},...whoFields()],null,
+    async v=>{await db.collection('complaints').add({kind:'complaint',cat:'पार्किंग',title:'गलत पार्किंग: '+v.vnum.toUpperCase()+' · '+v.where,text:v.text||v.where,vnum:v.vnum.toUpperCase(),...who(v),status:'new',reply:'',date:today(),example:false})},
+    `<p class="muted" style="margin:0;font-size:14px">शिकायत सिर्फ़ कमेटी को दिखेगी। अगर गाड़ी कॉलोनी की है तो कमेटी को उसके मालिक का नंबर अपने आप दिख जाएगा, आपको नहीं।</p>`);
   if(a==='editRules')openForm('पार्किंग के नियम',[{k:'parkRules',label:'नियम (हर लाइन में एक)',type:'textarea'}],{parkRules:S.cfg.parkRules||DEFAULT_RULES},
     async v=>{await db.doc('config/main').set({...S.cfg,parkRules:v.parkRules})});
   if(a==='addPoll')openForm('नया पोल',[{k:'q',label:'सवाल',req:true,ph:'जैसे क्या मुख्य गेट पर CCTV लगवाना चाहिए?'},{k:'note',label:'और जानकारी (वैकल्पिक)',type:'textarea',ph:'जैसे अनुमानित खर्च ₹25,000, हर घर से ₹500 एक बार'},{k:'opts',label:'विकल्प (हर लाइन में एक)',type:'textarea',req:true,def:'हाँ\nनहीं\nकोई राय नहीं'}],null,
@@ -1054,7 +1118,7 @@ async function act(a,id,m){
     const d=dlg.querySelector('#delph');if(d)d.onclick=()=>confirmBox('यह फोटो गैलरी से हमेशा के लिए हट जाएगी।','हाँ, हटाएँ',async()=>{await db.doc('gallery/'+id).delete();try{await assets.delete(p.asset)}catch(_){}});
     dlg.showModal()}
   if(a==='clearEx')confirmBox('सभी “उदाहरण” वाले घर, भुगतान, शिकायतें, सूचनाएँ और खर्च हटा दिए जाएँगे। आपका जोड़ा हुआ असली डेटा नहीं हटेगा।','हाँ, उदाहरण हटाएँ',async()=>{
-    const jobs=[['houses',S.houses],['payments',S.payList],['complaints',S.comp],['notices',S.notices],['expenses',S.exp],['polls',S.polls],['vehicles',S.veh],['services',S.svc],['committee',S.team],['cctvlog',S.clog]];
+    const jobs=[['houses',S.houses],['payments',S.payList],['complaints',S.comp],['notices',S.notices],['expenses',S.exp],['polls',S.polls],['vehicles',S.veh],['services',S.svc],['committee',S.team],['cctvlog',S.clog],['tenants',S.tenants],['fees',S.fees],['feepay',S.feeList],['inbox',S.inbox]];
     for(const [col,arr] of jobs)for(const d of arr.filter(x=>x.example))await db.doc(col+'/'+d.id).delete()});
 }
 async function shrink(f){try{const bm=await createImageBitmap(f);const k=Math.min(1,1600/Math.max(bm.width,bm.height));const c=document.createElement('canvas');c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);c.getContext('2d').drawImage(bm,0,0,c.width,c.height);
@@ -1071,4 +1135,310 @@ function bindWaApi(ph,kind,params){const b=dlg.querySelector('#waapi');if(!b)ret
   try{await B.fn('send-whatsapp',{colony_id:COLONY,to:'91'+ph,kind,params});e.style.color='var(--ok)';e.textContent='✓ WhatsApp पर भेज दिया गया।';b.textContent='✓ भेजा गया'}
   catch(x){console.warn(x);e.style.color='var(--bad)';e.textContent='अपने आप नहीं भेजा जा सका। “WhatsApp पर भेजें” बटन से भेजें।';b.disabled=false;b.textContent='🤖 फिर कोशिश करें'}}}
 document.getElementById('role').addEventListener('click',()=>{if(MEM)userMenu()});
+
+/* =====================================================================
+   Part 3: committee (admin) and resident views
+   The server sends a resident only their own house's private records;
+   these screens present what arrives and never decide access themselves.
+   ===================================================================== */
+const CHIEF_POSTS=['अध्यक्ष','सचिव'];
+function isChief(){return isOwner||(isAdmin&&(CHIEF_POSTS.includes(MEM.post)||!S.members.some(m=>m.role==='admin'&&!m.blocked&&CHIEF_POSTS.includes(m.post))))}
+function myHouse(){if(!MEM)return null;const n=x=>String(x||'').replace(/\s/g,'').toLowerCase();
+  return (MEM.house_id&&S.houses.find(h=>h.id===MEM.house_id))||(MEM.house&&S.houses.find(h=>n(h.no)===n(MEM.house)))||(!isAdmin&&S.houses.length===1?S.houses[0]:null)}
+/* who is filing: a resident files for their own house automatically; the committee types it in */
+function whoFields(){return isAdmin?[{k:'house',label:'मकान नंबर',req:true},{k:'name',label:'नाम',req:true}]:[]}
+function who(v){if(isAdmin){const h=S.houses.find(x=>String(x.no).toLowerCase()===String(v.house||'').toLowerCase());const r={house:v.house,houseId:h?h.id:'',name:v.name};delete v.house;delete v.name;return r}
+  const h=myHouse();return {house:h?h.no:(MEM.house||''),houseId:h?h.id:'',name:MEM.member_name||meLabel()}}
+function addDays(d,n){const [y,m,dd]=d.split('-').map(Number);const x=new Date(y,m-1,dd+n);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
+let sumT=null;function summarySoon(){if(isAdmin||!COLONY)return;clearTimeout(sumT);sumT=setTimeout(loadSummary,400)}
+const noHouseMsg=()=>`<div class="empty">आपका मोबाइल नंबर अभी किसी घर से नहीं जुड़ा है। कमेटी से कहें कि वे <b>एडमिन → लॉगिन वाले सदस्य</b> में आपको आपके मकान से जोड़ दें। तब आपके घर, किराएदार और मेंटेनेंस की जानकारी यहाँ दिखेगी।</div>`;
+
+/* ---------- tenants ---------- */
+const POLICE={done:['हो गया','p-ok'],applied:['आवेदन दिया है','p-warn'],no:['नहीं हुआ','p-bad']};
+const TDOCS=[['photo','फोटो','photoF'],['aadhaarDoc','आधार (ढका हुआ)','aadhaarF'],['workIdDoc','काम का ID','workIdF'],['policeDoc','पुलिस वेरिफिकेशन','policeF']];
+function tenantsOf(hid,all){return S.tenants.filter(t=>t.house===hid&&(all||t.status!=='left'))}
+function tenantFields(t){return [
+  ...(isAdmin?[{k:'house',label:'मकान',type:'select',options:S.houses.map(h=>[h.id,h.no+' · '+h.owner])}]:[]),
+  {k:'name',label:'किराएदार का पूरा नाम',req:true},{k:'rel',label:'पिता / पति का नाम'},{k:'age',label:'उम्र (साल)',type:'number'},
+  {k:'phone',label:'मोबाइल नंबर',type:'tel',req:true},{k:'permAddr',label:'स्थायी पता (गाँव / शहर, मोहल्ला)',req:true,ph:'जैसे वार्ड 5, ग्राम सिमगा'},
+  {k:'district',label:'ज़िला'},{k:'state',label:'राज्य'},
+  {k:'family',label:'साथ रहने वाले सदस्य (नाम और रिश्ता)',type:'textarea',ph:'जैसे पत्नी सुनीता, बेटा राहुल (8 साल)'},{k:'familyCount',label:'घर में कुल कितने लोग रहते हैं',type:'number'},
+  {k:'aadhaarLast4',label:'आधार के सिर्फ़ आख़िरी 4 अंक (पूरा नंबर न लिखें)',ph:'जैसे 4821',max:4,num:true},
+  {k:'work',label:'कहाँ काम करते हैं (कंपनी / दुकान / ऑफ़िस का नाम)',req:true},{k:'workAddr',label:'काम की जगह का पता'},
+  {k:'since',label:'किराएदार कब से रह रहे हैं',type:'date',req:true},
+  {k:'police',label:'पुलिस वेरिफिकेशन',type:'select',options:Object.entries(POLICE).map(([k,v])=>[k,v[0]])},
+  {k:'emergency',label:'आपात संपर्क (कोई दूसरा मोबाइल नंबर)',type:'tel'},
+  ...TDOCS.map(([k,l,fk])=>({k:fk,label:(t&&t[k]?'नई '+l+' (बदलनी हो तो)':l+' की फोटो')+(k==='aadhaarDoc'?' · पहले 8 अंक ढके हों':''),type:'file',one:true})),
+  {k:'consent',label:'मैंने किराएदार की सहमति ली है। यह जानकारी सिर्फ़ हमारे घर और कॉलोनी कमेटी को दिखेगी।',type:'check',req:true}]}
+const TENANT_NOTE=`<div class="notice" style="margin:0"><b>🔒 यह जानकारी सिर्फ़ आपके घर और कॉलोनी कमेटी को दिखेगी।</b><p style="font-size:14px">पूरा 12 अंकों का आधार नंबर न लिखें, सिर्फ़ आख़िरी 4 अंक। आधार की फोटो <b>ढकी हुई (masked) आधार</b> की लगाएँ, जिसमें पहले 8 अंक छिपे होते हैं। यह UIDAI की वेबसाइट (myaadhaar.uidai.gov.in) से मुफ़्त डाउनलोड होती है। ऐप आधार की सरकारी जाँच नहीं करता, कमेटी दस्तावेज़ देखकर पुष्टि करती है।</p></div>`;
+async function saveTenant(v,btn,t,hid){
+  v.aadhaarLast4=String(v.aadhaarLast4||'').replace(/\s/g,'');
+  if(v.aadhaarLast4&&!/^\d{4}$/.test(v.aadhaarLast4))throw {code:'rule',message:'आधार के सिर्फ़ आख़िरी 4 अंक लिखें, पूरा नंबर नहीं।'};
+  if(!v.consent)throw {code:'rule',message:'किराएदार की सहमति वाला बॉक्स चुनें।'};
+  if(phone10(v.phone).length!==10)throw {code:'rule',message:'किराएदार का 10 अंकों का मोबाइल नंबर लिखें।'};
+  const h=houseById(hid);if(!h)throw {code:'rule',message:'पहले मकान चुनें।'};
+  const out={...v};TDOCS.forEach(([,,fk])=>delete out[fk]);delete out.consent;delete out.house;
+  const old=[];
+  for(const [k,,fk] of TDOCS){const f=(v[fk]||[])[0];if(f){btn.textContent='फोटो अपलोड हो रही है…';out[k]=(await houseFiles.upload(await shrink(f),hid)).id;if(t&&t[k])old.push(t[k])}}
+  Object.assign(out,{house:hid,houseNo:h.no,phone:phone10(v.phone),emergency:phone10(v.emergency),updated:today()});
+  if(t)await db.doc('tenants/'+t.id).update(out);
+  else await db.collection('tenants').add({...out,status:'active',consentAt:today(),addedBy:MEM.member_name||meLabel(),verified:false,example:false});
+  for(const p of old)try{await houseFiles.delete(p)}catch(_){}
+}
+function tenantCard(t,admin){
+  const pol=POLICE[t.police]||POLICE.no;const docs=TDOCS.filter(([k])=>t[k]);
+  const kv=[['मोबाइल',t.phone&&`<span class="num">${esc(t.phone)}</span>`],['उम्र',t.age?esc(t.age)+' साल':''],['पिता / पति',esc(t.rel||'')],['स्थायी पता',esc([t.permAddr,t.district,t.state].filter(Boolean).join(', '))],
+    ['साथ रहने वाले',esc(t.family||'')+(t.familyCount?` <span class="muted">(कुल ${esc(t.familyCount)})</span>`:'')],['आधार',t.aadhaarLast4?'<span class="num">XXXX XXXX '+esc(t.aadhaarLast4)+'</span>':''],
+    ['काम',esc([t.work,t.workAddr].filter(Boolean).join(' · '))],['कब से',dFmt(t.since)],['आपात संपर्क',t.emergency&&`<span class="num">${esc(t.emergency)}</span>`]].filter(x=>x[1]);
+  const acts=admin?`${t.verified?`<button class="btn sm ghost" data-act="unverifyTenant" data-id="${t.id}">जाँच हटाएँ</button>`:`<button class="btn sm" style="--tc:var(--ok);--tc-ink:var(--surface)" data-act="verifyTenant" data-id="${t.id}">✔ जाँच हो गई</button>`}<button class="btn sm ghost" data-act="tenantNote" data-id="${t.id}">कमेटी का नोट</button>`:'';
+  return `<article class="card tn">
+    <div class="top"><div class="av">${t.photo?`<img src="${PIX}" data-img="${esc(t.photo)}" alt="${esc(t.name)}">`:`<span>${esc(initials(t.name))}</span>`}</div>
+      <div style="min-width:0;flex:1"><h3 style="margin:0;font-size:19px">${esc(t.name)}${t.example?' <span class="pill p-mar">उदाहरण</span>':''}</h3>${admin?`<div class="muted" style="font-size:14px">मकान <b>${esc(t.houseNo||'')}</b>${t.addedBy?' · जोड़ा: '+esc(t.addedBy):''}</div>`:''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">${t.status==='left'?`<span class="pill p-warn">घर छोड़ दिया · ${dFmt(t.leftOn)}</span>`:''}${t.verified?'<span class="pill p-ok">✔ कमेटी ने जाँच की</span>':t.reverify?'<span class="pill p-bad">जानकारी बदली · दोबारा जाँच बाकी</span>':'<span class="pill p-warn">कमेटी की जाँच बाकी</span>'}<span class="pill ${pol[1]}">पुलिस वेरिफिकेशन: ${pol[0]}</span></div></div></div>
+    <div class="kv" style="grid-template-columns:1fr">${kv.map(([k,v])=>`<div><span>${k}: </span>${v}</div>`).join('')}</div>
+    ${docs.length?`<div class="docs">${docs.map(([k,l])=>`<button class="ph" data-act="viewDoc" data-id="${t.id}" data-m="${k}" aria-label="${l}"><img src="${PIX}" data-img="${esc(t[k])}" alt="${l}"><span>${l}</span></button>`).join('')}</div>`:`<p class="muted" style="margin:0;font-size:14px">${t.purged?'घर छोड़ने के 90 दिन बाद दस्तावेज़ हटा दिए गए।':'अभी कोई फोटो या दस्तावेज़ नहीं लगाया गया।'}</p>`}
+    ${t.verified&&t.verifiedBy?`<div class="muted" style="font-size:13px">जाँच: ${esc(t.verifiedBy)} · ${dFmt(t.verifiedAt)}</div>`:''}
+    ${t.adminNote?`<div class="notice" style="margin:0"><b style="font-size:14px">कमेटी का नोट</b><p>${esc(t.adminNote)}</p></div>`:''}
+    <div class="actions">${acts}<button class="btn sm ghost" data-act="editTenant" data-id="${t.id}">बदलें</button>${t.status!=='left'?`<button class="btn sm ghost" data-act="tenantLeft" data-id="${t.id}">घर छोड़ दिया</button>`:''}<button class="btn sm danger" data-act="delTenant" data-id="${t.id}">हटाएँ</button></div>
+  </article>`}
+let purgedOnce=false;
+async function purgeOldTenants(){
+  if(!isAdmin||purgedOnce||!db)return;purgedOnce=true;const lim=addDays(today(),-90);
+  for(const t of S.tenants.filter(t=>t.status==='left'&&t.leftOn&&t.leftOn<=lim&&!t.purged)){
+    for(const [k] of TDOCS)if(t[k])try{await B.files.remove(t[k])}catch(_){}
+    try{await db.doc('tenants/'+t.id).update({photo:'',aadhaarDoc:'',workIdDoc:'',policeDoc:'',aadhaarLast4:'',purged:true})}catch(e){console.warn(e)}}}
+
+/* ---------- fees / चंदा ---------- */
+const FEECATS=['नवरात्रि / गरबा','अम्बेडकर जयंती','गुरु घासीदास जयंती','होली मिलन','गणेश उत्सव','दिवाली','15 अगस्त / 26 जनवरी','मरम्मत / विकास कार्य','अन्य'];
+function feeOpen(f){return f.open!==false}
+function feePaid(f,hid){return S.feepay[f.id+'_'+hid]}
+function feeClaim(f,hid){return S.claims.find(c=>c.fee===f.id&&c.house===hid&&c.status==='pending')}
+function feeDueFor(h){return h?S.fees.filter(f=>feeOpen(f)&&!feePaid(f,h.id)):[]}
+function feeAmtText(f){return f.kind==='voluntary'?`अपनी इच्छा से${Number(f.amount)?' · कम से कम '+rs(f.amount):''}`:rs(f.amount)+' प्रति घर'}
+function feeReceiptNo(fid,no){return 'CF/'+String(fid).slice(0,5).toUpperCase()+'/'+String(no).replace(/\s+/g,'')}
+
+/* ---------- messages ---------- */
+const MSGK={info:['सूचना','p-info'],dues:['बकाया याद दिलाना','p-bad'],check:['जाँच / पूछताछ','p-warn'],other:['अन्य','p-acc']};
+function dueHouses(){return S.houses.filter(h=>dueMonths(h).length||S.fees.some(f=>feeOpen(f)&&f.due&&f.due<today()&&!feePaid(f,h.id)))}
+function msgCard(m,admin){const k=MSGK[m.kind]||MSGK.info;
+  return `<div class="msg" style="--tc:var(--t-msgs)"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><h3>${esc(m.title)}</h3><span class="pill ${k[1]}">${k[0]}</span></div>
+    <p>${esc(m.body)}</p><div class="muted" style="font-size:13px;margin-top:6px">${dFmt(m.date)}${m.by?' · '+esc(m.by):''}${admin?' · किसे: '+(m.target==='all'?'सभी घर':`${m.n} घर`+(m.nos?' ('+esc(m.nos)+')':'')):''}</div>
+    ${admin?`<div class="actions"><button class="btn sm ghost" style="--tc:#1f9d55" data-act="waBatch" data-id="${esc(m.batch)}">💬 WhatsApp पर भी भेजें</button><button class="btn sm danger" data-act="delMsg" data-id="${esc(m.batch)}">हटाएँ</button></div>`:''}</div>`}
+
+/* ---------- join requests and audit (committee) ---------- */
+function joinBox(){if(!S.joins.length)return '';
+  return `<section class="panel" style="margin-top:20px;border:1.5px solid var(--tc)"><h2 style="margin:0">🙋 जुड़ने के अनुरोध <span class="pill p-warn">${S.joins.length}</span></h2><p class="muted" style="margin:4px 0 10px;font-size:14px">इन लोगों ने कॉलोनी कोड डालकर जुड़ने का अनुरोध भेजा है। सही घर चुनकर मंज़ूरी दें। जिन्हें नहीं जानते, उन्हें मना करें।</p>
+  <div class="list">${S.joins.map(r=>`<div class="card"><div class="row" style="align-items:center"><div><b>${esc(r.name)}</b> · मकान ${esc(r.house)}<div class="muted" style="font-size:13.5px"><span class="num">${esc(r.phone10||r.email)}</span> · ${dFmt(String(r.created_at||'').slice(0,10))}${r.note?' · '+esc(r.note):''}</div></div>
+    <span class="actions" style="margin:0"><button class="btn sm" style="--tc:var(--ok);--tc-ink:var(--surface)" data-act="joinOk" data-id="${r.id}">✓ मंज़ूर करें</button><button class="btn sm danger" data-act="joinNo" data-id="${r.id}">✗ मना करें</button></span></div></div>`).join('')}</div></section>`}
+function auditText(a){const r=x=>x==='admin'?'👑 एडमिन':x==='resident'?'🏠 निवासी':'';
+  if(a.action==='insert')return `जोड़ा: ${r(a.new_role)}${a.new_post?' · '+esc(a.new_post):''}`;
+  if(a.action==='delete')return `हटाया (${r(a.old_role)}${a.old_post?' · '+esc(a.old_post):''})`;
+  const c=[];if(a.old_role!==a.new_role)c.push(`${r(a.old_role)} → ${r(a.new_role)}`);if(a.old_post!==a.new_post)c.push(`पद: ${esc(a.old_post||'—')} → ${esc(a.new_post||'—')}`);if(a.blocked===true)c.push('🚫 रोका गया');
+  return c.join(' · ')||'जानकारी बदली'}
+function auditBox(){if(!S.audit.length)return '';
+  return `<h2>एडमिन और सदस्यों में बदलाव का रिकॉर्ड</h2><p class="muted" style="margin:-4px 0 10px;font-size:14px">कौन, कब, किसको जोड़ा, हटाया या बदला। यह रिकॉर्ड सर्वर अपने आप लिखता है, इसे कोई मिटा नहीं सकता।</p>
+  <div class="scroll"><table><thead><tr><th>कब</th><th>किसने</th><th>किसका</th><th>क्या बदला</th></tr></thead><tbody>${S.audit.slice(0,40).map(a=>`<tr><td>${dFmt(String(a.at||'').slice(0,10))} <span class="muted num" style="font-size:13px">${String(a.at||'').slice(11,16)}</span></td><td>${esc(a.actor_label||'—')}</td><td>${esc(a.member_name||'')} <span class="muted num" style="font-size:13px">${esc(a.member_login||'')}</span></td><td style="white-space:normal">${auditText(a)}</td></tr>`).join('')}</tbody></table></div>`}
+
+/* ---------- resident screens ---------- */
+function homeResident(){
+  const h=myHouse(),cm=curMonth();
+  const fd=feeDueFor(h),open=S.comp.filter(c=>c.status!=='done');
+  const houseCard=h?(()=>{const d=dueMonths(h),p=S.pay[h.id+'_'+cm];return `<section class="panel" style="border:1.5px solid var(--tc)"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><div><div class="muted" style="font-size:13.5px">आपका घर</div><div class="hno">${esc(h.no)}</div><div class="muted" style="font-size:14px">${esc(h.owner)}</div></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${p&&!d.length?`<span class="pill p-ok">✓ ${mLong(cm)} का मेंटेनेंस जमा</span><button class="btn sm ghost" data-act="receipt" data-id="${h.id}" data-m="${cm}">रसीद</button>`:`<span class="pill ${d.length?'p-bad':'p-warn'}">${d.length?d.length+' महीने बकाया · '+rs(dueAmt(h)):mLong(cm)+' का बाकी · '+DD()+' तारीख तक'}</span>`}
+    ${(!p||d.length)&&S.cfg.upiId?`<button class="btn sm" data-act="payOnline" data-id="${h.id}">💳 अभी जमा करें</button>`:''}</div></div>
+    ${fd.length?`<div class="contacts" style="margin-top:12px">${fd.map(f=>{const c=feeClaim(f,h.id);return `<div><span>🪔 <b>${esc(f.title)}</b> <span class="muted">· ${feeAmtText(f)}${f.due?' · '+dFmt(f.due)+' तक':''}</span></span>${c?'<span class="pill p-warn">पुष्टि बाकी</span>':S.cfg.upiId?`<button class="btn sm" data-act="payFee" data-id="${f.id}">💳 जमा करें</button>`:'<span class="pill p-warn">बाकी</span>'}</div>`}).join('')}</div>`:''}
+    <div class="actions"><button class="btn sm ghost" data-act="goto" data-id="myhouse">🏡 मेरा घर और किराएदार</button><button class="btn sm ghost" data-act="goto" data-id="maint">💰 मेंटेनेंस का हिसाब</button></div></section>`})():noHouseMsg();
+  const sm=S.summary;
+  return `${houseCard}
+  <div class="stats">
+    <div class="stat ${open.length?'bad':''}"><b>${open.length}</b><span>आपकी खुली शिकायतें</span></div>
+    <div class="stat"><b>${S.inbox.length}</b><span>कमेटी से संदेश</span></div>
+    <div class="stat"><b>${S.polls.filter(p=>p.open).length}</b><span>चल रहे पोल</span></div>
+    ${S.cams.length?`<div class="stat ${S.cams.some(c=>c.status==='bad')?'bad':'ok'}"><b>${S.cams.filter(c=>c.status==='ok').length}/${S.cams.length}</b><span>📹 CCTV चालू</span></div>`:''}
+    ${sm?`<div class="stat ${Number(sm.fund)>=0?'ok':'bad'}"><b>${rs(sm.fund)}</b><span>कॉलोनी फंड में बची रकम</span></div>`:''}
+  </div>
+  <div class="actions" style="margin-top:14px"><button class="btn" data-act="addComp">📣 शिकायत भेजें</button><button class="btn ghost" data-act="goto" data-id="comp">मेरी शिकायतें देखें</button></div>
+  ${S.inbox.length?`<h2>कमेटी से आपके संदेश</h2><div class="list">${S.inbox.slice(0,3).map(m=>msgCard(m,false)).join('')}</div>${S.inbox.length>3?'<div class="actions"><button class="btn sm ghost" data-act="goto" data-id="msgs">सभी संदेश देखें</button></div>':''}`:''}
+  <div class="grid2" style="margin-top:20px">
+    <section class="panel"><h2 style="margin:0">सूचना बोर्ड</h2>
+      <div style="margin-top:14px">${S.notices.length?S.notices.map(n=>`<div class="notice"><div class="row" style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><h3>${esc(n.title)}</h3><span class="muted" style="font-size:13px">${dFmt(n.date)}</span></div><p>${esc(n.body)}</p></div>`).join(''):'<div class="empty">अभी कोई सूचना नहीं है।</div>'}</div></section>
+    <section class="panel"><h2 style="margin:0">ज़रूरी संपर्क</h2>
+      <div class="contacts" style="margin-top:14px">${(S.cfg.contacts||[]).length?S.cfg.contacts.map(c=>`<div><span><b>${esc(c.name)}</b> <span class="muted">· ${esc(c.role)}</span></span><span class="num">${esc(c.phone)}</span></div>`).join(''):'<div class="empty">संपर्क नंबर अभी नहीं जोड़े गए।</div>'}</div>
+      <p class="muted" style="font-size:14px;margin:14px 0 0">मासिक मेंटेनेंस: <b class="num">${rs(S.cfg.charge)}</b> प्रति घर · हर महीने 1 से ${DD()} तारीख तक${FEE()?' · लेट फीस '+rs(FEE()):''}</p></section>
+  </div>`}
+function maintMine(){
+  const h=myHouse();if(!h)return noHouseMsg();
+  const ms=months(hStart(h),curMonth()).reverse().slice(0,24),d=dueMonths(h);
+  return `<section class="panel" style="border:1.5px solid var(--tc);margin-bottom:16px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><div><div class="muted" style="font-size:13.5px">मकान</div><div class="hno">${esc(h.no)}</div></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${d.length?`<span class="pill p-bad">${d.length} महीने बकाया · ${rs(dueAmt(h))}</span>`:pendingNow(h)?`<span class="pill p-warn">${mLong(curMonth())} का बाकी · ${DD()} तारीख तक</span>`:'<span class="pill p-ok">✓ कोई बकाया नहीं</span>'}${S.cfg.upiId&&(d.length||pendingNow(h))?`<button class="btn sm" data-act="payOnline" data-id="${h.id}">💳 ऑनलाइन जमा करें</button>`:''}</div></div>
+    <p class="muted" style="margin:10px 0 0;font-size:14px">${ruleLine()}${S.cfg.upiId?'':' ऑनलाइन भुगतान अभी चालू नहीं है, कोषाध्यक्ष को नकद / UPI से दें।'}</p></section>
+  ${ms.length?`<div class="scroll"><table><thead><tr><th>महीना</th><th>स्थिति</th><th class="r">रकम</th><th></th></tr></thead><tbody>${ms.map(m=>{const p=S.pay[h.id+'_'+m];return `<tr><td><b>${mLong(m)}</b></td><td>${p?`<span class="pill ${isLate(p)?'p-mar':'p-ok'}">✓ ${isLate(p)?'देर से जमा':'समय पर जमा'} · ${dFmt(p.date)}</span>`:overdue(m)?'<span class="pill p-bad">✗ बकाया</span>':'<span class="pill p-warn">अभी समय है</span>'}</td><td class="r num">${rs(p?p.amount:Number(S.cfg.charge||0)+(overdue(m)?FEE():0))}</td><td>${p?`<button class="btn sm ghost" data-act="receipt" data-id="${h.id}" data-m="${m}">रसीद</button>`:''}</td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">आपके घर पर अभी मेंटेनेंस लागू नहीं हुआ है।</div>'}`}
+function acctResident(){
+  const sm=S.summary;if(!sm)return '<div class="empty">हिसाब लोड हो रहा है…</div>';
+  const cats=Object.entries(sm.byCat||{}).sort((a,b)=>b[1]-a[1]),ct=cats.reduce((s,x)=>s+Number(x[1]),0);
+  return `<div class="stats" style="margin-top:0">
+    <div class="stat"><b>${rs(sm.openBal)}</b><span>शुरुआती बचत</span></div>
+    <div class="stat ok"><b>+${rs(sm.maint)}</b><span>मेंटेनेंस से आय</span></div>
+    <div class="stat ok"><b>+${rs(sm.fees)}</b><span>शुल्क / चंदा से आय</span></div>
+    <div class="stat ok"><b>+${rs(sm.otherIn)}</b><span>दूसरी आय (दान, जुर्माना…)</span></div>
+    <div class="stat bad"><b>−${rs(sm.spent)}</b><span>कुल खर्च</span></div>
+    <div class="stat ${Number(sm.fund)>=0?'ok':'bad'}"><b>${rs(sm.fund)}</b><span>अभी फंड में बची रकम</span></div></div>
+  <p class="muted num" style="font-size:14px;margin:10px 0 0">हिसाब: ${rs(sm.openBal)} + ${rs(sm.maint)} + ${rs(sm.fees)} + ${rs(sm.otherIn)} − ${rs(sm.spent)} = <b style="color:var(--ink)">${rs(sm.fund)}</b></p>
+  ${cats.length?`<h2>खर्च किस पर हुआ</h2><div class="panel">${cats.map(([k,v])=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:4px 0"><span>${esc(k)}</span><span class="num">${rs(v)} <span class="muted" style="font-size:13px">(${ct?Math.round(v*100/ct):0}%)</span></span></div><div style="height:7px;border-radius:4px;background:var(--bg);margin-bottom:6px"><div style="height:7px;border-radius:4px;background:var(--tc);width:${ct?v*100/ct:0}%"></div></div>`).join('')}</div>`:''}
+  <p class="muted" style="font-size:14px;margin-top:14px">यहाँ सिर्फ़ कुल रकम दिखती है, किसी घर का नाम या भुगतान नहीं। पूरी रोकड़ बही और बिल कमेटी के पास हैं, आम सभा में देखे जा सकते हैं।</p>`}
+
+Object.assign(SHELL,{
+  myhouse:()=>'',
+  msgs:()=>isAdmin?`<div class="toolbar"><p class="muted grow" style="margin:0;font-size:14px">संदेश तुरंत ऐप में पहुँचता है। WhatsApp पर एक-एक करके भेजने के बटन भी मिलेंगे।</p><button class="btn" data-act="addMsg">+ नया संदेश</button></div>`:'',
+  fees:()=>isAdmin?`<div class="toolbar"><p class="muted grow" style="margin:0;font-size:14px">मासिक मेंटेनेंस “मेंटेनेंस” टैब में है। यहाँ त्योहार, जयंती, कार्यक्रम या मरम्मत जैसे दूसरे शुल्क / चंदे बनाएँ।</p><button class="btn" data-act="addFee">+ नया शुल्क / चंदा</button></div>`:'',
+  tenants:()=>`<div class="toolbar"><input class="grow" id="tq" type="search" placeholder="किराएदार का नाम, मकान नंबर या मोबाइल से खोजें" value="${esc(F.tq)}">
+    <select id="tf" style="width:auto">${[['all','सभी (अभी रह रहे)'],['pending','कमेटी की जाँच बाकी'],['police','पुलिस वेरिफिकेशन बाकी'],['left','घर छोड़ चुके']].map(([k,l])=>`<option value="${k}" ${F.tf===k?'selected':''}>${l}</option>`).join('')}</select>
+    <button class="btn" data-act="addTenant">+ किराएदार जोड़ें</button></div>`
+});
+Object.assign(BODY,{
+myhouse(){
+  const h=myHouse();if(!h)return noHouseMsg();
+  const T=tenantsOf(h.id,true).sort((a,b)=>(a.status==='left')-(b.status==='left')),V=vehOf(h.id);
+  return `<section class="panel"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start"><div><div class="muted" style="font-size:13.5px">आपका घर</div><div class="hno">${esc(h.no)}</div><div class="muted" style="font-size:14px">${esc(h.owner)}</div></div><button class="btn sm" data-act="editFamily">परिवार की जानकारी बदलें</button></div>
+    <div class="kv" style="margin-top:10px">
+      <div><span>मालिक का मोबाइल: </span><span class="num">${esc(h.ownerPhone||'—')}</span></div>
+      <div><span>घर में कौन रहता है: </span>${OCC[h.occ]||'—'}</div>
+      <div><span>परिवार में कुल लोग: </span>${esc(h.members||'—')}</div>
+      <div><span>परिवार के सदस्य: </span>${esc(h.family||'—')}</div>
+      <div><span>दूसरा मोबाइल: </span><span class="num">${esc(h.altPhone||'—')}</span></div>
+      <div><span>आपात संपर्क: </span><span class="num">${esc(h.emergency||'—')}</span></div>
+    </div>
+    <p class="muted" style="margin:10px 0 0;font-size:13.5px">मकान नंबर, मालिक का नाम और मोबाइल कमेटी दर्ज करती है। कुछ ग़लत हो तो “शिकायत / सुझाव” से कमेटी को बताएँ।</p></section>
+  <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;margin-top:24px"><h2 style="margin:0">आपके घर के किराएदार <span class="muted" style="font-family:var(--body);font-size:15px">· ${T.filter(t=>t.status!=='left').length}</span></h2><button class="btn" data-act="addTenant">+ किराएदार जोड़ें</button></div>
+  <p class="muted" style="margin:6px 0 12px;font-size:14px">🔒 किराएदार की जानकारी सिर्फ़ आप और कॉलोनी कमेटी देख सकते हैं, दूसरे निवासी नहीं। कमेटी जाँच करके “✔ जाँच हुई” लगाएगी। जाँच के बाद जानकारी बदलने पर दोबारा जाँच होगी।</p>
+  ${T.length?`<div class="memgrid">${T.map(t=>tenantCard(t,false)).join('')}</div>`:'<div class="empty">अभी कोई किराएदार दर्ज नहीं है। अगर आपके घर में कोई किराए पर रहता है तो “किराएदार जोड़ें” दबाकर उसका बायोडाटा भरें।</div>'}
+  <h2>आपके घर की गाड़ियाँ</h2>
+  ${V.length?`<div class="contacts">${V.map(v=>`<div><span>${VT[v.type]?.[1]||''} <b class="num">${esc(v.number)}</b> <span class="muted">· ${esc(v.model||VT[v.type]?.[0]||'')}</span></span><span class="muted">${esc(v.parkAt||'')}</span></div>`).join('')}</div>`:'<div class="empty">अभी कोई गाड़ी दर्ज नहीं है।</div>'}
+  <p class="muted" style="font-size:13.5px">नई गाड़ी जुड़वाने या हटवाने के लिए कमेटी को बताएँ।</p>`},
+tenants(){
+  if(!isAdmin)return '';
+  const q=F.tq.trim().toLowerCase(),act=S.tenants.filter(t=>t.status!=='left');
+  const list=S.tenants.filter(t=>(F.tf==='left'?t.status==='left':t.status!=='left')&&(F.tf!=='pending'||!t.verified)&&(F.tf!=='police'||t.police!=='done')&&(!q||[t.name,t.houseNo,t.phone,t.work].some(v=>String(v||'').toLowerCase().includes(q))));
+  const groups={};list.forEach(t=>{(groups[t.house]=groups[t.house]||[]).push(t)});
+  return `${exBanner()}<div class="stats" style="margin-top:${hasExamples()?'16px':'0'}">
+    <div class="stat"><b>${act.length}</b><span>किराएदार अभी रह रहे हैं</span></div>
+    <div class="stat"><b>${new Set(act.map(t=>t.house)).size}</b><span>घरों में किराएदार</span></div>
+    <div class="stat ${act.some(t=>!t.verified)?'bad':'ok'}"><b>${act.filter(t=>!t.verified).length}</b><span>कमेटी की जाँच बाकी</span></div>
+    <div class="stat ${act.some(t=>t.police!=='done')?'bad':'ok'}"><b>${act.filter(t=>t.police!=='done').length}</b><span>पुलिस वेरिफिकेशन बाकी</span></div></div>
+  <p class="muted" style="font-size:14px;margin:12px 0">यह जानकारी निवासी अपने प्रोफ़ाइल से भरते हैं। हर घर को सिर्फ़ अपने किराएदार दिखते हैं, पूरा रजिस्टर सिर्फ़ कमेटी को। घर छोड़ने के 90 दिन बाद किराएदार की फोटो और दस्तावेज़, कमेटी के ऐप खोलने पर अपने आप हट जाते हैं।</p>
+  ${list.length?Object.entries(groups).map(([hid,ts])=>{const h=houseById(hid)||{};return `<h2 style="margin-top:8px">मकान ${esc(h.no||ts[0].houseNo||'')} <span class="muted" style="font-family:var(--body);font-size:15px">· ${esc(h.owner||'')} · ${ts.length} किराएदार</span></h2><div class="memgrid">${ts.map(t=>tenantCard(t,true)).join('')}</div>`}).join('')
+    :`<div class="empty">${S.tenants.length?'इस खोज / फ़िल्टर में कोई किराएदार नहीं मिला।':'अभी किसी घर ने किराएदार की जानकारी नहीं भरी है। निवासी “मेरा घर” टैब से भरेंगे, या आप “किराएदार जोड़ें” से भर सकते हैं।'}</div>`}`},
+fees(){
+  if(!S.fees.length)return `<div class="empty">${isAdmin?'अभी कोई शुल्क / चंदा नहीं बनाया गया। ऊपर “नया शुल्क / चंदा” दबाकर नवरात्रि गरबा, अम्बेडकर जयंती या गुरु घासीदास जयंती जैसे कार्यक्रम का चंदा बनाएँ।':'अभी कोई शुल्क या चंदा नहीं माँगा गया है।'}</div>`;
+  if(!isAdmin){const h=myHouse();if(!h)return noHouseMsg();
+    return `<div class="list">${S.fees.map(f=>{const p=feePaid(f,h.id),c=feeClaim(f,h.id);
+      return `<article class="card"><div class="row"><div style="min-width:0"><h3 style="margin:0">🪔 ${esc(f.title)}</h3><div class="muted" style="font-size:14px">${feeAmtText(f)}${f.due?' · आख़िरी तारीख '+dFmt(f.due):''}</div></div>
+        ${p?`<span class="pill p-ok">✓ जमा · ${rs(p.amount)} · ${dFmt(p.date)}</span>`:c?'<span class="pill p-warn">भुगतान की पुष्टि बाकी</span>':feeOpen(f)?`<span class="pill ${f.due&&f.due<today()?'p-bad':'p-warn'}">बाकी</span>`:'<span class="pill p-acc">बंद</span>'}</div>
+        ${f.note?`<p style="margin:8px 0 0;white-space:pre-wrap">${esc(f.note)}</p>`:''}
+        <div class="actions">${p?`<button class="btn sm ghost" data-act="feeReceipt" data-id="${f.id}" data-m="${h.id}">रसीद</button>`:!c&&feeOpen(f)&&S.cfg.upiId?`<button class="btn sm" data-act="payFee" data-id="${f.id}">💳 UPI से जमा करें</button>`:''}</div></article>`}).join('')}</div>
+      ${S.cfg.upiId?'<p class="muted" style="font-size:14px">पैसा सीधे कॉलोनी कमेटी के UPI खाते में जाता है। भुगतान के बाद UTR नंबर भेजें, कमेटी पुष्टि करेगी और रसीद बनेगी।</p>':'<p class="muted" style="font-size:14px">ऑनलाइन भुगतान अभी चालू नहीं है, कोषाध्यक्ष को नकद / UPI से दें।</p>'}`}
+  return `${exBanner()}<div class="list" style="margin-top:${hasExamples()?'14px':'0'}">${S.fees.map(f=>{const ps=S.feeList.filter(p=>p.fee===f.id),got=sumA(ps),tot=S.houses.length;
+    return `<article class="card"><div class="row"><div style="min-width:0"><h3 style="margin:0;font-size:19px">🪔 ${esc(f.title)}${f.example?' <span class="pill p-mar">उदाहरण</span>':''}</h3><div class="muted" style="font-size:14px">${esc(f.cat||'')}${f.cat?' · ':''}${feeAmtText(f)}${f.due?' · आख़िरी तारीख '+dFmt(f.due):''}</div></div><span class="pill ${feeOpen(f)?'p-ok':'p-acc'}">${feeOpen(f)?'चालू':'बंद'}</span></div>
+      ${f.note?`<p style="margin:8px 0 0;white-space:pre-wrap">${esc(f.note)}</p>`:''}
+      <div class="stats" style="margin-top:10px"><div class="stat ok"><b>${ps.length}/${tot}</b><span>घरों ने दिया</span></div><div class="stat"><b>${rs(got)}</b><span>कुल जमा</span></div>${f.kind!=='voluntary'?`<div class="stat bad"><b>${rs(Math.max(0,(tot-ps.length)*Number(f.amount||0)))}</b><span>अभी बाकी</span></div>`:''}</div>
+      <div class="actions"><button class="btn sm" data-act="feeHouses" data-id="${f.id}">किसने दिया / किसका बाकी</button><button class="btn sm ghost" data-act="editFee" data-id="${f.id}">बदलें</button><button class="btn sm ghost" data-act="toggleFee" data-id="${f.id}">${feeOpen(f)?'बंद करें':'फिर चालू करें'}</button><button class="btn sm danger" data-act="delFee" data-id="${f.id}">हटाएँ</button></div></article>`}).join('')}</div>`},
+msgs(){
+  if(!isAdmin)return S.inbox.length?`<div class="list">${S.inbox.map(m=>msgCard(m,false)).join('')}</div>`:'<div class="empty">अभी कमेटी से कोई संदेश नहीं आया है।</div>';
+  const by={};S.inbox.forEach(m=>{const b=m.batch||m.id;if(!by[b])by[b]={...m,batch:b,n:0,nos:[]};by[b].n++;if(m.houseNo)by[b].nos.push(m.houseNo)});
+  const list=Object.values(by).sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.at||'').localeCompare(String(a.at||''))).map(m=>({...m,nos:m.nos.slice(0,8).join(', ')+(m.nos.length>8?' …':'')}));
+  return list.length?`<div class="list">${list.map(m=>msgCard(m,true)).join('')}</div>`:'<div class="empty">अभी कोई संदेश नहीं भेजा गया। “नया संदेश” से सभी घरों, बकाया वाले घरों या चुने हुए घरों को सूचना, याद-दिहानी या पूछताछ भेजें।</div>'}
+});
+
+/* ---------- actions for the screens above ---------- */
+const ACT2={
+  houseTenants(id){const h=houseById(id);F.tq=h?h.no:'';F.tf='all';act('goto','tenants')},
+  addTenant(){const h=isAdmin?null:myHouse();if(!isAdmin&&!h){alertBox('आपका नंबर अभी किसी घर से नहीं जुड़ा है। कमेटी से कहें कि वे आपको आपके घर से जोड़ें।');return}
+    if(isAdmin&&!S.houses.length){alertBox('पहले “घर व निवासी” में घर जोड़ें।');return}
+    openForm('किराएदार जोड़ें'+(h?' · मकान '+esc(h.no):''),tenantFields(null),{house:(h||S.houses[0]||{}).id,police:'no'},async(v,btn)=>saveTenant(v,btn,null,h?h.id:v.house),TENANT_NOTE)},
+  editTenant(id){const t=S.tenants.find(x=>x.id===id);if(!t)return;
+    openForm('किराएदार की जानकारी बदलें · '+esc(t.name),tenantFields(t),{...t,consent:false},async(v,btn)=>saveTenant(v,btn,t,isAdmin?v.house:t.house),TENANT_NOTE+(t.verified&&!isAdmin?'<p class="muted" style="margin:0;font-size:14px">ध्यान दें: जानकारी बदलने पर कमेटी को दोबारा जाँच करनी होगी।</p>':''))},
+  tenantLeft(id){const t=S.tenants.find(x=>x.id===id);if(!t)return;
+    openForm('किराएदार ने घर छोड़ दिया · '+esc(t.name),[{k:'leftOn',label:'किस तारीख को घर छोड़ा',type:'date',def:today(),req:true}],null,async v=>{await db.doc('tenants/'+id).update({status:'left',leftOn:v.leftOn||today()})},
+      '<p class="muted" style="margin:0;font-size:14px">90 दिन बाद इनकी फोटो और दस्तावेज़ अपने आप हटा दिए जाएँगे। नाम और तारीख रिकॉर्ड में रहेगी।</p>')},
+  delTenant(id){const t=S.tenants.find(x=>x.id===id);if(!t)return;
+    confirmBox(`<b>${esc(t.name)}</b> की पूरी जानकारी और दस्तावेज़ हमेशा के लिए हट जाएँगे। अगर किराएदार ने घर छोड़ा है तो “घर छोड़ दिया” चुनना बेहतर है।`,'हाँ, हटाएँ',async()=>{await db.doc('tenants/'+id).delete();for(const [k] of TDOCS)if(t[k])try{await houseFiles.delete(t[k])}catch(_){}})},
+  async verifyTenant(id){try{await db.doc('tenants/'+id).update({verified:true,reverify:false,verifiedBy:(MEM.member_name||meLabel())+(MEM.post?' ('+MEM.post+')':''),verifiedAt:today()})}catch(e){alertBox(errMsg(mapErr(e)))}},
+  async unverifyTenant(id){try{await db.doc('tenants/'+id).update({verified:false})}catch(e){alertBox(errMsg(mapErr(e)))}},
+  tenantNote(id){const t=S.tenants.find(x=>x.id===id);if(!t)return;openForm('कमेटी का नोट · '+esc(t.name),[{k:'adminNote',label:'नोट (यह घर भी देख सकता है)',type:'textarea',ph:'जैसे पुलिस वेरिफिकेशन की कॉपी 15 तारीख तक जमा करें'}],t,async v=>{await db.doc('tenants/'+id).update({adminNote:v.adminNote})})},
+  viewDoc(id,k){const t=S.tenants.find(x=>x.id===id);if(!t||!t[k])return;const l=(TDOCS.find(d=>d[0]===k)||[])[1]||'';
+    dlg.innerHTML=`<div class="dbody"><h3>${esc(t.name)} · ${l}</h3><img src="${PIX}" data-img="${esc(t[k])}" alt="${l}" style="width:100%;border-radius:8px;max-height:65vh;object-fit:contain;background:var(--bg)"><p class="muted" style="margin:0;font-size:13.5px">🔒 सिर्फ़ इस घर और कमेटी के लिए। स्क्रीनशॉट लेकर किसी से साझा न करें।</p><div class="dfoot"><button class="btn" data-close>बंद करें</button></div></div>`;dlg.showModal()},
+  viewComp(id){const c=S.comp.find(x=>x.id===id);if(!c||!c.photo)return;
+    dlg.innerHTML=`<div class="dbody"><h3>${esc(c.title)}</h3><img src="${PIX}" data-img="${esc(c.photo)}" alt="शिकायत की फोटो" style="width:100%;border-radius:8px;max-height:65vh;object-fit:contain;background:var(--bg)"><div class="dfoot"><button class="btn" data-close>बंद करें</button></div></div>`;dlg.showModal()},
+  editFamily(){const h=myHouse();if(!h)return;
+    openForm('परिवार की जानकारी · मकान '+esc(h.no),[{k:'occ',label:'घर में कौन रहता है',type:'select',options:Object.entries(OCC)},{k:'members',label:'परिवार में कुल कितने लोग',type:'number'},
+      {k:'family',label:'परिवार के सदस्य (नाम और रिश्ता)',type:'textarea',ph:'जैसे पत्नी सीमा, बेटा अमन (12), माँ कमला देवी'},{k:'altPhone',label:'दूसरा मोबाइल नंबर',type:'tel'},{k:'emergency',label:'आपात संपर्क (रिश्तेदार / पड़ोसी का नंबर)',type:'tel'}],h,
+    async v=>{await B.rpc('my_house_update',{p_colony:COLONY,p_patch:{...v,altPhone:phone10(v.altPhone),emergency:phone10(v.emergency)}});await db.refresh('houses')},
+    '<p class="muted" style="margin:0;font-size:14px">यह जानकारी सिर्फ़ आप और कमेटी देख सकते हैं।</p>')},
+  addFee(){ACT2.editFee(null)},
+  editFee(id){const f=id?S.fees.find(x=>x.id===id):{kind:'fixed',open:true,cat:FEECATS[0]};if(!f)return;
+    openForm(id?'शुल्क / चंदा बदलें':'नया शुल्क / चंदा',[{k:'title',label:'नाम',req:true,ph:'जैसे नवरात्रि गरबा 2026'},{k:'cat',label:'किस लिए',type:'select',options:FEECATS},
+      {k:'kind',label:'रकम कैसे तय हो',type:'select',options:[['fixed','तय रकम, हर घर से एक जैसी'],['voluntary','अपनी इच्छा से (कम से कम रकम)']]},{k:'amount',label:'रकम (₹) · तय रकम या कम से कम रकम',type:'number',req:true},
+      {k:'due',label:'आख़िरी तारीख',type:'date'},{k:'note',label:'विवरण (वैकल्पिक)',type:'textarea',ph:'जैसे 3 दिन का गरबा, DJ और प्रसाद का खर्च'},{k:'open',label:'भुगतान चालू है',type:'check'}],f,
+    async v=>{if(v.kind==='fixed'&&!(v.amount>0))throw {code:'amt'};if(id)await db.doc('fees/'+id).update(v);else await db.collection('fees').add({...v,date:today(),example:false})})},
+  async toggleFee(id){const f=S.fees.find(x=>x.id===id);if(f)try{await db.doc('fees/'+id).update({open:!feeOpen(f)})}catch(e){alertBox(errMsg(mapErr(e)))}},
+  delFee(id){const f=S.fees.find(x=>x.id===id);if(!f)return;const n=S.feeList.filter(p=>p.fee===id).length;
+    confirmBox(`<b>${esc(f.title)}</b> हट जाएगा।${n?` इसके ${n} भुगतान हिसाब-किताब में बने रहेंगे।`:''}`,'हाँ, हटाएँ',()=>db.doc('fees/'+id).delete())},
+  feeHouses(id){const f=S.fees.find(x=>x.id===id);if(!f)return;
+    const txt=h=>`नमस्ते ${h.owner} जी,\n${S.cfg.name} कॉलोनी की ओर से याद दिलाना है कि “${f.title}” का ${f.kind==='voluntary'?'चंदा':rs(f.amount)+' शुल्क'} मकान ${h.no} से अभी बाकी है${f.due?' (आख़िरी तारीख '+dFmt(f.due)+')':''}। कृपया जमा करें।\nधन्यवाद।`;
+    dlg.innerHTML=`<div class="dbody"><h3>🪔 ${esc(f.title)}</h3><div class="walist">${sortHouses(S.houses).map(h=>{const p=feePaid(f,h.id),c=feeClaim(f,h.id),ph=phone10(h.ownerPhone);
+      return `<div><span><b>${esc(h.no)}</b> <span class="muted">· ${esc(h.owner)}</span></span><span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${p?`<span class="pill p-ok">✓ ${rs(p.amount)} · ${esc(p.mode||'')}</span><button class="btn sm ghost" data-fx="feeReceipt" data-id="${f.id}" data-m="${h.id}">रसीद</button>`:`${c?'<span class="pill p-warn">UPI पुष्टि बाकी</span>':'<span class="pill p-bad">बाकी</span>'}<button class="btn sm" data-fx="feePayManual" data-id="${f.id}" data-m="${h.id}">जमा दर्ज करें</button>${ph.length===10?`<a class="btn sm ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/91${ph}?text=${encodeURIComponent(txt(h))}">💬 याद दिलाएँ</a>`:''}`}</span></div>`}).join('')}</div>
+      <div class="dfoot"><button class="btn" data-close>बंद करें</button></div></div>`;
+    dlg.querySelectorAll('[data-fx]').forEach(b=>b.onclick=()=>ACT2[b.dataset.fx](b.dataset.id,b.dataset.m));dlg.showModal()},
+  feePayManual(id,hid){const f=S.fees.find(x=>x.id===id),h=houseById(hid);if(!f||!h)return;
+    openForm(`जमा दर्ज करें · ${esc(f.title)} · ${esc(h.no)}`,[{k:'amount',label:'रकम (₹)',type:'number',def:Number(f.amount||0),req:true},{k:'date',label:'तारीख',type:'date',def:today(),req:true},{k:'mode',label:'भुगतान का तरीका',type:'select',options:MODES},{k:'note',label:'नोट (वैकल्पिक)'}],null,
+    async v=>{if(!(v.amount>0))throw {code:'amt'};if(f.kind==='voluntary'&&Number(f.amount)&&v.amount<Number(f.amount))throw {code:'rule',message:`कम से कम ${rs(f.amount)} लिखें।`};
+      await db.doc('feepay/'+f.id+'_'+h.id).set({fee:f.id,feeTitle:f.title,house:h.id,houseNo:h.no,...v,receipt:feeReceiptNo(f.id,h.no),example:false})})},
+  feeReceipt(id,hid){const p=S.feepay[id+'_'+hid],h=houseById(hid)||{};if(!p)return;
+    const txt=`${S.cfg.name} कॉलोनी\nरसीद ${p.receipt}\n${p.feeTitle}\nमकान: ${h.no||p.houseNo} (${h.owner||''})\nरकम: ${rs(p.amount)} (${p.mode})\nतारीख: ${dFmt(p.date)}\nधन्यवाद!`;const ph=phone10(h.ownerPhone);
+    dlg.innerHTML=`<div class="dbody"><div class="receipt"><div class="t">${esc(S.cfg.name)} कॉलोनी</div><p class="muted" style="text-align:center;margin:0 0 10px">रसीद · ${esc(p.feeTitle)}</p>
+      <table><tr><td class="muted">रसीद नंबर</td><td><b>${esc(p.receipt)}</b></td></tr><tr><td class="muted">मकान</td><td>${esc(h.no||p.houseNo)} · ${esc(h.owner||'')}</td></tr><tr><td class="muted">रकम</td><td><b>${rs(p.amount)}</b> · ${esc(p.mode)}</td></tr><tr><td class="muted">तारीख</td><td>${dFmt(p.date)}</td></tr>${p.note?`<tr><td class="muted">नोट</td><td>${esc(p.note)}</td></tr>`:''}</table></div>
+      <div class="err" id="ferr" style="color:var(--ok)"></div><div class="dfoot">${ph.length===10&&isAdmin?`<a class="btn ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/91${ph}?text=${encodeURIComponent(txt)}">WhatsApp पर भेजें</a>`:''}<button class="btn ghost" id="cp">रसीद कॉपी करें</button><button class="btn" data-close>बंद करें</button></div></div>`;
+    dlg.querySelector('#cp').onclick=()=>copyText(txt);dlg.showModal()},
+  payFee(id){const f=S.fees.find(x=>x.id===id),h=myHouse();if(!f||!S.cfg.upiId)return;if(!h){alertBox('आपका नंबर अभी किसी घर से नहीं जुड़ा है।');return}
+    openForm('💳 '+esc(f.title)+' · UPI से जमा करें',[{k:'amount',label:f.kind==='voluntary'?`रकम (₹)${Number(f.amount)?' · कम से कम '+rs(f.amount):''}`:'रकम (₹)',type:'number',req:true},
+      {k:'ref',label:'भुगतान के बाद: UTR / रेफ़रेंस नंबर',req:true,ph:'UPI ऐप में दिखने वाला 12 अंकों का नंबर'},{k:'date',label:'भुगतान की तारीख',type:'date',def:today(),req:true}],{amount:Number(f.amount||0)},
+    async v=>{if(!(v.amount>0))throw {code:'amt'};if(f.kind==='voluntary'&&Number(f.amount)&&v.amount<Number(f.amount))throw {code:'rule',message:`कम से कम ${rs(f.amount)} लिखें।`};
+      if(f.kind!=='voluntary'&&v.amount!==Number(f.amount))throw {code:'rule',message:`इस शुल्क की रकम ${rs(f.amount)} है।`};
+      await db.collection('payclaims').add({fee:f.id,feeTitle:f.title,house:h.id,houseNo:h.no,amount:v.amount,ref:v.ref.replace(/\s/g,''),date:v.date,name:MEM.member_name||meLabel(),by:uid,status:'pending'})},
+    `<div id="upibox" class="upibox"></div>`);
+    const frm=dlg.querySelector('#frm'),box=dlg.querySelector('#upibox');
+    const draw=()=>{const a=Number(frm.elements.amount.value||0);const url=`upi://pay?pa=${encodeURIComponent(S.cfg.upiId)}&pn=${encodeURIComponent(S.cfg.payeeName||S.cfg.name)}&am=${a}&cu=INR&tn=${encodeURIComponent(f.title+' '+h.no)}`;
+      let qr='';try{const q=qrcode(0,'M');q.addData(url);q.make();qr=q.createSvgTag({cellSize:4,margin:2,scalable:true})}catch(_){}
+      box.innerHTML=`<div class="qr">${qr}</div><div style="min-width:0"><b>1.</b> इस QR को किसी भी UPI ऐप (PhonePe, Google Pay, Paytm, BHIM) से स्कैन करें, या फ़ोन पर नीचे का बटन दबाएँ। पैसा सीधे कमेटी के खाते में जाएगा।<div class="muted num" style="font-size:13.5px;margin:4px 0">UPI: ${esc(S.cfg.upiId)} · ${rs(a)}</div><a class="btn sm" href="${url}">📲 UPI ऐप से ${rs(a)} भरें</a><div style="margin-top:8px"><b>2.</b> भुगतान के बाद UTR नंबर नीचे लिखकर “सेव करें” दबाएँ। कमेटी पुष्टि करेगी।</div></div>`};
+    frm.elements.amount.addEventListener('input',draw);draw()},
+  addMsg(){if(!S.houses.length){alertBox('पहले “घर व निवासी” में घर जोड़ें।');return}
+    const pick=`<div class="f" id="hpk" hidden><label>किन घरों को भेजना है</label><div class="hpick">${sortHouses(S.houses).map(h=>`<label><input type="checkbox" value="${h.id}"> ${esc(h.no)}</label>`).join('')}</div></div>`;
+    openForm('नया संदेश',[{k:'to',label:'किसे भेजना है',type:'select',options:[['all','सभी घर'],['dues',`सिर्फ़ बकाया वाले घर (${dueHouses().length})`],['pick','चुने हुए घर']]},
+      {k:'kind',label:'संदेश का प्रकार',type:'select',options:Object.entries(MSGK).map(([k,v])=>[k,v[0]])},{k:'title',label:'शीर्षक',req:true,ph:'जैसे रविवार को आम सभा / बकाया मेंटेनेंस जमा करें'},
+      {k:'body',label:'संदेश',type:'textarea',req:true,ph:'जैसे रविवार सुबह 10 बजे पार्क में आम सभा है, सभी परिवार आएँ।'},{k:'notice',label:'सूचना बोर्ड पर भी डालें (सिर्फ़ “सभी घर” के लिए)',type:'check'}],{to:'all',kind:'info'},
+    async v=>{const batch=newId(),base={title:v.title,body:v.body,kind:v.kind,date:today(),at:new Date().toISOString(),by:(MEM.member_name||meLabel())+(MEM.post?' ('+MEM.post+')':''),batch,target:v.to};
+      if(v.to==='all'){await db.collection('inbox').add({...base,house:'',houseNo:''});if(v.notice)await db.collection('notices').add({title:v.title,body:v.body,date:today(),example:false})}
+      else{const ids=v.to==='dues'?dueHouses().map(h=>h.id):[...dlg.querySelectorAll('#hpk input:checked')].map(i=>i.value);
+        if(!ids.length)throw {code:'rule',message:v.to==='dues'?'अभी किसी घर का बकाया नहीं है।':'कम से कम एक घर चुनें।'};
+        for(const hid of ids){const h=houseById(hid);await db.collection('inbox').add({...base,house:hid,houseNo:h?h.no:''})}}
+      setTimeout(()=>ACT2.waBatch(batch),60)},pick);
+    const sel=dlg.querySelector('[name="to"]');sel.addEventListener('change',()=>{dlg.querySelector('#hpk').hidden=sel.value!=='pick'})},
+  waBatch(batch){const ms=S.inbox.filter(m=>(m.batch||m.id)===batch);if(!ms.length)return;const m=ms[0];
+    const hs=m.target==='all'?sortHouses(S.houses):sortHouses(ms.map(x=>houseById(x.house)).filter(Boolean));
+    const txt=`${S.cfg.name} कॉलोनी कमेटी\n${m.title}\n\n${m.body}`;
+    dlg.innerHTML=`<div class="dbody"><h3>✓ संदेश ऐप में पहुँच गया</h3><p class="muted" style="margin:0;font-size:14px">${hs.length} घरों को यह संदेश उनके ऐप में दिखेगा। WhatsApp पर भी भेजना हो तो हर घर के बटन से एक-एक करके भेजें। अपने आप सबको एक साथ WhatsApp भेजने की सुविधा WhatsApp Business खाता जुड़ने के बाद ही चालू होगी।</p>
+      <div class="walist">${hs.map(h=>{const ph=phone10(h.ownerPhone);return `<div><span><b>${esc(h.no)}</b> <span class="muted">· ${esc(h.owner)}</span></span>${ph.length===10?`<a class="btn sm ghost" style="text-decoration:none;--tc:#1f9d55" target="_blank" rel="noopener" href="https://wa.me/91${ph}?text=${encodeURIComponent(txt)}">💬 WhatsApp</a>`:'<span class="muted" style="font-size:13px">नंबर नहीं</span>'}</div>`}).join('')}</div>
+      <div class="err" id="ferr" style="color:var(--ok)"></div><div class="dfoot"><button class="btn ghost" id="cp">संदेश कॉपी करें</button><button class="btn" data-close>बंद करें</button></div></div>`;
+    dlg.querySelector('#cp').onclick=()=>copyText(txt);dlg.showModal()},
+  delMsg(batch){const ms=S.inbox.filter(m=>(m.batch||m.id)===batch);confirmBox(`यह संदेश ${ms.length>1?ms.length+' घरों के':'सभी घरों के'} ऐप से हट जाएगा। (WhatsApp पर भेजा गया संदेश वहाँ से नहीं हटेगा।)`,'हाँ, हटाएँ',async()=>{for(const m of ms)await db.doc('inbox/'+m.id).delete()})},
+  joinOk(id){const r=S.joins.find(x=>x.id===id);if(!r)return;const g=S.houses.find(h=>String(h.no).replace(/\s/g,'').toLowerCase()===String(r.house).replace(/\s/g,'').toLowerCase());
+    openForm('जुड़ने का अनुरोध मंज़ूर करें · '+esc(r.name),[{k:'name',label:'नाम',req:true},{k:'house_id',label:'किस घर से जोड़ें',type:'select',options:[['','— कोई घर नहीं —'],...sortHouses(S.houses).map(h=>[h.id,h.no+' · '+h.owner])]}],{name:r.name,house_id:g?g.id:''},
+    async v=>{const h=houseById(v.house_id);try{await B.members.add({colony_id:COLONY,name:v.name,phone10:r.phone10||'',email:r.email||'',house:h?h.no:r.house,house_id:h?h.id:'',role:'resident'});await B.joins.set(id,'approved')}catch(e){throw mapErr(e)}loadMembers();loadJoins()},
+    `<p class="muted" style="margin:0;font-size:14px">यह व्यक्ति <b>निवासी</b> के रूप में जुड़ेगा और सिर्फ़ चुने हुए घर की जानकारी देख पाएगा। नंबर: <b class="num">${esc(r.phone10||r.email)}</b></p>`)},
+  joinNo(id){const r=S.joins.find(x=>x.id===id);if(!r)return;confirmBox(`<b>${esc(r.name)}</b> (मकान ${esc(r.house)}) का अनुरोध मना कर दिया जाएगा।`,'हाँ, मना करें',async()=>{try{await B.joins.set(id,'rejected')}catch(e){throw mapErr(e)}loadJoins()})}
+};
+(function bindTenantsShell(){const prev=bindShell;bindShell=function(){prev();
+  const tq=document.getElementById('tq');if(tq)tq.addEventListener('input',()=>{F.tq=tq.value;renderBody()});
+  const tf=document.getElementById('tf');if(tf)tf.addEventListener('change',()=>{F.tf=tf.value;renderBody()})}})();
+
 boot();

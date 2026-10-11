@@ -1,0 +1,609 @@
+{
+ "colonies": [
+  {
+   "id": "demo-lv",
+   "name": "लक्ष्मण विहार (डेमो)",
+   "plan": "trial",
+   "paid_until": null,
+   "active": true,
+   "code": "LV2026"
+  }
+ ],
+ "members": [
+  {
+   "id": "m1",
+   "colony_id": "demo-lv",
+   "name": "कमेटी डेमो",
+   "phone10": "9999900001",
+   "email": "",
+   "role": "admin",
+   "post": "अध्यक्ष",
+   "house": "",
+   "house_id": "",
+   "blocked": false
+  },
+  {
+   "id": "m2",
+   "colony_id": "demo-lv",
+   "name": "रमेश शर्मा",
+   "phone10": "9999900002",
+   "email": "",
+   "role": "resident",
+   "post": "",
+   "house": "A-1",
+   "house_id": "ex-a1",
+   "blocked": false
+  },
+  {
+   "id": "m3",
+   "colony_id": "demo-lv",
+   "name": "कोषाध्यक्ष डेमो",
+   "phone10": "9999900003",
+   "email": "",
+   "role": "admin",
+   "post": "कोषाध्यक्ष",
+   "house": "",
+   "house_id": "",
+   "blocked": false
+  },
+  {
+   "id": "m4",
+   "colony_id": "demo-lv",
+   "name": "सुरेश गुप्ता",
+   "phone10": "9999900004",
+   "email": "",
+   "role": "resident",
+   "post": "",
+   "house": "A-2",
+   "house_id": "ex-a2",
+   "blocked": false
+  }
+ ],
+ "docs": {
+  "demo-lv": {
+   "cameras": {
+    "cam1": {
+     "brand": "",
+     "example": false,
+     "lastCheck": "",
+     "name": "कैमरा 1",
+     "note": "",
+     "place": "मुख्य गेट (उदाहरण)",
+     "since": "",
+     "status": "ok"
+    },
+    "cam2": {
+     "brand": "",
+     "example": false,
+     "lastCheck": "",
+     "name": "कैमरा 2",
+     "note": "",
+     "place": "पार्क के पास (उदाहरण)",
+     "since": "",
+     "status": "ok"
+    }
+   },
+   "cctvlog": {
+    "ex-l1": {
+     "cam": "all",
+     "cost": 0,
+     "date": "2026-10-01",
+     "example": true,
+     "kind": "service",
+     "text": "दोनों कैमरों के लेंस साफ़ किए, रिकॉर्डिंग चेक की (उदाहरण)"
+    }
+   },
+   "committee": {
+    "ex-m1": {
+     "duty": "बड़े फ़ैसले, आम सभा की अध्यक्षता",
+     "example": true,
+     "house": "A-1",
+     "name": "रमेश शर्मा (उदाहरण)",
+     "phone": "98XXXXXX01",
+     "post": "अध्यक्ष",
+     "since": "अप्रैल 2026"
+    },
+    "ex-m2": {
+     "duty": "शिकायतें, सूचनाएँ और किराएदारों की जानकारी",
+     "example": true,
+     "house": "A-2",
+     "name": "सुरेश गुप्ता (उदाहरण)",
+     "phone": "98XXXXXX02",
+     "post": "सचिव",
+     "since": "अप्रैल 2026"
+    },
+    "ex-m3": {
+     "duty": "मेंटेनेंस वसूली, रसीद और बैंक का काम",
+     "example": true,
+     "house": "B-5",
+     "name": "कमला देवी (उदाहरण)",
+     "phone": "98XXXXXX03",
+     "post": "कोषाध्यक्ष",
+     "since": "अप्रैल 2026"
+    },
+    "ex-m4": {
+     "duty": "पार्किंग और सुरक्षा",
+     "example": true,
+     "house": "B-7",
+     "name": "विनोद तिवारी (उदाहरण)",
+     "phone": "",
+     "post": "सदस्य",
+     "since": ""
+    }
+   },
+   "complaints": {
+    "ex-c1": {
+     "cat": "बिजली / स्ट्रीट लाइट",
+     "date": "2026-10-06",
+     "example": true,
+     "house": "B-5",
+     "kind": "complaint",
+     "name": "अमित यादव",
+     "reply": "इलेक्ट्रीशियन को बुला लिया है, 2 दिन में ठीक हो जाएगी।",
+     "status": "work",
+     "text": "पिछले एक हफ़्ते से गली नंबर 2 की दो लाइटें बंद हैं, रात में अंधेरा रहता है।",
+     "title": "गली नंबर 2 की स्ट्रीट लाइट खराब (उदाहरण)",
+     "houseId": "ex-b5"
+    },
+    "ex-c2": {
+     "cat": "पार्क",
+     "date": "2026-10-08",
+     "example": true,
+     "house": "A-1",
+     "kind": "suggestion",
+     "name": "रमेश शर्मा",
+     "reply": "",
+     "status": "new",
+     "text": "पार्क में 2-3 झूले और एक फिसलपट्टी लग जाए तो बच्चे शाम को वहीं खेल सकेंगे।",
+     "title": "पार्क में बच्चों के लिए झूले लगवाए जाएँ (उदाहरण)",
+     "houseId": "ex-a1"
+    },
+    "ex-c3": {
+     "cat": "पार्किंग",
+     "date": "2026-10-10",
+     "example": true,
+     "house": "B-7",
+     "kind": "complaint",
+     "name": "विनोद तिवारी",
+     "reply": "",
+     "status": "new",
+     "text": "सुबह से गेट के सामने कार खड़ी है, मेरी गाड़ी बाहर नहीं निकल पा रही।",
+     "title": "गलत पार्किंग: 4321 · मेरे गेट के सामने (उदाहरण)",
+     "vnum": "4321",
+     "houseId": "ex-b7"
+    }
+   },
+   "config": {
+    "main": {
+     "charge": 500,
+     "contacts": [
+      {
+       "name": "रमेश शर्मा",
+       "role": "अध्यक्ष",
+       "phone": "98XXXXXX01"
+      },
+      {
+       "name": "कमला देवी",
+       "role": "कोषाध्यक्ष",
+       "phone": "98XXXXXX03"
+      }
+     ],
+     "dueDay": 10,
+     "lateFee": 0,
+     "name": "लक्ष्मण विहार (डेमो)",
+     "start": "2026-07",
+     "termFrom": "अप्रैल 2026",
+     "termNote": "उदाहरण: आम सभा में चुनी गई कमेटी (अपनी सही तारीखें डालें)",
+     "termTo": "मार्च 2028",
+     "upiId": "laxmanvihar@upi",
+     "payeeName": "लक्ष्मण विहार समिति (डेमो)",
+     "cctvKeeper": "रमेश शर्मा (अध्यक्ष)",
+     "cctvWhere": "मकान A-1",
+     "cctvDays": 30
+    }
+   },
+   "expenses": {
+    "ex-e1": {
+     "amount": 1500,
+     "cat": "सफाई कर्मचारी",
+     "date": "2026-09-30",
+     "example": true,
+     "title": "सितंबर की सफाई कर्मचारी की तनख्वाह (उदाहरण)"
+    },
+    "ex-e2": {
+     "amount": 650,
+     "cat": "मरम्मत",
+     "date": "2026-10-07",
+     "example": true,
+     "title": "स्ट्रीट लाइट मरम्मत (उदाहरण)"
+    },
+    "ex-i1": {
+     "amount": 1100,
+     "cat": "दान / चंदा",
+     "date": "2026-10-05",
+     "example": true,
+     "kind": "in",
+     "mode": "नकद",
+     "note": "मकान A-1 की ओर से",
+     "title": "दिवाली कार्यक्रम के लिए दान (उदाहरण)"
+    }
+   },
+   "houses": {
+    "ex-a1": {
+     "chargeFrom": "",
+     "example": true,
+     "members": 4,
+     "no": "A-1",
+     "occ": "self",
+     "owner": "रमेश शर्मा (उदाहरण)",
+     "ownerPhone": "98XXXXXX01",
+     "police": false,
+     "tenant": "",
+     "tenantPhone": "",
+     "tenantSince": "",
+     "vehicle": "MP09 AB 1234",
+     "family": "पत्नी सीमा, बेटा अमन (12), माँ कमला देवी",
+     "emergency": ""
+    },
+    "ex-a2": {
+     "chargeFrom": "",
+     "example": true,
+     "members": 3,
+     "no": "A-2",
+     "occ": "rent",
+     "owner": "सुरेश गुप्ता (उदाहरण)",
+     "ownerPhone": "98XXXXXX02",
+     "police": true,
+     "tenant": "सुनील वर्मा (उदाहरण)",
+     "tenantPhone": "97XXXXXX11",
+     "tenantSince": "2026-04-01",
+     "vehicle": ""
+    },
+    "ex-b5": {
+     "chargeFrom": "",
+     "example": true,
+     "members": 2,
+     "no": "B-5",
+     "occ": "rent",
+     "owner": "कमला देवी (उदाहरण)",
+     "ownerPhone": "98XXXXXX03",
+     "police": false,
+     "tenant": "अमित यादव (उदाहरण)",
+     "tenantPhone": "97XXXXXX12",
+     "tenantSince": "2026-08-15",
+     "vehicle": "MP09 CD 5678"
+    },
+    "ex-b7": {
+     "chargeFrom": "",
+     "example": true,
+     "members": 0,
+     "no": "B-7",
+     "occ": "vacant",
+     "owner": "विनोद तिवारी (उदाहरण)",
+     "ownerPhone": "98XXXXXX04",
+     "police": false,
+     "tenant": "",
+     "tenantPhone": "",
+     "tenantSince": "",
+     "vehicle": ""
+    }
+   },
+   "notices": {
+    "ex-n1": {
+     "body": "रविवार सुबह 10 बजे पार्क में कॉलोनी की आम सभा होगी। विषय: दिवाली कार्यक्रम और पार्क की मरम्मत।",
+     "date": "2026-10-09",
+     "example": true,
+     "title": "रविवार को आम सभा (उदाहरण)"
+    }
+   },
+   "payments": {
+    "ex-a1_2026-07": {
+     "amount": 500,
+     "date": "2026-07-05",
+     "example": true,
+     "house": "ex-a1",
+     "houseNo": "A-1",
+     "mode": "UPI",
+     "month": "2026-07",
+     "note": "",
+     "receipt": "LV/202607/A-1"
+    },
+    "ex-a1_2026-08": {
+     "amount": 500,
+     "date": "2026-08-04",
+     "example": true,
+     "house": "ex-a1",
+     "houseNo": "A-1",
+     "mode": "UPI",
+     "month": "2026-08",
+     "note": "",
+     "receipt": "LV/202608/A-1"
+    },
+    "ex-a1_2026-09": {
+     "amount": 500,
+     "date": "2026-09-06",
+     "example": true,
+     "house": "ex-a1",
+     "houseNo": "A-1",
+     "mode": "नकद",
+     "month": "2026-09",
+     "note": "",
+     "receipt": "LV/202609/A-1"
+    },
+    "ex-a1_2026-10": {
+     "amount": 500,
+     "date": "2026-10-03",
+     "example": true,
+     "house": "ex-a1",
+     "houseNo": "A-1",
+     "mode": "UPI",
+     "month": "2026-10",
+     "note": "",
+     "receipt": "LV/202610/A-1"
+    },
+    "ex-a2_2026-07": {
+     "amount": 500,
+     "date": "2026-07-10",
+     "example": true,
+     "house": "ex-a2",
+     "houseNo": "A-2",
+     "mode": "नकद",
+     "month": "2026-07",
+     "note": "",
+     "receipt": "LV/202607/A-2"
+    },
+    "ex-a2_2026-08": {
+     "amount": 500,
+     "date": "2026-08-12",
+     "example": true,
+     "house": "ex-a2",
+     "houseNo": "A-2",
+     "mode": "नकद",
+     "month": "2026-08",
+     "note": "",
+     "receipt": "LV/202608/A-2"
+    },
+    "ex-b5_2026-07": {
+     "amount": 500,
+     "date": "2026-07-08",
+     "example": true,
+     "house": "ex-b5",
+     "houseNo": "B-5",
+     "mode": "UPI",
+     "month": "2026-07",
+     "note": "",
+     "receipt": "LV/202607/B-5"
+    }
+   },
+   "polls": {
+    "ex-p1": {
+     "date": "2026-10-09",
+     "example": true,
+     "note": "अनुमानित खर्च ₹8,000, कॉलोनी फंड से।",
+     "open": true,
+     "options": [
+      "हाँ",
+      "नहीं",
+      "कोई राय नहीं"
+     ],
+     "q": "क्या इस दिवाली पार्क में सामूहिक दीपोत्सव रखा जाए? (उदाहरण)"
+    }
+   },
+   "services": {
+    "ex-s1": {
+     "area": "पास की बस्ती",
+     "cat": "प्लंबर",
+     "example": true,
+     "name": "राजू (उदाहरण)",
+     "note": "",
+     "phone": "98XXXXXX21",
+     "rate": "₹200 प्रति विज़िट",
+     "timing": "सुबह 9 से शाम 6, मंगलवार छुट्टी",
+     "verified": true
+    },
+    "ex-s2": {
+     "area": "",
+     "cat": "कामवाली / मेड",
+     "example": true,
+     "name": "सीता बाई (उदाहरण)",
+     "note": "कॉलोनी में 5 साल से काम कर रही हैं",
+     "phone": "97XXXXXX22",
+     "rate": "₹1,500 प्रति महीना (झाड़ू-पोछा)",
+     "timing": "सुबह 7 से 11",
+     "verified": true
+    },
+    "ex-s3": {
+     "area": "",
+     "cat": "दूध वाला",
+     "example": true,
+     "name": "श्याम डेयरी (उदाहरण)",
+     "note": "",
+     "phone": "99XXXXXX23",
+     "rate": "₹64 प्रति लीटर",
+     "timing": "सुबह 6 और शाम 6 बजे",
+     "verified": false
+    },
+    "ex-s4": {
+     "area": "मेन मार्केट",
+     "cat": "इलेक्ट्रीशियन",
+     "example": true,
+     "name": "मुकेश इलेक्ट्रिकल्स (उदाहरण)",
+     "note": "कॉलोनी की स्ट्रीट लाइट भी यही ठीक करते हैं",
+     "phone": "96XXXXXX24",
+     "rate": "₹150 से शुरू",
+     "timing": "कॉल करके बुलाएँ",
+     "verified": false
+    }
+   },
+   "vehicles": {
+    "ex-v1": {
+     "example": true,
+     "house": "ex-a1",
+     "houseNo": "A-1",
+     "model": "सफ़ेद स्विफ्ट",
+     "number": "MP09 AB 1234",
+     "parkAt": "घर के अंदर",
+     "type": "car"
+    },
+    "ex-v2": {
+     "example": true,
+     "house": "ex-a1",
+     "houseNo": "A-1",
+     "model": "ग्रे क्रेटा",
+     "number": "MP09 XY 4321",
+     "parkAt": "गली में",
+     "type": "car"
+    },
+    "ex-v3": {
+     "example": true,
+     "house": "ex-a1",
+     "houseNo": "A-1",
+     "model": "काली स्प्लेंडर",
+     "number": "MP09 PQ 7788",
+     "parkAt": "घर के अंदर",
+     "type": "bike"
+    },
+    "ex-v4": {
+     "example": true,
+     "house": "ex-b5",
+     "houseNo": "B-5",
+     "model": "लाल i20",
+     "number": "MP09 CD 5678",
+     "parkAt": "घर के सामने",
+     "type": "car"
+    },
+    "ex-v5": {
+     "example": true,
+     "house": "ex-a2",
+     "houseNo": "A-2",
+     "model": "नीली एक्टिवा",
+     "number": "MP09 RS 2468",
+     "parkAt": "घर के अंदर",
+     "type": "bike"
+    }
+   },
+   "tenants": {
+    "ex-t1": {
+     "house": "ex-a2",
+     "houseNo": "A-2",
+     "name": "सुनील वर्मा (उदाहरण)",
+     "rel": "रामप्रसाद वर्मा",
+     "age": 32,
+     "phone": "97XXXXXX11",
+     "permAddr": "वार्ड 4, ग्राम पलारी",
+     "district": "बलौदा बाज़ार",
+     "state": "छत्तीसगढ़",
+     "family": "पत्नी रेखा, बेटी पिंकी (6 साल)",
+     "familyCount": 3,
+     "aadhaarLast4": "4821",
+     "work": "श्री सीमेंट प्लांट",
+     "workAddr": "हिरमी, बलौदा बाज़ार",
+     "since": "2026-04-01",
+     "police": "done",
+     "emergency": "",
+     "status": "active",
+     "verified": true,
+     "verifiedBy": "कमेटी डेमो (अध्यक्ष)",
+     "verifiedAt": "2026-04-10",
+     "consentAt": "2026-04-01",
+     "addedBy": "सुरेश गुप्ता",
+     "updated": "2026-04-01",
+     "example": true
+    },
+    "ex-t2": {
+     "house": "ex-b5",
+     "houseNo": "B-5",
+     "name": "अमित यादव (उदाहरण)",
+     "rel": "शिवकुमार यादव",
+     "age": 27,
+     "phone": "97XXXXXX12",
+     "permAddr": "मकान 12, रामनगर",
+     "district": "रायपुर",
+     "state": "छत्तीसगढ़",
+     "family": "अकेले रहते हैं",
+     "familyCount": 1,
+     "aadhaarLast4": "7302",
+     "work": "मेडिकल स्टोर, मुख्य बाज़ार",
+     "workAddr": "",
+     "since": "2026-08-15",
+     "police": "applied",
+     "emergency": "",
+     "status": "active",
+     "verified": false,
+     "consentAt": "2026-08-15",
+     "addedBy": "कमला देवी",
+     "updated": "2026-08-15",
+     "example": true
+    }
+   },
+   "fees": {
+    "ex-f1": {
+     "title": "नवरात्रि गरबा 2026 (उदाहरण)",
+     "cat": "नवरात्रि / गरबा",
+     "kind": "fixed",
+     "amount": 501,
+     "due": "2026-10-20",
+     "note": "3 दिन का गरबा, DJ, सजावट और प्रसाद का खर्च",
+     "open": true,
+     "date": "2026-10-01",
+     "example": true
+    },
+    "ex-f2": {
+     "title": "गुरु घासीदास जयंती 2026 (उदाहरण)",
+     "cat": "गुरु घासीदास जयंती",
+     "kind": "voluntary",
+     "amount": 101,
+     "due": "2026-12-15",
+     "note": "18 दिसंबर को जयंती कार्यक्रम और भंडारा",
+     "open": true,
+     "date": "2026-10-05",
+     "example": true
+    }
+   },
+   "feepay": {
+    "ex-f1_ex-a2": {
+     "fee": "ex-f1",
+     "feeTitle": "नवरात्रि गरबा 2026 (उदाहरण)",
+     "house": "ex-a2",
+     "houseNo": "A-2",
+     "amount": 501,
+     "date": "2026-10-04",
+     "mode": "UPI",
+     "note": "",
+     "receipt": "CF/EX-F1/A-2",
+     "example": true
+    }
+   },
+   "inbox": {
+    "ex-i1": {
+     "house": "",
+     "houseNo": "",
+     "batch": "ex-b1",
+     "target": "all",
+     "kind": "info",
+     "title": "रविवार को आम सभा (उदाहरण)",
+     "body": "रविवार सुबह 10 बजे पार्क में आम सभा है। नवरात्रि गरबा की तैयारी पर बात होगी। सभी परिवार आएँ।",
+     "date": "2026-10-08",
+     "by": "कमेटी डेमो (अध्यक्ष)",
+     "example": true
+    },
+    "ex-i2": {
+     "house": "ex-b5",
+     "houseNo": "B-5",
+     "batch": "ex-b2",
+     "target": "dues",
+     "kind": "dues",
+     "title": "बकाया मेंटेनेंस (उदाहरण)",
+     "body": "मकान B-5 का अगस्त से मेंटेनेंस बाकी है। कृपया जल्द जमा करें।",
+     "date": "2026-10-09",
+     "by": "कोषाध्यक्ष डेमो (कोषाध्यक्ष)",
+     "example": true
+    }
+   }
+  }
+ },
+ "owners": [
+  "u-demo-owner"
+ ],
+ "files": {}
+}
