@@ -3,13 +3,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Building2, Smartphone, Eye, Download, CheckCircle2, Settings, Clock } from "lucide-react";
 import { ColonyMitraPurchaseForm } from "@/components/colony-mitra/ColonyMitraPurchaseForm";
-import { COLONY_MITRA_FIRST_COLONY, getColonyMitraPlan } from "@/lib/colonyMitraPurchase";
+import { COLONY_MITRA_FIRST_COLONY, getColonyMitraPlans } from "@/lib/colonyMitraPurchase";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Colony Mitra ख़रीदें — मासिक कॉलोनी प्लान | Abhiraj Digital Innovation",
-  description: "Colony Mitra (कॉलोनी मित्र) का मासिक कॉलोनी प्लान Razorpay (UPI / कार्ड) से ख़रीदें।",
+  title: "Colony Mitra ख़रीदें — मासिक / सालाना कॉलोनी प्लान | Abhiraj Digital Innovation",
+  description: "Colony Mitra (कॉलोनी मित्र) का मासिक या सालाना कॉलोनी प्लान Razorpay (UPI / कार्ड) से ख़रीदें।",
 };
 
 const ready = [
@@ -28,7 +28,7 @@ const needsSetup = [
 const later = ["Android APK / Play Store", "विज़िटर व गेट मैनेजमेंट", "पुश नोटिफ़िकेशन"];
 
 export default function ColonyMitraPurchasePage() {
-  const plan = getColonyMitraPlan();
+  const plans = getColonyMitraPlans();
 
   return (
     <div className="relative space-y-12 sm:space-y-16 py-10 lg:py-16 bg-grid-pattern">
@@ -47,25 +47,32 @@ export default function ColonyMitraPurchasePage() {
           <div className="lg:col-span-6 space-y-5">
             <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full text-xs font-mono bg-indigo-950/80 border border-indigo-800/60 text-indigo-300">
               <Building2 className="w-3.5 h-3.5" />
-              <span>MONTHLY COLONY PLAN</span>
+              <span>MONTHLY &amp; YEARLY COLONY PLANS</span>
             </div>
             <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight font-heading">
               Colony Mitra <span className="text-indigo-400">ख़रीदें</span>
             </h1>
             <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-              पूरी कॉलोनी के लिए एक मासिक प्लान। पहली कॉलोनी: <strong className="text-white">{COLONY_MITRA_FIRST_COLONY}</strong>।
+              पूरी कॉलोनी के लिए मासिक या सालाना प्लान। पहली कॉलोनी: <strong className="text-white">{COLONY_MITRA_FIRST_COLONY}</strong>।
               भुगतान के बाद हमारी टीम आपकी कॉलोनी के घर, सदस्य और सेटिंग्स जोड़कर ऐप शुरू करती है।
             </p>
 
-            <div className="p-5 rounded-2xl bg-slate-900/80 border border-indigo-700/50">
-              <div className="text-xs font-mono text-indigo-300 uppercase tracking-wider">मासिक प्लान</div>
-              {plan ? (
-                <div className="text-4xl font-extrabold text-white mt-1 tabular-nums">
-                  {plan.displayPrice}
-                  <span className="text-base font-medium text-slate-400"> {plan.period}</span>
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {plans.length ? (
+                plans.map((p) => (
+                  <div key={p.id} className="p-5 rounded-2xl bg-slate-900/80 border border-indigo-700/50">
+                    <div className="text-xs font-mono text-indigo-300 uppercase tracking-wider">
+                      {p.id === "yearly" ? "सालाना प्लान" : "मासिक प्लान"}
+                    </div>
+                    <div className="text-3xl font-extrabold text-white mt-1 tabular-nums">
+                      {p.displayPrice}
+                      <span className="text-base font-medium text-slate-400"> {p.period}</span>
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1">पूरी कॉलोनी के लिए</div>
+                  </div>
+                ))
               ) : (
-                <div className="text-xl font-bold text-amber-300 mt-1">कीमत जल्द घोषित होगी</div>
+                <div className="text-xl font-bold text-amber-300">कीमत जल्द घोषित होगी</div>
               )}
             </div>
 
@@ -95,8 +102,7 @@ export default function ColonyMitraPurchasePage() {
 
           <div className="lg:col-span-6">
             <ColonyMitraPurchaseForm
-              priceSet={Boolean(plan)}
-              displayPrice={plan ? plan.displayPrice : null}
+              plans={plans.map((p) => ({ id: p.id, displayPrice: p.displayPrice, period: p.period }))}
               firstColony={COLONY_MITRA_FIRST_COLONY}
             />
           </div>

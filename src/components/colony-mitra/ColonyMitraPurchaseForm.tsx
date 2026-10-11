@@ -18,16 +18,12 @@ function loadCheckout(): Promise<boolean> {
   });
 }
 
-export function ColonyMitraPurchaseForm({
-  priceSet,
-  displayPrice,
-  firstColony,
-}: {
-  priceSet: boolean;
-  displayPrice: string | null;
-  firstColony: string;
-}) {
+type PlanOption = { id: "monthly" | "yearly"; displayPrice: string; period: string };
+
+export function ColonyMitraPurchaseForm({ plans, firstColony }: { plans: PlanOption[]; firstColony: string }) {
   const [form, setForm] = useState({ colonyName: firstColony, city: "", houses: "", contactName: "", phone: "", email: "" });
+  const [planId, setPlanId] = useState<PlanOption["id"]>(plans[0]?.id ?? "monthly");
+  const plan = plans.find((p) => p.id === planId) ?? plans[0];
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState<{ paymentId: string } | null>(null);
@@ -42,7 +38,7 @@ export function ColonyMitraPurchaseForm({
       const r = await fetch("/api/colony-mitra/purchase/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, planId }),
       });
       const order = await r.json();
       if (!order.success) {
@@ -60,7 +56,7 @@ export function ColonyMitraPurchaseForm({
         amount: order.amount,
         currency: order.currency,
         name: "Abhiraj Digital Innovation",
-        description: `Colony Mitra · ${form.colonyName}`,
+        description: `Colony Mitra · ${planId === "yearly" ? "Yearly" : "Monthly"} · ${form.colonyName}`,
         prefill: { name: form.contactName, email: form.email, contact: form.phone },
         notes: { colonyName: form.colonyName },
         theme: { color: "#4F46E5" },
@@ -70,7 +66,7 @@ export function ColonyMitraPurchaseForm({
             const v = await fetch("/api/colony-mitra/purchase/verify", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(resp),
+              body: JSON.stringify({ ...resp, planId }),
             }).then((x) => x.json());
             if (v.verified) setDone({ paymentId: v.paymentId });
             else setError(v.error || "भुगतान की पुष्टि नहीं हो सकी।");
@@ -98,7 +94,7 @@ export function ColonyMitraPurchaseForm({
           <CheckCircle2 className="w-6 h-6" /> भुगतान सफल हुआ
         </div>
         <p className="text-slate-300 text-sm">
-          <strong className="text-white">{form.colonyName}</strong> के लिए Colony Mitra का मासिक प्लान ले लिया गया है। हमारी टीम{" "}
+          <strong className="text-white">{form.colonyName}</strong> के लिए Colony Mitra का {planId === "yearly" ? "सालाना" : "मासिक"} प्लान ले लिया गया है। हमारी टीम{" "}
           <strong className="text-white">{form.phone}</strong> पर संपर्क करके आपकी कॉलोनी का सेटअप शुरू करेगी।
         </p>
         <p className="text-xs text-slate-400">
@@ -114,6 +110,24 @@ export function ColonyMitraPurchaseForm({
 
   return (
     <form onSubmit={pay} className="p-6 sm:p-8 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
+      <fieldset className="grid grid-cols-2 gap-3">
+        <legend className={label}>प्लान चुनें</legend>
+        {plans.map((p) => (
+          <label
+            key={p.id}
+            className={`cursor-pointer rounded-xl border p-3 transition-colors ${
+              planId === p.id ? "border-indigo-500 bg-indigo-950/60" : "border-slate-700 bg-slate-950/50 hover:border-slate-500"
+            }`}
+          >
+            <input type="radio" name="cm-plan" value={p.id} checked={planId === p.id} onChange={() => setPlanId(p.id)} className="sr-only" />
+            <span className="block text-xs font-semibold text-slate-300">{p.id === "yearly" ? "सालाना" : "मासिक"}</span>
+            <span className="block text-lg font-extrabold text-white tabular-nums">
+              {p.displayPrice}
+              <span className="text-xs font-medium text-slate-400"> {p.period}</span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
           <label htmlFor="cm-colony" className={label}>कॉलोनी / सोसाइटी का नाम</label>
@@ -143,18 +157,20 @@ export function ColonyMitraPurchaseForm({
 
       {error && <p className="text-sm text-rose-400">{error}</p>}
 
-      {priceSet ? (
+      {plan ? (
         <button
           type="submit"
           disabled={busy}
           className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/25 transition-all disabled:opacity-60"
         >
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
-          <span>{displayPrice} / महीना · UPI या कार्ड से भुगतान करें</span>
+          <span>
+            {plan.displayPrice} {plan.period} · UPI या कार्ड से भुगतान करें
+          </span>
         </button>
       ) : (
         <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 text-sm text-amber-200">
-          मासिक प्लान की कीमत जल्द घोषित होगी। तब तक संपर्क करें:{" "}
+          प्लान की कीमत जल्द घोषित होगी। तब तक संपर्क करें:{" "}
           <a className="underline" href="mailto:abhirajdigitalinnovation@gmail.com?subject=Colony%20Mitra">
             abhirajdigitalinnovation@gmail.com
           </a>

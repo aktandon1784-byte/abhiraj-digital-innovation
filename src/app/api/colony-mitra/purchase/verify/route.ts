@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
       razorpay_order_id?: string;
       razorpay_payment_id?: string;
       razorpay_signature?: string;
+      planId?: string;
     } | null;
     const orderId = String(body?.razorpay_order_id || "");
     const paymentId = String(body?.razorpay_payment_id || "");
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, verified: false, error: "भुगतान की पुष्टि नहीं हो सकी।" }, { status: 400 });
     }
 
-    const plan = getColonyMitraPlan();
+    const plan = getColonyMitraPlan(body?.planId);
     const payment = await fetchRazorpayPayment(paymentId);
     const okStatus = payment && (payment.status === "captured" || payment.status === "authorized");
     const okOrder = payment && payment.orderId === orderId;
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ success: true, verified: true, paymentId, orderId });
+    return NextResponse.json({ success: true, verified: true, paymentId, orderId, planId: plan?.id });
   } catch (err: unknown) {
     console.error("Colony Mitra verify error:", err);
     return NextResponse.json({ success: false, verified: false, error: "भुगतान की पुष्टि नहीं हो सकी।" }, { status: 500 });

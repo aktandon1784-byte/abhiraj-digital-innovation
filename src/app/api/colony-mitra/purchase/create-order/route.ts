@@ -6,23 +6,20 @@ export const dynamic = "force-dynamic";
 
 /**
  * POST /api/colony-mitra/purchase/create-order
- * Creates a Razorpay order for the Colony Mitra monthly colony plan.
- * The amount comes only from the server (COLONY_MITRA_MONTHLY_PRICE_INR); client prices are ignored.
+ * Creates a Razorpay order for the Colony Mitra monthly or yearly colony plan.
+ * The amount comes only from the server plan table; client prices are ignored.
  */
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json().catch(() => null)) as Partial<ColonyMitraBuyer> | null;
+    const body = (await req.json().catch(() => null)) as (Partial<ColonyMitraBuyer> & { planId?: string }) | null;
     const buyer = cleanBuyer(body ?? undefined);
     if (typeof buyer === "string") {
       return NextResponse.json({ success: false, error: buyer }, { status: 400 });
     }
 
-    const plan = getColonyMitraPlan();
+    const plan = getColonyMitraPlan(body?.planId);
     if (!plan) {
-      return NextResponse.json(
-        { success: false, priceNotSet: true, error: "Colony Mitra की कीमत अभी तय नहीं हुई है। कृपया संपर्क करें।" },
-        { status: 503 }
-      );
+      return NextResponse.json({ success: false, error: "मासिक या सालाना प्लान चुनें।" }, { status: 400 });
     }
 
     const { keyId, isConfigured } = getRazorpayCredentials();
@@ -58,6 +55,7 @@ export async function POST(req: NextRequest) {
       amount: order.amount,
       currency: order.currency,
       keyId,
+      planId: plan.id,
       planName: plan.name,
     });
   } catch (err: unknown) {
