@@ -22,10 +22,10 @@ const ready = [
 ];
 const needsSetup = [
   "OTP लॉगिन (SMS / WhatsApp / ईमेल)",
-  "अपने आप WhatsApp रसीद और रिमाइंडर",
+  "WhatsApp पर अपने आप रसीद और रिमाइंडर",
   "ऑनलाइन डेटा सर्वर और फोटो स्टोरेज",
 ];
-const later = ["Android APK / Play Store", "विज़िटर व गेट मैनेजमेंट", "पुश नोटिफ़िकेशन"];
+const later = ["Android APK फ़ाइल / Play Store", "विज़िटर व गेट मैनेजमेंट", "पुश नोटिफ़िकेशन"];
 
 export default function ColonyMitraPurchasePage() {
   const plans = getColonyMitraPlans();
@@ -89,13 +89,13 @@ export default function ColonyMitraPurchasePage() {
                 href="/colony-mitra/app/index.html"
                 className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-slate-200 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 transition-all"
               >
-                <Smartphone className="w-4 h-4" /> वेब ऐप खोलें
+                <Smartphone className="w-4 h-4" /> वेब ऐप (सेटअप बाकी)
               </a>
               <span
                 aria-disabled="true"
                 className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-slate-500 bg-slate-900/60 border border-slate-800 cursor-not-allowed"
               >
-                <Download className="w-4 h-4" /> APK जल्द आएगी
+                <Download className="w-4 h-4" /> APK अभी उपलब्ध नहीं
               </span>
             </div>
           </div>
@@ -118,11 +118,12 @@ export default function ColonyMitraPurchasePage() {
             <ul className="space-y-1.5 text-sm text-slate-300">{ready.map((t) => <li key={t}>• {t}</li>)}</ul>
           </div>
           <div className="p-5 rounded-2xl bg-slate-900/70 border border-amber-800/60 space-y-3">
-            <div className="flex items-center gap-2 text-amber-300 font-bold"><Settings className="w-5 h-5" /> आपकी कॉलोनी के सेटअप के साथ चालू होगा</div>
+            <div className="flex items-center gap-2 text-amber-300 font-bold"><Settings className="w-5 h-5" /> अभी चालू नहीं · सेटअप बाकी</div>
             <ul className="space-y-1.5 text-sm text-slate-300">{needsSetup.map((t) => <li key={t}>• {t}</li>)}</ul>
+            <p className="text-xs text-slate-400">इसके लिए SMS / WhatsApp सेवा और डेटा सर्वर के खाते जोड़ने बाकी हैं। डेमो में OTP नकली (123456) है, असली संदेश नहीं जाता।</p>
           </div>
           <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-700 space-y-3">
-            <div className="flex items-center gap-2 text-slate-300 font-bold"><Clock className="w-5 h-5" /> आगे आएगा</div>
+            <div className="flex items-center gap-2 text-slate-300 font-bold"><Clock className="w-5 h-5" /> अभी उपलब्ध नहीं · आगे आएगा</div>
             <ul className="space-y-1.5 text-sm text-slate-400">{later.map((t) => <li key={t}>• {t}</li>)}</ul>
           </div>
         </div>
