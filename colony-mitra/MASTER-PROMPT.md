@@ -82,9 +82,9 @@ manually; police verification is the real check.
 
 ## 4. Payments to the committee
 
-- Committee creates **fees / चंदा** (monthly maintenance is built in; others like नवरात्रि गरबा,
-  अम्बेडकर जयंती, गुरु घासीदास जयंती, होली मिलन): title, fixed amount or voluntary (minimum),
-  last date, open/closed.
+- **चंदा section is for the committee only.** It has no pre-filled names or categories: the committee types
+  what the चंदा is for, the amount (fixed per house, or voluntary with a minimum), last date and an optional note.
+  After creating it, the message form opens pre-filled to send to all houses (editable).
 - Residents see their own dues and pay by **UPI directly to the committee's UPI ID** (QR / UPI app
   link, zero fee). The resident submits the UTR; the committee confirms; a receipt is created and the
   amount enters the cash book.

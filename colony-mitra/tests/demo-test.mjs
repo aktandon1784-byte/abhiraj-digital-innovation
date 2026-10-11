@@ -45,7 +45,7 @@ const text=async pg=>pg.$eval('#main',e=>e.innerText);
  await go(pg,'comp');tx=await text(pg);ok(!tx.includes('B-5')&&!tx.includes('विनोद'),'complaints: only own');
  await pg.click('[data-act="addComp"]');await pg.selectOption('#f_cat','स्ट्रीट लाइट');await pg.fill('#f_title','गली 3 की स्ट्रीट लाइट बंद');await pg.fill('#f_text','3 दिन से बंद है');
  await pg.click('#frm [type=submit]');await pg.waitForTimeout(500);tx=await text(pg);ok(tx.includes('गली 3 की स्ट्रीट लाइट बंद')&&tx.includes('नई'),'resident files complaint for own house');
- await go(pg,'fees');tx=await text(pg);ok(tx.includes('नवरात्रि गरबा')&&tx.includes('बाकी'),'resident sees fee due');
+ ok(!(await tabs(pg)).includes('fees'),'chanda tab is committee only');await go(pg,'maint');tx=await text(pg);ok(tx.includes('कॉलोनी कार्यक्रम')&&tx.includes('जमा करें'),'resident sees own chanda due in maintenance');
  await go(pg,'acct');tx=await text(pg);ok(tx.includes('अभी फंड में बची रकम')&&!tx.includes('बाकी रकम')&&!tx.includes('सभी एंट्री')&&!tx.includes('मेंटेनेंस वसूली'),'resident sees fund totals only (no cash book)');
  await go(pg,'msgs');tx=await text(pg);ok(tx.includes('रविवार को आम सभा')&&!tx.includes('B-5'),'resident inbox');
  const leak=await pg.evaluate(async()=>{const r=await window.CS_BACKEND.docs.listAll('demo-lv');return r.filter(x=>['houses','tenants','payments','vehicles','feepay','complaints','expenses','payclaims'].includes(x.collection)).map(x=>x.collection+':'+(x.data.houseNo||x.data.house||x.data.no||''))});
@@ -69,14 +69,17 @@ const text=async pg=>pg.$eval('#main',e=>e.innerText);
  await pg.fill('#f_title','A-1 के लिए जाँच');await pg.fill('#f_body','कृपया अपने किराएदार का पुलिस वेरिफिकेशन जमा करें');await pg.click('#frm [type=submit]');await pg.waitForTimeout(600);
  ok((await pg.$eval('#dlg',e=>e.open&&e.innerText.includes('संदेश ऐप में पहुँच गया'))),'message sent, WhatsApp list shown');
  await pg.keyboard.press('Escape');
- await go(pg,'fees');tx=await text(pg);ok(tx.includes('1/4')&&tx.includes('घरों ने दिया'),'committee fee summary');
+ await go(pg,'fees');tx=await text(pg);ok(tx.includes('1/4')&&tx.includes('घरों ने दिया'),'committee chanda summary');
+ await pg.click('.toolbar [data-act="addFee"]');ok(!(await pg.$('#f_cat')),'no pre-filled chanda category');await pg.fill('#f_title','सामुदायिक भवन');await pg.fill('#f_amount','251');await pg.click('#frm [type=submit]');await pg.waitForTimeout(600);
+ ok(await pg.$eval('#dlg',e=>e.open&&e.querySelector('#f_title')&&e.querySelector('#f_title').value==='चंदा: सामुदायिक भवन'),'after creating chanda, message form opens prefilled');
+ await pg.click('#frm [type=submit]');await pg.waitForTimeout(600);ok(await pg.$eval('#dlg',e=>e.open&&e.innerText.includes('संदेश ऐप में पहुँच गया')),'chanda message sent to all houses');await pg.keyboard.press('Escape');
  ok(!errs.length,'no console errors (treasurer) '+errs.join(';'));
  await pg.screenshot({path:'/tmp/adm-fees.png',fullPage:true});
  await ctx.close()}
 
 // ---------- resident A-1 again: sees the targeted message and verification ----------
 {const {ctx,pg}=await session('9999900002');
- await go(pg,'msgs');let tx=await text(pg);ok(tx.includes('A-1 के लिए जाँच'),'resident receives targeted message');
+ await go(pg,'msgs');let tx=await text(pg);ok(tx.includes('A-1 के लिए जाँच')&&tx.includes('चंदा: सामुदायिक भवन'),'resident receives targeted and chanda messages');
  await go(pg,'myhouse');tx=await text(pg);ok(tx.includes('कमेटी ने जाँच की'),'resident sees committee verification');
  await ctx.close()}
 // ---------- resident A-2 does not see A-1 message ----------

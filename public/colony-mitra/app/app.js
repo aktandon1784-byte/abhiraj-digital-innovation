@@ -415,7 +415,7 @@ const TABS=[['home','होम','🏠',()=>isAdmin?'कॉलोनी की �
   ['houses','घर व निवासी','🏘️','हर घर के मालिक और किराएदार की जानकारी','a'],['tenants','किराएदार रजिस्टर','🪪','सभी घरों के किराएदारों का बायोडाटा, दस्तावेज़ और कमेटी की जाँच','a'],
   ['parking','पार्किंग','🚗','गाड़ियों का रजिस्टर, मालिक की खोज और पार्किंग के नियम','a'],
   ['cctv','CCTV / सुरक्षा','📹','कैमरों की स्थिति, रिकॉर्डिंग और फुटेज देखने का अनुरोध','b'],['maint','मेंटेनेंस','💰',()=>isAdmin?`हर महीने 1 से ${DD()} तारीख तक · ${rs(S.cfg.charge)} प्रति घर`:`आपके घर का मेंटेनेंस, बकाया और रसीदें · हर महीने 1 से ${DD()} तारीख तक`,'b'],
-  ['fees','शुल्क / चंदा','🪔',()=>isAdmin?'त्योहार, कार्यक्रम और दूसरे शुल्क: किसने दिया, किसका बाकी है':'त्योहार और कार्यक्रम के शुल्क: आपका भुगतान और बकाया','b'],
+  ['fees','चंदा','🪔','कमेटी चंदा बनाती है, सब घरों को संदेश भेजती है और देखती है किसने दिया, किसका बाकी है','a'],
   ['comp','शिकायत / सुझाव','📣',()=>isAdmin?'निवासियों की शिकायतें और सुझाव: स्थिति बदलें और जवाब दें':'अपनी शिकायत भेजें और उसकी स्थिति देखें। आपकी शिकायत सिर्फ़ आप और कमेटी देख सकते हैं।','b'],
   ['msgs','संदेश','✉️',()=>isAdmin?'सभी घरों, बकाया वाले घरों या चुने हुए घरों को संदेश भेजें':'कमेटी से आए आपके संदेश','b'],
   ['acct','हिसाब-किताब','📒',()=>isAdmin?'कॉलोनी फंड में कितना आया, कितना खर्च हुआ':'कॉलोनी फंड का कुल हिसाब: कितना आया, कितना खर्च हुआ, कितना बचा','b'],
@@ -443,7 +443,7 @@ function bookRows(){
   const bym={};S.payList.forEach(p=>{const m=String(p.date||p.month).slice(0,7);(bym[m]=bym[m]||[]).push(p)});
   Object.entries(bym).forEach(([m,ps])=>{const last=ps.map(p=>p.date||m+'-01').sort().pop();rows.push({date:last,title:`मेंटेनेंस वसूली · ${mLong(m)}`,cat:`${ps.length} भुगतान`,inc:sumA(ps),out:0,maint:true,m})});
   const byf={};S.feeList.forEach(p=>{(byf[p.fee]=byf[p.fee]||[]).push(p)});
-  Object.values(byf).forEach(ps=>{const last=ps.map(p=>p.date||'').sort().pop()||today();rows.push({date:last,title:`शुल्क / चंदा · ${ps[0].feeTitle||''}`,cat:`${ps.length} भुगतान`,inc:sumA(ps),out:0,fee:true})});
+  Object.values(byf).forEach(ps=>{const last=ps.map(p=>p.date||'').sort().pop()||today();rows.push({date:last,title:`चंदा · ${ps[0].feeTitle||''}`,cat:`${ps.length} भुगतान`,inc:sumA(ps),out:0,fee:true})});
   rows.sort((a,b)=>a.date.localeCompare(b.date)||(a.maint?-1:1));
   let bal=Number(S.cfg.openBal||0);rows.forEach(r=>{bal+=r.inc-r.out;r.bal=bal});return rows}
 const S={cfg:{name:'लक्ष्मण विहार',charge:500,start:'2026-04',contacts:[]},houses:[],pay:{},payList:[],comp:[],notices:[],exp:[],polls:[],pv:{},photos:[],veh:[],svc:[],sv:{},team:[],cams:[],clog:[],cv:{},claims:[],members:[],
@@ -720,7 +720,7 @@ admin(){
     ${q('houses','🏘️','नया घर जोड़ें','मालिक और किराएदार','addHouse')}
     ${q('tenants','🪪','किराएदार जोड़ें','बायोडाटा और दस्तावेज़','addTenant')}
     ${q('msgs','✉️','संदेश भेजें','सभी या चुने हुए घरों को','addMsg')}
-    ${q('fees','🪔','नया शुल्क / चंदा','नवरात्रि, जयंती, कार्यक्रम','addFee')}
+    ${q('fees','🪔','नया चंदा','बनाएँ और सबको संदेश भेजें','addFee')}
     ${q('parking','🚗','गाड़ी जोड़ें','कार या बाइक का नंबर','addVeh')}
     ${q('maint','💰','मेंटेनेंस जमा करें','इस महीने की सूची खोलें','goto','data-id="maint" data-m="month"')}
     ${q('maint','⏰','बकाया सूची','याद दिलाने के संदेश भेजें','goto','data-id="maint" data-m="due"')}
@@ -797,13 +797,13 @@ function claimsBox(){
   if(isAdmin){
     if(!pend.length)return '';
     return `<section class="panel" style="margin-bottom:16px;border:1.5px solid var(--tc)"><h2 style="margin:0">🔔 भुगतान की पुष्टि बाकी <span class="pill p-warn">${pend.length}</span></h2><p class="muted" style="margin:4px 0 10px;font-size:14px">निवासियों ने UPI से भुगतान करके सूचना भेजी है। बैंक / UPI ऐप में पैसा आया है या नहीं, जाँचकर पुष्टि करें।</p>
-    <div class="list">${pend.map(c=>`<div class="card"><div class="row" style="align-items:center"><div><b>मकान ${esc(c.houseNo)}</b> · ${c.fee?'🪔 '+esc(c.feeTitle||'शुल्क'):mLong(c.month)} · <b class="num">${rs(c.amount)}</b><div class="muted" style="font-size:13.5px">UTR / रेफ़रेंस: <b class="num">${esc(c.ref||'—')}</b> · ${dFmt(c.date)} · ${esc(c.name||'')}</div></div>
+    <div class="list">${pend.map(c=>`<div class="card"><div class="row" style="align-items:center"><div><b>मकान ${esc(c.houseNo)}</b> · ${c.fee?'🪔 '+esc(c.feeTitle||'चंदा'):mLong(c.month)} · <b class="num">${rs(c.amount)}</b><div class="muted" style="font-size:13.5px">UTR / रेफ़रेंस: <b class="num">${esc(c.ref||'—')}</b> · ${dFmt(c.date)} · ${esc(c.name||'')}</div></div>
       <span class="actions" style="margin:0"><button class="btn sm" style="--tc:var(--ok);--tc-ink:var(--surface)" data-act="claimOk" data-id="${c.id}">✓ पैसा आ गया, पुष्टि करें</button><button class="btn sm danger" data-act="claimNo" data-id="${c.id}">✗ नहीं आया</button></span></div></div>`).join('')}</div></section>`;
   }
   const mine=S.claims.filter(c=>c.by===uid).slice(0,5);
   if(!mine.length)return '';
   const st={pending:['पुष्टि बाकी','p-warn'],approved:['✓ पुष्टि हो गई','p-ok'],rejected:['✗ पैसा नहीं मिला, कमेटी से बात करें','p-bad']};
-  return `<section class="panel" style="margin-bottom:16px"><h2 style="margin:0;font-size:20px">आपकी भेजी भुगतान सूचनाएँ</h2><div class="contacts" style="margin-top:10px">${mine.map(c=>`<div><span>मकान ${esc(c.houseNo)} · ${c.fee?'🪔 '+esc(c.feeTitle||'शुल्क'):mLong(c.month)} · <b class="num">${rs(c.amount)}</b></span><span class="pill ${(st[c.status]||st.pending)[1]}">${(st[c.status]||st.pending)[0]}</span></div>`).join('')}</div></section>`;
+  return `<section class="panel" style="margin-bottom:16px"><h2 style="margin:0;font-size:20px">आपकी भेजी भुगतान सूचनाएँ</h2><div class="contacts" style="margin-top:10px">${mine.map(c=>`<div><span>मकान ${esc(c.houseNo)} · ${c.fee?'🪔 '+esc(c.feeTitle||'चंदा'):mLong(c.month)} · <b class="num">${rs(c.amount)}</b></span><span class="pill ${(st[c.status]||st.pending)[1]}">${(st[c.status]||st.pending)[0]}</span></div>`).join('')}</div></section>`;
 }
 function maintMain(){
   if(!S.houses.length)return `<div class="empty">पहले “घर व निवासी” में घर जोड़ें, फिर यहाँ मेंटेनेंस दर्ज होगा।</div>`;
@@ -862,7 +862,7 @@ acct(){
   <div class="stats" style="margin-top:${hasExamples()?'16px':'0'}">
     <div class="stat"><b>${rs(ob)}</b><span>शुरुआती बचत${isAdmin?' · <a href="#" data-act="setOpen" style="color:var(--tc)">बदलें</a>':''}</span></div>
     <div class="stat ok"><b>+${rs(mt)}</b><span>मेंटेनेंस से आय</span></div>
-    <div class="stat ok"><b>+${rs(fe)}</b><span>शुल्क / चंदा से आय</span></div>
+    <div class="stat ok"><b>+${rs(fe)}</b><span>चंदा से आय</span></div>
     <div class="stat ok"><b>+${rs(oi)}</b><span>दूसरी आय (दान, जुर्माना…)</span></div>
     <div class="stat bad"><b>−${rs(sp)}</b><span>कुल खर्च</span></div>
     <div class="stat ${bal>=0?'ok':'bad'}" style="--tc:${bal>=0?'var(--ok)':'var(--bad)'}"><b>${rs(bal)}</b><span>अभी फंड में बची रकम</span></div>
@@ -1209,7 +1209,6 @@ async function purgeOldTenants(){
     try{await db.doc('tenants/'+t.id).update({photo:'',aadhaarDoc:'',workIdDoc:'',policeDoc:'',aadhaarLast4:'',purged:true})}catch(e){console.warn(e)}}}
 
 /* ---------- fees / चंदा ---------- */
-const FEECATS=['नवरात्रि / गरबा','अम्बेडकर जयंती','गुरु घासीदास जयंती','होली मिलन','गणेश उत्सव','दिवाली','15 अगस्त / 26 जनवरी','मरम्मत / विकास कार्य','अन्य'];
 function feeOpen(f){return f.open!==false}
 function feePaid(f,hid){return S.feepay[f.id+'_'+hid]}
 function feeClaim(f,hid){return S.claims.find(c=>c.fee===f.id&&c.house===hid&&c.status==='pending')}
@@ -1272,14 +1271,18 @@ function maintMine(){
   return `<section class="panel" style="border:1.5px solid var(--tc);margin-bottom:16px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><div><div class="muted" style="font-size:13.5px">मकान</div><div class="hno">${esc(h.no)}</div></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${d.length?`<span class="pill p-bad">${d.length} महीने बकाया · ${rs(dueAmt(h))}</span>`:pendingNow(h)?`<span class="pill p-warn">${mLong(curMonth())} का बाकी · ${DD()} तारीख तक</span>`:'<span class="pill p-ok">✓ कोई बकाया नहीं</span>'}${S.cfg.upiId&&(d.length||pendingNow(h))?`<button class="btn sm" data-act="payOnline" data-id="${h.id}">💳 ऑनलाइन जमा करें</button>`:''}</div></div>
     <p class="muted" style="margin:10px 0 0;font-size:14px">${ruleLine()}${S.cfg.upiId?'':' ऑनलाइन भुगतान अभी चालू नहीं है, कोषाध्यक्ष को नकद / UPI से दें।'}</p></section>
+  ${feeMine(h)}
   ${ms.length?`<div class="scroll"><table><thead><tr><th>महीना</th><th>स्थिति</th><th class="r">रकम</th><th></th></tr></thead><tbody>${ms.map(m=>{const p=S.pay[h.id+'_'+m];return `<tr><td><b>${mLong(m)}</b></td><td>${p?`<span class="pill ${isLate(p)?'p-mar':'p-ok'}">✓ ${isLate(p)?'देर से जमा':'समय पर जमा'} · ${dFmt(p.date)}</span>`:overdue(m)?'<span class="pill p-bad">✗ बकाया</span>':'<span class="pill p-warn">अभी समय है</span>'}</td><td class="r num">${rs(p?p.amount:Number(S.cfg.charge||0)+(overdue(m)?FEE():0))}</td><td>${p?`<button class="btn sm ghost" data-act="receipt" data-id="${h.id}" data-m="${m}">रसीद</button>`:''}</td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">आपके घर पर अभी मेंटेनेंस लागू नहीं हुआ है।</div>'}`}
+function feeMine(h){const fs=S.fees.filter(f=>feeOpen(f)||feePaid(f,h.id));if(!fs.length)return '';
+  return `<section class="panel" style="margin-bottom:16px"><h2 style="margin:0;font-size:20px">🪔 चंदा</h2><div class="contacts" style="margin-top:10px">${fs.map(f=>{const p=feePaid(f,h.id),c=feeClaim(f,h.id);
+    return `<div><span><b>${esc(f.title)}</b> <span class="muted">· ${feeAmtText(f)}${f.due?' · '+dFmt(f.due)+' तक':''}</span></span><span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${p?`<span class="pill p-ok">✓ ${rs(p.amount)} जमा</span><button class="btn sm ghost" data-act="feeReceipt" data-id="${f.id}" data-m="${h.id}">रसीद</button>`:c?'<span class="pill p-warn">पुष्टि बाकी</span>':S.cfg.upiId?`<button class="btn sm" data-act="payFee" data-id="${f.id}">💳 जमा करें</button>`:'<span class="pill p-warn">बाकी</span>'}</span></div>`}).join('')}</div></section>`}
 function acctResident(){
   const sm=S.summary;if(!sm)return '<div class="empty">हिसाब लोड हो रहा है…</div>';
   const cats=Object.entries(sm.byCat||{}).sort((a,b)=>b[1]-a[1]),ct=cats.reduce((s,x)=>s+Number(x[1]),0);
   return `<div class="stats" style="margin-top:0">
     <div class="stat"><b>${rs(sm.openBal)}</b><span>शुरुआती बचत</span></div>
     <div class="stat ok"><b>+${rs(sm.maint)}</b><span>मेंटेनेंस से आय</span></div>
-    <div class="stat ok"><b>+${rs(sm.fees)}</b><span>शुल्क / चंदा से आय</span></div>
+    <div class="stat ok"><b>+${rs(sm.fees)}</b><span>चंदा से आय</span></div>
     <div class="stat ok"><b>+${rs(sm.otherIn)}</b><span>दूसरी आय (दान, जुर्माना…)</span></div>
     <div class="stat bad"><b>−${rs(sm.spent)}</b><span>कुल खर्च</span></div>
     <div class="stat ${Number(sm.fund)>=0?'ok':'bad'}"><b>${rs(sm.fund)}</b><span>अभी फंड में बची रकम</span></div></div>
@@ -1290,7 +1293,7 @@ function acctResident(){
 Object.assign(SHELL,{
   myhouse:()=>'',
   msgs:()=>isAdmin?`<div class="toolbar"><p class="muted grow" style="margin:0;font-size:14px">संदेश तुरंत ऐप में पहुँचता है। WhatsApp पर एक-एक करके भेजने के बटन भी मिलेंगे।</p><button class="btn" data-act="addMsg">+ नया संदेश</button></div>`:'',
-  fees:()=>isAdmin?`<div class="toolbar"><p class="muted grow" style="margin:0;font-size:14px">मासिक मेंटेनेंस “मेंटेनेंस” टैब में है। यहाँ त्योहार, जयंती, कार्यक्रम या मरम्मत जैसे दूसरे शुल्क / चंदे बनाएँ।</p><button class="btn" data-act="addFee">+ नया शुल्क / चंदा</button></div>`:'',
+  fees:()=>isAdmin?`<div class="toolbar"><p class="muted grow" style="margin:0;font-size:14px">चंदा किस लिए है, यह आप ख़ुद लिखें। बनाने के बाद सभी घरों को संदेश भेजने का फ़ॉर्म अपने आप खुलेगा।</p><button class="btn" data-act="addFee">+ नया चंदा</button></div>`:'',
   tenants:()=>`<div class="toolbar"><input class="grow" id="tq" type="search" placeholder="किराएदार का नाम, मकान नंबर या मोबाइल से खोजें" value="${esc(F.tq)}">
     <select id="tf" style="width:auto">${[['all','सभी (अभी रह रहे)'],['pending','कमेटी की जाँच बाकी'],['police','पुलिस वेरिफिकेशन बाकी'],['left','घर छोड़ चुके']].map(([k,l])=>`<option value="${k}" ${F.tf===k?'selected':''}>${l}</option>`).join('')}</select>
     <button class="btn" data-act="addTenant">+ किराएदार जोड़ें</button></div>`
@@ -1329,19 +1332,13 @@ tenants(){
   ${list.length?Object.entries(groups).map(([hid,ts])=>{const h=houseById(hid)||{};return `<h2 style="margin-top:8px">मकान ${esc(h.no||ts[0].houseNo||'')} <span class="muted" style="font-family:var(--body);font-size:15px">· ${esc(h.owner||'')} · ${ts.length} किराएदार</span></h2><div class="memgrid">${ts.map(t=>tenantCard(t,true)).join('')}</div>`}).join('')
     :`<div class="empty">${S.tenants.length?'इस खोज / फ़िल्टर में कोई किराएदार नहीं मिला।':'अभी किसी घर ने किराएदार की जानकारी नहीं भरी है। निवासी “मेरा घर” टैब से भरेंगे, या आप “किराएदार जोड़ें” से भर सकते हैं।'}</div>`}`},
 fees(){
-  if(!S.fees.length)return `<div class="empty">${isAdmin?'अभी कोई शुल्क / चंदा नहीं बनाया गया। ऊपर “नया शुल्क / चंदा” दबाकर नवरात्रि गरबा, अम्बेडकर जयंती या गुरु घासीदास जयंती जैसे कार्यक्रम का चंदा बनाएँ।':'अभी कोई शुल्क या चंदा नहीं माँगा गया है।'}</div>`;
-  if(!isAdmin){const h=myHouse();if(!h)return noHouseMsg();
-    return `<div class="list">${S.fees.map(f=>{const p=feePaid(f,h.id),c=feeClaim(f,h.id);
-      return `<article class="card"><div class="row"><div style="min-width:0"><h3 style="margin:0">🪔 ${esc(f.title)}</h3><div class="muted" style="font-size:14px">${feeAmtText(f)}${f.due?' · आख़िरी तारीख '+dFmt(f.due):''}</div></div>
-        ${p?`<span class="pill p-ok">✓ जमा · ${rs(p.amount)} · ${dFmt(p.date)}</span>`:c?'<span class="pill p-warn">भुगतान की पुष्टि बाकी</span>':feeOpen(f)?`<span class="pill ${f.due&&f.due<today()?'p-bad':'p-warn'}">बाकी</span>`:'<span class="pill p-acc">बंद</span>'}</div>
-        ${f.note?`<p style="margin:8px 0 0;white-space:pre-wrap">${esc(f.note)}</p>`:''}
-        <div class="actions">${p?`<button class="btn sm ghost" data-act="feeReceipt" data-id="${f.id}" data-m="${h.id}">रसीद</button>`:!c&&feeOpen(f)&&S.cfg.upiId?`<button class="btn sm" data-act="payFee" data-id="${f.id}">💳 UPI से जमा करें</button>`:''}</div></article>`}).join('')}</div>
-      ${S.cfg.upiId?'<p class="muted" style="font-size:14px">पैसा सीधे कॉलोनी कमेटी के UPI खाते में जाता है। भुगतान के बाद UTR नंबर भेजें, कमेटी पुष्टि करेगी और रसीद बनेगी।</p>':'<p class="muted" style="font-size:14px">ऑनलाइन भुगतान अभी चालू नहीं है, कोषाध्यक्ष को नकद / UPI से दें।</p>'}`}
+  if(!isAdmin)return '';
+  if(!S.fees.length)return '<div class="empty">अभी कोई चंदा नहीं बनाया गया। ऊपर “नया चंदा” दबाएँ, लिखें कि चंदा किस लिए है, रकम और आख़िरी तारीख भरें, फिर सभी घरों को संदेश भेजें।</div>';
   return `${exBanner()}<div class="list" style="margin-top:${hasExamples()?'14px':'0'}">${S.fees.map(f=>{const ps=S.feeList.filter(p=>p.fee===f.id),got=sumA(ps),tot=S.houses.length;
-    return `<article class="card"><div class="row"><div style="min-width:0"><h3 style="margin:0;font-size:19px">🪔 ${esc(f.title)}${f.example?' <span class="pill p-mar">उदाहरण</span>':''}</h3><div class="muted" style="font-size:14px">${esc(f.cat||'')}${f.cat?' · ':''}${feeAmtText(f)}${f.due?' · आख़िरी तारीख '+dFmt(f.due):''}</div></div><span class="pill ${feeOpen(f)?'p-ok':'p-acc'}">${feeOpen(f)?'चालू':'बंद'}</span></div>
+    return `<article class="card"><div class="row"><div style="min-width:0"><h3 style="margin:0;font-size:19px">🪔 ${esc(f.title)}${f.example?' <span class="pill p-mar">उदाहरण</span>':''}</h3><div class="muted" style="font-size:14px">${feeAmtText(f)}${f.due?' · आख़िरी तारीख '+dFmt(f.due):''}</div></div><span class="pill ${feeOpen(f)?'p-ok':'p-acc'}">${feeOpen(f)?'चालू':'बंद'}</span></div>
       ${f.note?`<p style="margin:8px 0 0;white-space:pre-wrap">${esc(f.note)}</p>`:''}
       <div class="stats" style="margin-top:10px"><div class="stat ok"><b>${ps.length}/${tot}</b><span>घरों ने दिया</span></div><div class="stat"><b>${rs(got)}</b><span>कुल जमा</span></div>${f.kind!=='voluntary'?`<div class="stat bad"><b>${rs(Math.max(0,(tot-ps.length)*Number(f.amount||0)))}</b><span>अभी बाकी</span></div>`:''}</div>
-      <div class="actions"><button class="btn sm" data-act="feeHouses" data-id="${f.id}">किसने दिया / किसका बाकी</button><button class="btn sm ghost" data-act="editFee" data-id="${f.id}">बदलें</button><button class="btn sm ghost" data-act="toggleFee" data-id="${f.id}">${feeOpen(f)?'बंद करें':'फिर चालू करें'}</button><button class="btn sm danger" data-act="delFee" data-id="${f.id}">हटाएँ</button></div></article>`}).join('')}</div>`},
+      <div class="actions"><button class="btn sm" data-act="feeHouses" data-id="${f.id}">किसने दिया / किसका बाकी</button><button class="btn sm ghost" style="--tc:var(--t-msgs)" data-act="feeMsg" data-id="${f.id}">📣 सबको संदेश भेजें</button><button class="btn sm ghost" data-act="editFee" data-id="${f.id}">बदलें</button><button class="btn sm ghost" data-act="toggleFee" data-id="${f.id}">${feeOpen(f)?'बंद करें':'फिर चालू करें'}</button><button class="btn sm danger" data-act="delFee" data-id="${f.id}">हटाएँ</button></div></article>`}).join('')}</div>`},
 msgs(){
   if(!isAdmin)return S.inbox.length?`<div class="list">${S.inbox.map(m=>msgCard(m,false)).join('')}</div>`:'<div class="empty">अभी कमेटी से कोई संदेश नहीं आया है।</div>';
   const by={};S.inbox.forEach(m=>{const b=m.batch||m.id;if(!by[b])by[b]={...m,batch:b,n:0,nos:[]};by[b].n++;if(m.houseNo)by[b].nos.push(m.houseNo)});
@@ -1375,16 +1372,20 @@ const ACT2={
     async v=>{await B.rpc('my_house_update',{p_colony:COLONY,p_patch:{...v,altPhone:phone10(v.altPhone),emergency:phone10(v.emergency)}});await db.refresh('houses')},
     '<p class="muted" style="margin:0;font-size:14px">यह जानकारी सिर्फ़ आप और कमेटी देख सकते हैं।</p>')},
   addFee(){ACT2.editFee(null)},
-  editFee(id){const f=id?S.fees.find(x=>x.id===id):{kind:'fixed',open:true,cat:FEECATS[0]};if(!f)return;
-    openForm(id?'शुल्क / चंदा बदलें':'नया शुल्क / चंदा',[{k:'title',label:'नाम',req:true,ph:'जैसे नवरात्रि गरबा 2026'},{k:'cat',label:'किस लिए',type:'select',options:FEECATS},
+  editFee(id){const f=id?S.fees.find(x=>x.id===id):{kind:'fixed',open:true};if(!f)return;
+    openForm(id?'चंदा बदलें':'नया चंदा',[{k:'title',label:'चंदा किस लिए है',req:true,ph:'यहाँ लिखें'},
       {k:'kind',label:'रकम कैसे तय हो',type:'select',options:[['fixed','तय रकम, हर घर से एक जैसी'],['voluntary','अपनी इच्छा से (कम से कम रकम)']]},{k:'amount',label:'रकम (₹) · तय रकम या कम से कम रकम',type:'number',req:true},
-      {k:'due',label:'आख़िरी तारीख',type:'date'},{k:'note',label:'विवरण (वैकल्पिक)',type:'textarea',ph:'जैसे 3 दिन का गरबा, DJ और प्रसाद का खर्च'},{k:'open',label:'भुगतान चालू है',type:'check'}],f,
-    async v=>{if(v.kind==='fixed'&&!(v.amount>0))throw {code:'amt'};if(id)await db.doc('fees/'+id).update(v);else await db.collection('fees').add({...v,date:today(),example:false})})},
+      {k:'due',label:'आख़िरी तारीख',type:'date'},{k:'note',label:'विवरण (वैकल्पिक)',type:'textarea'},{k:'open',label:'भुगतान चालू है',type:'check'}],f,
+    async v=>{if(v.kind==='fixed'&&!(v.amount>0))throw {code:'amt'};if(id){await db.doc('fees/'+id).update(v);return}
+      const r=await db.collection('fees').add({...v,date:today(),example:false});setTimeout(()=>ACT2.feeMsg(r.id),60)})},
+  feeMsg(id){const f=S.fees.find(x=>x.id===id);if(!f)return;
+    const body=`${S.cfg.name} कॉलोनी कमेटी की ओर से चंदा: ${f.title}\nरकम: ${feeAmtText(f)}${f.due?'\nआख़िरी तारीख: '+dFmt(f.due):''}${f.note?'\n'+f.note:''}\n\nऐप के होम पेज पर “जमा करें” दबाकर UPI से भुगतान करें, या कोषाध्यक्ष को दें।`;
+    ACT2.addMsg({to:'all',kind:'info',title:'चंदा: '+f.title,body})},
   async toggleFee(id){const f=S.fees.find(x=>x.id===id);if(f)try{await db.doc('fees/'+id).update({open:!feeOpen(f)})}catch(e){alertBox(errMsg(mapErr(e)))}},
   delFee(id){const f=S.fees.find(x=>x.id===id);if(!f)return;const n=S.feeList.filter(p=>p.fee===id).length;
     confirmBox(`<b>${esc(f.title)}</b> हट जाएगा।${n?` इसके ${n} भुगतान हिसाब-किताब में बने रहेंगे।`:''}`,'हाँ, हटाएँ',()=>db.doc('fees/'+id).delete())},
   feeHouses(id){const f=S.fees.find(x=>x.id===id);if(!f)return;
-    const txt=h=>`नमस्ते ${h.owner} जी,\n${S.cfg.name} कॉलोनी की ओर से याद दिलाना है कि “${f.title}” का ${f.kind==='voluntary'?'चंदा':rs(f.amount)+' शुल्क'} मकान ${h.no} से अभी बाकी है${f.due?' (आख़िरी तारीख '+dFmt(f.due)+')':''}। कृपया जमा करें।\nधन्यवाद।`;
+    const txt=h=>`नमस्ते ${h.owner} जी,\n${S.cfg.name} कॉलोनी की ओर से याद दिलाना है कि “${f.title}” का ${f.kind==='voluntary'?'चंदा':rs(f.amount)+' का चंदा'} मकान ${h.no} से अभी बाकी है${f.due?' (आख़िरी तारीख '+dFmt(f.due)+')':''}। कृपया जमा करें।\nधन्यवाद।`;
     dlg.innerHTML=`<div class="dbody"><h3>🪔 ${esc(f.title)}</h3><div class="walist">${sortHouses(S.houses).map(h=>{const p=feePaid(f,h.id),c=feeClaim(f,h.id),ph=phone10(h.ownerPhone);
       return `<div><span><b>${esc(h.no)}</b> <span class="muted">· ${esc(h.owner)}</span></span><span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${p?`<span class="pill p-ok">✓ ${rs(p.amount)} · ${esc(p.mode||'')}</span><button class="btn sm ghost" data-fx="feeReceipt" data-id="${f.id}" data-m="${h.id}">रसीद</button>`:`${c?'<span class="pill p-warn">UPI पुष्टि बाकी</span>':'<span class="pill p-bad">बाकी</span>'}<button class="btn sm" data-fx="feePayManual" data-id="${f.id}" data-m="${h.id}">जमा दर्ज करें</button>${ph.length===10?`<a class="btn sm ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/91${ph}?text=${encodeURIComponent(txt(h))}">💬 याद दिलाएँ</a>`:''}`}</span></div>`}).join('')}</div>
       <div class="dfoot"><button class="btn" data-close>बंद करें</button></div></div>`;
@@ -1403,7 +1404,7 @@ const ACT2={
     openForm('💳 '+esc(f.title)+' · UPI से जमा करें',[{k:'amount',label:f.kind==='voluntary'?`रकम (₹)${Number(f.amount)?' · कम से कम '+rs(f.amount):''}`:'रकम (₹)',type:'number',req:true},
       {k:'ref',label:'भुगतान के बाद: UTR / रेफ़रेंस नंबर',req:true,ph:'UPI ऐप में दिखने वाला 12 अंकों का नंबर'},{k:'date',label:'भुगतान की तारीख',type:'date',def:today(),req:true}],{amount:Number(f.amount||0)},
     async v=>{if(!(v.amount>0))throw {code:'amt'};if(f.kind==='voluntary'&&Number(f.amount)&&v.amount<Number(f.amount))throw {code:'rule',message:`कम से कम ${rs(f.amount)} लिखें।`};
-      if(f.kind!=='voluntary'&&v.amount!==Number(f.amount))throw {code:'rule',message:`इस शुल्क की रकम ${rs(f.amount)} है।`};
+      if(f.kind!=='voluntary'&&v.amount!==Number(f.amount))throw {code:'rule',message:`इस चंदे की रकम ${rs(f.amount)} है।`};
       await db.collection('payclaims').add({fee:f.id,feeTitle:f.title,house:h.id,houseNo:h.no,amount:v.amount,ref:v.ref.replace(/\s/g,''),date:v.date,name:MEM.member_name||meLabel(),by:uid,status:'pending'})},
     `<div id="upibox" class="upibox"></div>`);
     const frm=dlg.querySelector('#frm'),box=dlg.querySelector('#upibox');
@@ -1411,11 +1412,11 @@ const ACT2={
       let qr='';try{const q=qrcode(0,'M');q.addData(url);q.make();qr=q.createSvgTag({cellSize:4,margin:2,scalable:true})}catch(_){}
       box.innerHTML=`<div class="qr">${qr}</div><div style="min-width:0"><b>1.</b> इस QR को किसी भी UPI ऐप (PhonePe, Google Pay, Paytm, BHIM) से स्कैन करें, या फ़ोन पर नीचे का बटन दबाएँ। पैसा सीधे कमेटी के खाते में जाएगा।<div class="muted num" style="font-size:13.5px;margin:4px 0">UPI: ${esc(S.cfg.upiId)} · ${rs(a)}</div><a class="btn sm" href="${url}">📲 UPI ऐप से ${rs(a)} भरें</a><div style="margin-top:8px"><b>2.</b> भुगतान के बाद UTR नंबर नीचे लिखकर “सेव करें” दबाएँ। कमेटी पुष्टि करेगी।</div></div>`};
     frm.elements.amount.addEventListener('input',draw);draw()},
-  addMsg(){if(!S.houses.length){alertBox('पहले “घर व निवासी” में घर जोड़ें।');return}
+  addMsg(pre){if(!S.houses.length){alertBox('पहले “घर व निवासी” में घर जोड़ें।');return}
     const pick=`<div class="f" id="hpk" hidden><label>किन घरों को भेजना है</label><div class="hpick">${sortHouses(S.houses).map(h=>`<label><input type="checkbox" value="${h.id}"> ${esc(h.no)}</label>`).join('')}</div></div>`;
     openForm('नया संदेश',[{k:'to',label:'किसे भेजना है',type:'select',options:[['all','सभी घर'],['dues',`सिर्फ़ बकाया वाले घर (${dueHouses().length})`],['pick','चुने हुए घर']]},
       {k:'kind',label:'संदेश का प्रकार',type:'select',options:Object.entries(MSGK).map(([k,v])=>[k,v[0]])},{k:'title',label:'शीर्षक',req:true,ph:'जैसे रविवार को आम सभा / बकाया मेंटेनेंस जमा करें'},
-      {k:'body',label:'संदेश',type:'textarea',req:true,ph:'जैसे रविवार सुबह 10 बजे पार्क में आम सभा है, सभी परिवार आएँ।'},{k:'notice',label:'सूचना बोर्ड पर भी डालें (सिर्फ़ “सभी घर” के लिए)',type:'check'}],{to:'all',kind:'info'},
+      {k:'body',label:'संदेश',type:'textarea',req:true,ph:'जैसे रविवार सुबह 10 बजे पार्क में आम सभा है, सभी परिवार आएँ।'},{k:'notice',label:'सूचना बोर्ड पर भी डालें (सिर्फ़ “सभी घर” के लिए)',type:'check'}],pre&&pre.title?pre:{to:'all',kind:'info'},
     async v=>{const batch=newId(),base={title:v.title,body:v.body,kind:v.kind,date:today(),at:new Date().toISOString(),by:(MEM.member_name||meLabel())+(MEM.post?' ('+MEM.post+')':''),batch,target:v.to};
       if(v.to==='all'){await db.collection('inbox').add({...base,house:'',houseNo:''});if(v.notice)await db.collection('notices').add({title:v.title,body:v.body,date:today(),example:false})}
       else{const ids=v.to==='dues'?dueHouses().map(h=>h.id):[...dlg.querySelectorAll('#hpk input:checked')].map(i=>i.value);
