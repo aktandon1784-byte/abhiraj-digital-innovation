@@ -79,6 +79,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/colony-mitra" className="hover:text-white transition-colors">
+                  Colony Mitra
+                </Link>
+              </li>
+              <li>
                 <Link href="/about" className="hover:text-white transition-colors">
                   About
                 </Link>
@@ -112,6 +117,12 @@ export function Footer() {
                 className="inline-block text-[11px] font-semibold text-blue-400 hover:text-blue-300 transition-colors pt-1"
               >
                 Explore OPD Assistant AI ➜
+              </Link>
+              <Link
+                href="/colony-mitra"
+                className="block text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 transition-colors pt-1"
+              >
+                New: Colony Mitra (कॉलोनी मित्र) ➜
               </Link>
             </div>
           </div>
