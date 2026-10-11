@@ -451,6 +451,34 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* 2c. MORE PRODUCTS & PORTFOLIO */}
+      <section id="products" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <Link
+            href="/gharmitra"
+            className="group p-6 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-blue-700/60 transition-colors space-y-2"
+          >
+            <div className="text-xs font-mono uppercase tracking-wider text-blue-400">Product</div>
+            <div className="text-xl font-bold text-white group-hover:text-blue-300">GharMitra</div>
+            <p className="text-sm text-slate-400">Complete Home Solution</p>
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-400">
+              Learn more <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </Link>
+          <Link
+            href="/portfolio"
+            className="group p-6 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-blue-700/60 transition-colors space-y-2"
+          >
+            <div className="text-xs font-mono uppercase tracking-wider text-blue-400">Portfolio</div>
+            <div className="text-xl font-bold text-white group-hover:text-blue-300">Our Products & Client Work</div>
+            <p className="text-sm text-slate-400">Including the Kumar Solar Panel website.</p>
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-400">
+              View portfolio <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </Link>
+        </div>
+      </section>
+
       {/* 3. OUR SERVICES SECTION */}
       <section id="services" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 pb-5 border-b border-slate-800">

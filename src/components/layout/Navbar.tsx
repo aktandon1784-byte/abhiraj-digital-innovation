@@ -4,12 +4,15 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/brand/Logo";
+import { products } from "@/lib/products";
 import { ChevronDown, Menu, X, Smartphone, Code2, Globe } from "lucide-react";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
+  const [productsDropdownOpen, setProductsDropdownOpen] = useState(false);
   const pathname = usePathname();
+  const isProductPath = ["/opd-assistant-ai", "/application", "/gharmitra", "/colony-mitra"].includes(pathname);
 
   const services = [
     {
@@ -138,24 +141,50 @@ export function Navbar() {
               )}
             </div>
 
-            <Link
-              href="/opd-assistant-ai"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                pathname === "/opd-assistant-ai" || pathname === "/application"
-                  ? "text-white bg-slate-900"
-                  : "text-slate-300 hover:text-white hover:bg-slate-900/60"
-              }`}
+            {/* Products Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setProductsDropdownOpen(true)}
+              onMouseLeave={() => setProductsDropdownOpen(false)}
             >
-              Our Application
-            </Link>
+              <button
+                type="button"
+                className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                  isProductPath ? "text-white bg-slate-900" : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+                }`}
+                aria-expanded={productsDropdownOpen}
+                aria-label="Toggle Products Menu"
+                onClick={() => setProductsDropdownOpen(!productsDropdownOpen)}
+              >
+                <span>Products</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${productsDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+              {productsDropdownOpen && (
+                <div className="absolute left-0 mt-1 w-72 rounded-xl bg-slate-900 border border-slate-800 shadow-xl py-2 z-50">
+                  <div className="p-1 space-y-1">
+                    {products.map((p) => (
+                      <Link
+                        key={p.href}
+                        href={p.href}
+                        className="block p-2 rounded-lg hover:bg-slate-800 transition-colors group"
+                        onClick={() => setProductsDropdownOpen(false)}
+                      >
+                        <div className="text-xs font-semibold text-slate-200 group-hover:text-white">{p.name}</div>
+                        <div className="text-[11px] text-slate-400 leading-snug">{p.tagline}</div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <Link
-              href="/colony-mitra"
+              href="/portfolio"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                pathname === "/colony-mitra" ? "text-white bg-slate-900" : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+                pathname.startsWith("/portfolio") ? "text-white bg-slate-900" : "text-slate-300 hover:text-white hover:bg-slate-900/60"
               }`}
             >
-              Colony Mitra
+              Portfolio
             </Link>
 
             <Link
@@ -232,19 +261,25 @@ export function Navbar() {
               </Link>
             ))}
           </div>
+          <div className="px-3 py-1 text-xs font-mono uppercase tracking-wider text-slate-400">Products</div>
+          <div className="pl-3 space-y-1">
+            {products.map((p) => (
+              <Link
+                key={p.href}
+                href={p.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-1.5 rounded-md text-sm text-slate-300 hover:bg-slate-800"
+              >
+                {p.name}
+              </Link>
+            ))}
+          </div>
           <Link
-            href="/opd-assistant-ai"
+            href="/portfolio"
             onClick={() => setMobileMenuOpen(false)}
             className="block px-3 py-2 rounded-md text-base font-medium text-slate-200 hover:bg-slate-800"
           >
-            Our Application (OPD Assistant AI)
-          </Link>
-          <Link
-            href="/colony-mitra"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-slate-200 hover:bg-slate-800"
-          >
-            Colony Mitra (कॉलोनी मित्र)
+            Portfolio
           </Link>
           <Link
             href="/contact"
