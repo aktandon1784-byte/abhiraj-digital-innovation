@@ -92,6 +92,16 @@ manually; police verification is the real check.
   (society bank account, PAN, KYC). Keys stay server-side. Never use Abhiraj Digital's own Razorpay
   account for colony money.
 
+## 4a. Account book (खाता बही) and published statements
+
+- Fully automatic running balance: confirmed maintenance and चंदा payments are added as **जमा (Credit)**,
+  committee expenses are subtracted as **खर्च (Debit)**; every entry shows the balance after it.
+- Monthly and yearly (financial year April–March) statements: opening balance, total credit, total debit,
+  closing balance, credit by source, expense by category, full entry list.
+- **Only अध्यक्ष or कोषाध्यक्ष** (or the app owner) can publish a statement (server-enforced). Published
+  statements are visible to all residents, who can view them and save them as PDF (print → Save as PDF).
+  Maintenance and चंदा appear as monthly totals, never per house. Bill photos are not published.
+
 ## 5. Complaints and messages
 
 - Resident complaint categories: घर की लाइट / बिजली, स्ट्रीट लाइट, नाली सफ़ाई, कचरा गाड़ी, CCTV,

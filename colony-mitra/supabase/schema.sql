@@ -170,11 +170,25 @@ language sql stable security definer set search_path = public as $$
   )
 $$;
 
+-- May the signed-in person publish the colony's account statements (monthly / yearly)?
+-- App owner, or an admin whose post is अध्यक्ष or कोषाध्यक्ष (any admin if nobody holds those posts yet).
+create or replace function public.cs_can_publish(c uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select auth.uid() is not null and (
+    public.cs_is_platform_admin()
+    or (public.cs_role(c) = 'admin' and (
+          (select (public.cs_me(c)).post) in ('अध्यक्ष','कोषाध्यक्ष')
+          or not exists (select 1 from public.members m
+                         where m.colony_id = c and m.role = 'admin' and not m.blocked
+                           and m.post in ('अध्यक्ष','कोषाध्यक्ष'))))
+  )
+$$;
+
 -- Collections every member of the colony may read.
 create or replace function public.cs_public_coll(col text) returns boolean
 language sql immutable as $$
   select col in ('config','notices','polls','pollvotes','services','svcvotes','committee',
-                 'cameras','cctvlog','gallery','fees')
+                 'cameras','cctvlog','gallery','fees','reports')
 $$;
 
 -- Collections whose records belong to one house (readable by that house and the committee).
@@ -413,6 +427,20 @@ begin
   end if;
   return new;
 end $$;
+-- Published account statements: only अध्यक्ष / कोषाध्यक्ष (or the app owner) may add, change or remove them.
+create or replace function public.docs_reports_guard() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if coalesce(new.collection, old.collection) = 'reports' and auth.uid() is not null
+     and not public.cs_can_publish(coalesce(new.colony_id, old.colony_id)) then
+    raise exception 'हिसाब सिर्फ़ अध्यक्ष या कोषाध्यक्ष प्रकाशित कर सकते हैं।' using errcode = 'P0001';
+  end if;
+  return coalesce(new, old);
+end $$;
+drop trigger if exists docs_reports_guard on public.docs;
+create trigger docs_reports_guard before insert or update or delete on public.docs
+  for each row execute function public.docs_reports_guard();
+
 drop trigger if exists docs_scope on public.docs;
 create trigger docs_scope before insert or update on public.docs for each row execute function public.docs_scope();
 
@@ -564,7 +592,7 @@ revoke execute on function public.claim_platform_admin(), public.create_colony(t
   public.my_house_update(uuid,jsonb), public.colony_summary(uuid), public.request_join(text,text,text,text)
   from anon, public;
 grant execute on function public.cs_role(uuid), public.cs_role_path(text), public.cs_is_platform_admin(),
-  public.cs_me(uuid), public.cs_my_house(uuid), public.cs_is_chief(uuid), public.cs_can_read(uuid,text,text,uuid),
+  public.cs_me(uuid), public.cs_my_house(uuid), public.cs_is_chief(uuid), public.cs_can_publish(uuid), public.cs_can_read(uuid,text,text,uuid),
   public.cs_file_ok(text,boolean), public.cs_public_coll(text), public.cs_house_coll(text),
   public.my_colonies(), public.cs_has_owner(), public.claim_platform_admin(),
   public.create_colony(text,text,text,text), public.doc_patch(uuid,text,text,jsonb),

@@ -203,6 +203,17 @@ button.role{cursor:pointer;font:inherit;font-size:13.5px;font-weight:600}
 .hpick label{display:flex;gap:6px;align-items:center;font-size:14.5px}
 .walist{display:grid;gap:6px;max-height:50vh;overflow:auto}
 .walist div{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line);padding:4px 0}
+#print{display:none}
+@media print{@page{size:A4;margin:12mm}
+  body{background:#fff!important}
+  body>*:not(#print){display:none!important}
+  #print{display:block;--ink:#111;--muted:#555;--surface:#fff;--bg:#eee;--line:#bbb;--ok:#1F7A3E;--bad:#B3261E;--tc:#17614F;color:#111;font-size:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #print .stats{grid-template-columns:repeat(4,1fr)} #print .stat b{font-size:18px}
+  #print .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px} #print .panel{border:1px solid #bbb;padding:8px}
+  #print .scroll{overflow:visible} #print table{width:100%;border-collapse:collapse} #print th,#print td{border:1px solid #bbb;padding:3px 5px;white-space:normal}
+  #print tr,#print .stat,#print .panel{break-inside:avoid}
+  #print .phead{text-align:center;margin-bottom:10px} #print .phead h1{margin:0;font-size:20px} #print .phead h2{margin:2px 0;font-size:16px}
+  #print .psign{display:flex;justify-content:space-between;margin-top:36px} #print .pfoot{color:#555;font-size:10.5px;margin-top:14px}}
 code{font-size:.92em;background:var(--bg);padding:1px 5px;border-radius:4px}
 </style>
 </head>
@@ -242,7 +253,7 @@ code{font-size:.92em;background:var(--bg);padding:1px 5px;border-radius:4px}
   const me = () => session && session.user;
   const isOwner = () => !!me() && D.owners.includes(me().id);
   const CHIEF = ['अध्यक्ष', 'सचिव'];
-  const PUBLIC = ['config', 'notices', 'polls', 'pollvotes', 'services', 'svcvotes', 'committee', 'cameras', 'cctvlog', 'gallery', 'fees'];
+  const PUBLIC = ['config', 'notices', 'polls', 'pollvotes', 'services', 'svcvotes', 'committee', 'cameras', 'cctvlog', 'gallery', 'fees', 'reports'];
   const HOUSE = ['houses', 'payments', 'payclaims', 'complaints', 'vehicles', 'tenants', 'feepay', 'inbox'];
   const ADMIN_ONLY_KEYS = ['verified', 'verifiedBy', 'verifiedAt', 'adminNote', 'reverify'];
 
@@ -259,6 +270,13 @@ code{font-size:.92em;background:var(--bg);padding:1px 5px;border-radius:4px}
     const m = memberOf(cid);
     return CHIEF.includes(m && m.post) || !D.members.some(x => x.colony_id === cid && x.role === 'admin' && !x.blocked && CHIEF.includes(x.post));
   }
+  const PUB = ['अध्यक्ष', 'कोषाध्यक्ष'];
+  function canPublish(cid) {
+    if (isOwner()) return true; if (role(cid) !== 'admin') return false;
+    const m = memberOf(cid);
+    return PUB.includes(m && m.post) || !D.members.some(x => x.colony_id === cid && x.role === 'admin' && !x.blocked && PUB.includes(x.post));
+  }
+  const reportsGuard = (cid, c) => { if (c === 'reports' && !canPublish(cid)) rule('हिसाब सिर्फ़ अध्यक्ष या कोषाध्यक्ष प्रकाशित कर सकते हैं।') };
   const own = (c, id) => ['pollvotes', 'svcvotes', 'compvotes'].includes(c) && me() && id === me().id;
   const coll = (cid, c) => ((D.docs[cid] = D.docs[cid] || {})[c] = D.docs[cid][c] || {});
   const metaOf = (cid, c, id) => (((D.meta[cid] = D.meta[cid] || {})[c] = D.meta[cid][c] || {})[id] = D.meta[cid][c][id] || {});
@@ -361,6 +379,7 @@ code{font-size:.92em;background:var(--bg);padding:1px 5px;border-radius:4px}
         const cid = a.p_colony, c = a.p_collection, id = a.p_id, col = coll(cid, c), old = col[id];
         const nf = () => { throw { code: '42501', message: 'document not found or not allowed' } };
         if (!old || !canRead(cid, c, id, old) || !canWrite(cid, c, id, old)) nf();
+        reportsGuard(cid, c);
         const merged = { ...old, ...clone(a.p_patch) };
         if (!canWrite(cid, c, id, merged)) deny();
         col[id] = scope(cid, c, merged, old); save(); notify(cid, c); return clone(col[id]);
@@ -430,15 +449,17 @@ code{font-size:.92em;background:var(--bg);padding:1px 5px;border-radius:4px}
       async upsert(cid, c, id, data) {
         const col = coll(cid, c), old = col[id];
         if (old) { if (!canWrite(cid, c, id, old) || !canWrite(cid, c, id, data)) deny() } else if (!canInsert(cid, c, id, data)) deny();
+        reportsGuard(cid, c);
         col[id] = scope(cid, c, clone(data), old); if (!old) metaOf(cid, c, id).by = me().id; save(); notify(cid, c);
       },
       async insert(cid, c, id, data) {
         if (!canInsert(cid, c, id, data)) deny();
+        reportsGuard(cid, c);
         const col = coll(cid, c); if (col[id]) throw { code: '23505', message: 'duplicate' };
         col[id] = scope(cid, c, clone(data), null); metaOf(cid, c, id).by = me().id; save(); notify(cid, c);
       },
       async patch(cid, c, id, p) { return window.CS_BACKEND.rpc('doc_patch', { p_colony: cid, p_collection: c, p_id: id, p_patch: p }) },
-      async del(cid, c, id) { const col = coll(cid, c), old = col[id]; if (!old || !canWrite(cid, c, id, old)) return; delete col[id]; save(); notify(cid, c) },
+      async del(cid, c, id) { const col = coll(cid, c), old = col[id]; if (!old || !canWrite(cid, c, id, old)) return; reportsGuard(cid, c); delete col[id]; save(); notify(cid, c) },
       subscribe(cid, fn) { const l = { cid, fn }; listeners.add(l); return () => listeners.delete(l) }
     },
     files: {
@@ -3199,19 +3220,19 @@ function bookRows(){
   const rows=S.exp.map(e=>({date:e.date||'',title:e.title,cat:e.cat,inc:isIn(e)?Number(e.amount||0):0,out:isIn(e)?0:Number(e.amount||0),e}));
   const bym={};S.payList.forEach(p=>{const m=String(p.date||p.month).slice(0,7);(bym[m]=bym[m]||[]).push(p)});
   Object.entries(bym).forEach(([m,ps])=>{const last=ps.map(p=>p.date||m+'-01').sort().pop();rows.push({date:last,title:`मेंटेनेंस वसूली · ${mLong(m)}`,cat:`${ps.length} भुगतान`,inc:sumA(ps),out:0,maint:true,m})});
-  const byf={};S.feeList.forEach(p=>{(byf[p.fee]=byf[p.fee]||[]).push(p)});
+  const byf={};S.feeList.forEach(p=>{const k=p.fee+'_'+String(p.date||'').slice(0,7);(byf[k]=byf[k]||[]).push(p)});
   Object.values(byf).forEach(ps=>{const last=ps.map(p=>p.date||'').sort().pop()||today();rows.push({date:last,title:`चंदा · ${ps[0].feeTitle||''}`,cat:`${ps.length} भुगतान`,inc:sumA(ps),out:0,fee:true})});
   rows.sort((a,b)=>a.date.localeCompare(b.date)||(a.maint?-1:1));
   let bal=Number(S.cfg.openBal||0);rows.forEach(r=>{bal+=r.inc-r.out;r.bal=bal});return rows}
 const S={cfg:{name:'लक्ष्मण विहार',charge:500,start:'2026-04',contacts:[]},houses:[],pay:{},payList:[],comp:[],notices:[],exp:[],polls:[],pv:{},photos:[],veh:[],svc:[],sv:{},team:[],cams:[],clog:[],cv:{},claims:[],members:[],
-  tenants:[],fees:[],feepay:{},feeList:[],inbox:[],summary:null,audit:[],joins:[]};
+  tenants:[],fees:[],feepay:{},feeList:[],inbox:[],summary:null,audit:[],joins:[],reports:[]};
 const S0=JSON.stringify(S);
 function resetState(){Object.assign(S,JSON.parse(S0));tab='home'}
 const VT={car:['कार','🚗'],bike:['बाइक / स्कूटी','🏍️'],other:['अन्य','🚙']};
 const PARK=['घर के अंदर','घर के सामने','गली में','पार्किंग एरिया में'];
 const DEFAULT_RULES='1. अपनी गाड़ी अपने घर के अंदर या ठीक सामने ही खड़ी करें।\n2. किसी के गेट, मोड़ या गली के बीच में गाड़ी न खड़ी करें।\n3. मेहमानों की गाड़ी पार्क / खाली जगह के पास तय जगह पर लगवाएँ।\n4. रात में गली में डबल पार्किंग न करें, एम्बुलेंस का रास्ता खुला रहे।\n5. नई गाड़ी खरीदें तो कमेटी को नंबर बताएँ ताकि रजिस्टर में जुड़ जाए।';
 let houseFiles=null,assets=null,db=null,isAdmin=false,uid=null,tab='home',status='loading',ME=null,MYCOL=[],COLONY=null,MEM=null,isOwner=false;
-const F={tq:'',tf:'all',q:'',occ:'all',view:'month',month:curMonth(),cstat:'all',ckind:'all',mq:'',am:'all',ak:'all',album:'all',vq:'',sq:'',scat:'all'};
+const F={ap:'month',apm:curMonth(),apy:fyOf(today()),tq:'',tf:'all',q:'',occ:'all',view:'month',month:curMonth(),cstat:'all',ckind:'all',mq:'',am:'all',ak:'all',album:'all',vq:'',sq:'',scat:'all'};
 function normV(v){return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
 function vehOf(hid){return S.veh.filter(v=>v.house===hid)}
 
@@ -3266,6 +3287,7 @@ function startColony(){
   db.collection('tenants').onSnapshot(q=>{S.tenants=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.houseNo).localeCompare(String(b.houseNo),'en',{numeric:true})||String(a.name).localeCompare(String(b.name)));renderBody();purgeOldTenants()},err);
   db.collection('fees').onSnapshot(q=>{S.fees=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));renderBody()},err);
   db.collection('feepay').onSnapshot(q=>{S.feeList=q.docs.map(d=>({id:d.id,...d.data()}));S.feepay={};S.feeList.forEach(p=>S.feepay[p.fee+'_'+p.house]=p);renderBody();summarySoon()},err);
+  db.collection('reports').onSnapshot(q=>{S.reports=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.to||'').localeCompare(String(a.to||''))||(a.kind==='year'?-1:1));renderBody()},err);
   db.collection('inbox').onSnapshot(q=>{S.inbox=q.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.at||'').localeCompare(String(a.at||'')));renderBody()},err);
   renderAll();
 }
@@ -3316,12 +3338,12 @@ const SHELL={
     <div class="seg" id="ckind">${[['all','सभी'],['complaint','शिकायतें'],['suggestion','सुझाव']].map(([k,l])=>`<button data-v="${k}" aria-pressed="${F.ckind===k}">${l}</button>`).join('')}</div>
     <select id="cstat" style="width:auto"><option value="all">हर स्थिति</option>${Object.entries(STAT).map(([k,v])=>`<option value="${k}" ${F.cstat===k?'selected':''}>${v[0]}</option>`).join('')}</select>
     ${isAdmin?'':'<button class="btn ghost" data-act="parkComp">🚗 गलत पार्किंग</button>'}<button class="btn" data-act="addComp">+ शिकायत / सुझाव दर्ज करें</button></div>`,
-  acct:()=>{if(!isAdmin)return '';const ms=[...new Set(bookRows().map(r=>r.date.slice(0,7)).filter(Boolean))].sort().reverse();
+  acct:()=>{if(!isAdmin)return '';const P=periodOpts();
     return `<div class="toolbar">
-    <div class="seg" id="akind">${[['all','सभी एंट्री'],['in','आय (+)'],['out','खर्च (−)']].map(([k,l])=>`<button data-v="${k}" aria-pressed="${F.ak===k}">${l}</button>`).join('')}</div>
-    <select id="amon" style="width:auto"><option value="all">सभी महीने</option>${ms.map(m=>`<option value="${m}" ${F.am===m?'selected':''}>${mLong(m)}</option>`).join('')}</select>
+    <div class="seg" id="apk">${[['month','महीने का हिसाब'],['year','साल का हिसाब (अप्रैल–मार्च)']].map(([k,l])=>`<button data-v="${k}" aria-pressed="${F.ap===k}">${l}</button>`).join('')}</div>
+    ${F.ap==='month'?`<select id="apm" style="width:auto">${P.months.map(m=>`<option value="${m}" ${F.apm===m?'selected':''}>${mLong(m)}</option>`).join('')}</select>`:`<select id="apy" style="width:auto">${P.years.map(y=>`<option value="${y}" ${String(F.apy)===String(y)?'selected':''}>${fyLabel(y)}</option>`).join('')}</select>`}
     <span class="grow"></span>
-    ${isAdmin?'<button class="btn" style="--tc:var(--ok);--tc-ink:var(--surface)" data-act="addInc">+ आय जोड़ें</button><button class="btn" style="--tc:var(--bad);--tc-ink:var(--surface)" data-act="addExp">− खर्च जोड़ें</button>':''}</div>`},
+    <button class="btn" style="--tc:var(--ok);--tc-ink:var(--surface)" data-act="addInc">+ जमा (आय) जोड़ें</button><button class="btn" style="--tc:var(--bad);--tc-ink:var(--surface)" data-act="addExp">− खर्च जोड़ें</button></div>`},
   polls:()=>`<div class="toolbar"><p class="muted grow" style="margin:0;font-size:14px">हर व्यक्ति हर पोल में एक वोट दे सकता है। पोल बंद होने तक वोट बदला जा सकता है।</p>${isAdmin?'<button class="btn" data-act="addPoll">+ नया पोल बनाएँ</button>':''}</div>`,
   gallery:()=>{const al=[...new Set(S.photos.map(p=>p.album).filter(Boolean))];return `<div class="toolbar"><select id="album" style="width:auto"><option value="all">सभी एल्बम</option>${al.map(a=>`<option ${F.album===a?'selected':''}>${esc(a)}</option>`).join('')}</select><span class="grow"></span>${assets?'<button class="btn" data-act="addPhotos">+ फोटो जोड़ें</button>':''}</div>`}
 };
@@ -3608,37 +3630,21 @@ comp(){
 },
 acct(){
   if(!isAdmin)return acctResident();
-  const ob=Number(S.cfg.openBal||0),mt=sumA(S.payList),fe=sumA(S.feeList),oi=sumA(S.exp.filter(isIn)),sp=sumA(S.exp.filter(e=>!isIn(e))),bal=ob+mt+fe+oi-sp;
-  const all=bookRows(),rows=all.filter(r=>(F.am==='all'||r.date.startsWith(F.am))&&(F.ak==='all'||(F.ak==='in'?r.inc>0:r.out>0)));
-  const fIn=rows.reduce((s,r)=>s+r.inc,0),fOut=rows.reduce((s,r)=>s+r.out,0);
-  const outs=S.exp.filter(e=>!isIn(e)&&(F.am==='all'||String(e.date).startsWith(F.am)));const byCat={};outs.forEach(e=>byCat[e.cat]=(byCat[e.cat]||0)+Number(e.amount||0));const ct=sumA(outs);
-  const mset=[...new Set(all.map(r=>r.date.slice(0,7)).filter(Boolean))].sort();let run=ob;
-  const msum=mset.map(m=>{const r=all.filter(x=>x.date.startsWith(m));const mi=r.filter(x=>x.maint).reduce((s,x)=>s+x.inc,0),o=r.filter(x=>!x.maint).reduce((s,x)=>s+x.inc,0),x=r.reduce((s,y)=>s+y.out,0);run+=mi+o-x;return {m,mi,o,x,net:mi+o-x,run}}).reverse();
-  const act=r=>r.maint?`<button class="btn sm ghost" data-act="goto" data-id="maint" data-m="month">देखें</button>`:r.fee?`<button class="btn sm ghost" data-act="goto" data-id="fees">देखें</button>`:`${r.e.bill?`<button class="btn sm ghost" data-act="viewBill" data-id="${r.e.id}">🧾 बिल</button> `:''}${isAdmin?`<button class="btn sm ghost" data-act="editExp" data-id="${r.e.id}">बदलें</button> <button class="btn sm danger" data-act="delExp" data-id="${r.e.id}">हटाएँ</button>`:''}`;
+  const st=statement(F.ap,F.ap==='month'?F.apm:F.apy);
+  const act=r=>r.maint?`<button class="btn sm ghost" data-act="goto" data-id="maint" data-m="month">देखें</button>`:r.fee?`<button class="btn sm ghost" data-act="goto" data-id="fees">देखें</button>`:`${r.e.bill?`<button class="btn sm ghost" data-act="viewBill" data-id="${r.e.id}">🧾 बिल</button> `:''}<button class="btn sm ghost" data-act="editExp" data-id="${r.e.id}">बदलें</button> <button class="btn sm danger" data-act="delExp" data-id="${r.e.id}">हटाएँ</button>`;
+  const pub=S.reports.find(r=>r.id===st.id);
   return `${exBanner()}
   <div class="stats" style="margin-top:${hasExamples()?'16px':'0'}">
-    <div class="stat"><b>${rs(ob)}</b><span>शुरुआती बचत${isAdmin?' · <a href="#" data-act="setOpen" style="color:var(--tc)">बदलें</a>':''}</span></div>
-    <div class="stat ok"><b>+${rs(mt)}</b><span>मेंटेनेंस से आय</span></div>
-    <div class="stat ok"><b>+${rs(fe)}</b><span>चंदा से आय</span></div>
-    <div class="stat ok"><b>+${rs(oi)}</b><span>दूसरी आय (दान, जुर्माना…)</span></div>
-    <div class="stat bad"><b>−${rs(sp)}</b><span>कुल खर्च</span></div>
-    <div class="stat ${bal>=0?'ok':'bad'}" style="--tc:${bal>=0?'var(--ok)':'var(--bad)'}"><b>${rs(bal)}</b><span>अभी फंड में बची रकम</span></div>
+    <div class="stat"><b>${rs(Number(S.cfg.openBal||0))}</b><span>ऐप शुरू होने से पहले की बचत · <a href="#" data-act="setOpen" style="color:var(--tc)">बदलें</a></span></div>
+    <div class="stat ${fund()>=0?'ok':'bad'}" style="--tc:${fund()>=0?'var(--ok)':'var(--bad)'}"><b>${rs(fund())}</b><span>आज फंड में कुल बची रकम</span></div>
   </div>
-  <p class="muted num" style="font-size:14px;margin:10px 0 0">हिसाब: ${rs(ob)} + ${rs(mt)} + ${rs(fe)} + ${rs(oi)} − ${rs(sp)} = <b style="color:var(--ink)">${rs(bal)}</b></p>
-
-  <h2>रोकड़ बही (हर एंट्री के बाद बची रकम)</h2>
-  ${rows.length?`<div class="scroll"><table><thead><tr><th>तारीख</th><th>विवरण</th><th>श्रेणी</th><th class="r">आय (+)</th><th class="r">खर्च (−)</th><th class="r">बाकी रकम</th><th></th></tr></thead><tbody>
-    ${[...rows].reverse().map(r=>`<tr><td>${dFmt(r.date)}</td><td style="white-space:normal;min-width:180px">${esc(r.title)}${r.e&&r.e.example?' <span class="pill p-mar">उदाहरण</span>':''}${r.e&&r.e.note?`<div class="muted" style="font-size:13px">${esc(r.e.note)}</div>`:''}</td><td><span class="pill ${r.inc?'p-ok':'p-bad'}">${esc(r.cat)}</span></td>
-      <td class="r num" style="color:var(--ok)">${r.inc?'+'+rs(r.inc):''}</td><td class="r num" style="color:var(--bad)">${r.out?'−'+rs(r.out):''}</td><td class="r num"><b>${rs(r.bal)}</b></td><td>${act(r)}</td></tr>`).join('')}
-    <tr><td colspan="3"><b>${F.am==='all'?'कुल':mLong(F.am)+' का कुल'}</b> <span class="muted">(${rows.length} एंट्री)</span></td><td class="r num" style="color:var(--ok)"><b>+${rs(fIn)}</b></td><td class="r num" style="color:var(--bad)"><b>−${rs(fOut)}</b></td><td class="r num"><b>${fIn-fOut>=0?'+':'−'}${rs(Math.abs(fIn-fOut))}</b></td><td></td></tr>
-    ${F.am==='all'&&F.ak==='all'?`<tr><td colspan="5" class="muted">शुरुआती बचत</td><td class="r num">${rs(ob)}</td><td></td></tr>`:''}
-  </tbody></table></div>`:`<div class="empty">इस फ़िल्टर में कोई एंट्री नहीं है। ${isAdmin?'ऊपर “+ आय जोड़ें” या “− खर्च जोड़ें” से एंट्री करें।':''}</div>`}
-
-  ${msum.length?`<h2>महीने के हिसाब से</h2><div class="scroll"><table><thead><tr><th>महीना</th><th class="r">मेंटेनेंस</th><th class="r">दूसरी आय</th><th class="r">खर्च</th><th class="r">उस महीने बचत</th><th class="r">महीने के अंत में फंड</th></tr></thead><tbody>
-    ${msum.map(x=>`<tr><td><b>${mLong(x.m)}</b></td><td class="r num" style="color:var(--ok)">${rs(x.mi)}</td><td class="r num" style="color:var(--ok)">${rs(x.o)}</td><td class="r num" style="color:var(--bad)">${rs(x.x)}</td><td class="r num"><span class="pill ${x.net>=0?'p-ok':'p-bad'}">${x.net>=0?'+':'−'}${rs(Math.abs(x.net))}</span></td><td class="r num"><b>${rs(x.run)}</b></td></tr>`).join('')}
-  </tbody></table></div>`:''}
-
-  ${Object.keys(byCat).length?`<h2>खर्च किस पर हुआ${F.am==='all'?'':' · '+mLong(F.am)}</h2><div class="panel">${Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:4px 0"><span>${esc(k)}</span><span class="num">${rs(v)} <span class="muted" style="font-size:13px">(${Math.round(v*100/ct)}%)</span></span></div><div style="height:7px;border-radius:4px;background:var(--bg);margin-bottom:6px"><div style="height:7px;border-radius:4px;background:var(--tc);width:${v*100/ct}%"></div></div>`).join('')}</div>`:''}`;
+  <p class="muted" style="font-size:14px;margin:10px 0 0">खाता बही अपने आप चलती है: मेंटेनेंस या चंदा जमा होते ही रकम “जमा” में जुड़ जाती है, और खर्च लिखते ही फंड से घट जाती है। हर एंट्री के बाद बची रकम अपने आप बदलती है।</p>
+  <h2>${esc(st.label)}</h2>
+  ${stmtHtml(st,act)}
+  <div class="actions" style="margin-top:14px"><button class="btn ghost" data-act="printStmt">📄 PDF / प्रिंट</button>
+    ${canPublish()?`<button class="btn" data-act="publishStmt">📢 ${pub?'प्रकाशित हिसाब अपडेट करें':'सभी निवासियों के लिए प्रकाशित करें'}</button>`:'<span class="muted" style="font-size:13.5px;align-self:center">हिसाब प्रकाशित करने का अधिकार अध्यक्ष / कोषाध्यक्ष को है।</span>'}</div>
+  ${pub?`<p class="muted" style="font-size:13.5px;margin:6px 0 0">यह हिसाब ${esc(pub.by||'')} ने ${dFmt(String(pub.at||'').slice(0,10))} को प्रकाशित किया था। नई एंट्री के बाद “अपडेट करें” दबाएँ।</p>`:''}
+  ${reportsList()}`;
 },
 polls(){
   if(!S.polls.length)return `<div class="empty">अभी कोई पोल नहीं है। ${isAdmin?'ऊपर “नया पोल बनाएँ” से कॉलोनी की राय लें, जैसे “क्या CCTV लगवाना चाहिए?”':''}</div>`;
@@ -4045,7 +4051,8 @@ function acctResident(){
     <div class="stat ${Number(sm.fund)>=0?'ok':'bad'}"><b>${rs(sm.fund)}</b><span>अभी फंड में बची रकम</span></div></div>
   <p class="muted num" style="font-size:14px;margin:10px 0 0">हिसाब: ${rs(sm.openBal)} + ${rs(sm.maint)} + ${rs(sm.fees)} + ${rs(sm.otherIn)} − ${rs(sm.spent)} = <b style="color:var(--ink)">${rs(sm.fund)}</b></p>
   ${cats.length?`<h2>खर्च किस पर हुआ</h2><div class="panel">${cats.map(([k,v])=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:4px 0"><span>${esc(k)}</span><span class="num">${rs(v)} <span class="muted" style="font-size:13px">(${ct?Math.round(v*100/ct):0}%)</span></span></div><div style="height:7px;border-radius:4px;background:var(--bg);margin-bottom:6px"><div style="height:7px;border-radius:4px;background:var(--tc);width:${ct?v*100/ct:0}%"></div></div>`).join('')}</div>`:''}
-  <p class="muted" style="font-size:14px;margin-top:14px">यहाँ सिर्फ़ कुल रकम दिखती है, किसी घर का नाम या भुगतान नहीं। पूरी रोकड़ बही और बिल कमेटी के पास हैं, आम सभा में देखे जा सकते हैं।</p>`}
+  <p class="muted" style="font-size:14px;margin-top:14px">यहाँ सिर्फ़ कुल रकम दिखती है, किसी घर का नाम या भुगतान नहीं। महीने और साल का पूरा हिसाब अध्यक्ष / कोषाध्यक्ष नीचे प्रकाशित करते हैं।</p>
+  ${reportsList()}`}
 
 Object.assign(SHELL,{
   myhouse:()=>'',
@@ -4198,6 +4205,70 @@ const ACT2={
 (function bindTenantsShell(){const prev=bindShell;bindShell=function(){prev();
   const tq=document.getElementById('tq');if(tq)tq.addEventListener('input',()=>{F.tq=tq.value;renderBody()});
   const tf=document.getElementById('tf');if(tf)tf.addEventListener('change',()=>{F.tf=tf.value;renderBody()})}})();
+
+
+/* ---------- account book (खाता बही): monthly / yearly statements and published PDFs ---------- */
+const PUB_POSTS=['अध्यक्ष','कोषाध्यक्ष'];
+function canPublish(){return isOwner||(isAdmin&&(PUB_POSTS.includes(MEM.post)||!S.members.some(m=>m.role==='admin'&&!m.blocked&&PUB_POSTS.includes(m.post))))}
+function fyOf(d){const y=Number(String(d).slice(0,4)),m=Number(String(d).slice(5,7));return m>=4?y:y-1}
+function fyLabel(y){y=Number(y);return `वित्त वर्ष ${y}–${String(y+1).slice(2)} (अप्रैल ${y} से मार्च ${y+1})`}
+function periodOpts(){const ds=bookRows().map(r=>r.date).filter(Boolean).concat([today()]);
+  return {months:[...new Set(ds.map(d=>d.slice(0,7)))].sort().reverse(),years:[...new Set(ds.map(fyOf))].sort((a,b)=>b-a)}}
+function statement(kind,key){
+  key=String(key);let from,to,label;
+  if(kind==='month'){const [y,m]=key.split('-').map(Number);from=key+'-01';to=key+'-'+String(new Date(y,m,0).getDate()).padStart(2,'0');label=`${mLong(key)} का हिसाब`}
+  else{from=key+'-04-01';to=(Number(key)+1)+'-03-31';label=`${fyLabel(key)} का हिसाब`}
+  const all=bookRows();let opening=Number(S.cfg.openBal||0);
+  all.filter(r=>r.date&&r.date<from).forEach(r=>{opening+=r.inc-r.out});
+  const inP=all.filter(r=>r.date&&r.date>=from&&r.date<=to);let bal=opening;
+  const rows=inP.map(r=>{bal+=r.inc-r.out;return {date:r.date,title:r.title,cat:r.cat,inc:r.inc,out:r.out,bal,maint:!!r.maint,fee:!!r.fee,e:r.e}});
+  const inCats={},outCats={};
+  inP.forEach(r=>{if(r.inc){const k=r.maint?'मेंटेनेंस':r.fee?'चंदा':(r.e&&r.e.cat)||'दूसरी आय';inCats[k]=(inCats[k]||0)+r.inc}if(r.out){const k=(r.e&&r.e.cat)||'अन्य';outCats[k]=(outCats[k]||0)+r.out}});
+  const credit=inP.reduce((s,r)=>s+r.inc,0),debit=inP.reduce((s,r)=>s+r.out,0);
+  return {id:kind+'_'+key,kind,key,label,from,to,opening,credit,debit,closing:opening+credit-debit,inCats,outCats,rows}}
+function catBars(cats,color){const e=Object.entries(cats||{}).sort((a,b)=>b[1]-a[1]),t=e.reduce((s,x)=>s+Number(x[1]),0);
+  return e.length?e.map(([k,v])=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:4px 0"><span>${esc(k)}</span><span class="num">${rs(v)} <span class="muted" style="font-size:13px">(${t?Math.round(v*100/t):0}%)</span></span></div><div style="height:7px;border-radius:4px;background:var(--bg);margin-bottom:6px"><div style="height:7px;border-radius:4px;background:${color};width:${t?v*100/t:0}%"></div></div>`).join(''):'<div class="muted" style="font-size:14px">इस अवधि में कुछ नहीं।</div>'}
+function stmtHtml(st,actFn){
+  return `<div class="stats" style="margin-top:0">
+    <div class="stat"><b>${rs(st.opening)}</b><span>शुरुआती रकम (पिछली बची हुई)</span></div>
+    <div class="stat ok" style="--tc:var(--ok)"><b>+${rs(st.credit)}</b><span>कुल जमा (Credit)</span></div>
+    <div class="stat bad" style="--tc:var(--bad)"><b>−${rs(st.debit)}</b><span>कुल खर्च (Debit)</span></div>
+    <div class="stat ${st.closing>=0?'ok':'bad'}" style="--tc:${st.closing>=0?'var(--ok)':'var(--bad)'}"><b>${rs(st.closing)}</b><span>आख़िर में बची रकम</span></div></div>
+  <p class="muted num" style="font-size:14px;margin:10px 0 0">${rs(st.opening)} + ${rs(st.credit)} − ${rs(st.debit)} = <b style="color:var(--ink)">${rs(st.closing)}</b></p>
+  <div class="grid2" style="margin-top:14px"><section class="panel"><h3 style="margin:0 0 8px">जमा कहाँ से आया</h3>${catBars(st.inCats,'var(--ok)')}</section><section class="panel"><h3 style="margin:0 0 8px">खर्च किस पर हुआ</h3>${catBars(st.outCats,'var(--bad)')}</section></div>
+  <h3 style="margin:18px 0 8px">खाता बही (हर एंट्री के बाद बची रकम)</h3>
+  <div class="scroll"><table><thead><tr><th>तारीख</th><th>विवरण</th><th>श्रेणी</th><th class="r">जमा (+)</th><th class="r">खर्च (−)</th><th class="r">बची रकम</th>${actFn?'<th></th>':''}</tr></thead><tbody>
+    <tr><td>${dFmt(st.from)}</td><td colspan="4" class="muted">शुरुआती रकम</td><td class="r num"><b>${rs(st.opening)}</b></td>${actFn?'<td></td>':''}</tr>
+    ${st.rows.map(r=>`<tr><td>${dFmt(r.date)}</td><td style="white-space:normal;min-width:170px">${esc(r.title)}${r.e&&r.e.note?`<div class="muted" style="font-size:13px">${esc(r.e.note)}</div>`:''}</td><td><span class="pill ${r.inc?'p-ok':'p-bad'}">${esc(r.cat||'')}</span></td><td class="r num" style="color:var(--ok)">${r.inc?'+'+rs(r.inc):''}</td><td class="r num" style="color:var(--bad)">${r.out?'−'+rs(r.out):''}</td><td class="r num"><b>${rs(r.bal)}</b></td>${actFn?`<td>${actFn(r)}</td>`:''}</tr>`).join('')}
+    <tr><td colspan="3"><b>कुल</b> <span class="muted">(${st.rows.length} एंट्री)</span></td><td class="r num" style="color:var(--ok)"><b>+${rs(st.credit)}</b></td><td class="r num" style="color:var(--bad)"><b>−${rs(st.debit)}</b></td><td class="r num"><b>${rs(st.closing)}</b></td>${actFn?'<td></td>':''}</tr>
+  </tbody></table></div>`}
+function reportsList(){const R=S.reports;
+  if(!R.length)return isAdmin?'':'<h2>प्रकाशित हिसाब</h2><div class="empty">अभी कमेटी ने महीने या साल का कोई हिसाब प्रकाशित नहीं किया है।</div>';
+  return `<h2>प्रकाशित हिसाब <span class="muted" style="font-family:var(--body);font-size:15px">· सभी निवासी देख सकते हैं</span></h2><div class="list">${R.map(r=>`<article class="card"><div class="row"><div style="min-width:0"><h3 style="margin:0">📄 ${esc(r.label)}</h3>
+    <div class="muted num" style="font-size:14px">${rs(r.opening)} + ${rs(r.credit)} − ${rs(r.debit)} = <b style="color:var(--ink)">${rs(r.closing)}</b></div><div class="muted" style="font-size:13px">प्रकाशित: ${esc(r.by||'')} · ${dFmt(String(r.at||'').slice(0,10))}</div></div><span class="pill ${r.kind==='year'?'p-mar':'p-info'}">${r.kind==='year'?'साल':'महीना'}</span></div>
+    <div class="actions"><button class="btn sm" data-act="viewReport" data-id="${r.id}">देखें</button><button class="btn sm ghost" data-act="printReport" data-id="${r.id}">📄 PDF / प्रिंट</button>${canPublish()?`<button class="btn sm danger" data-act="delReport" data-id="${r.id}">हटाएँ</button>`:''}</div></article>`).join('')}</div>
+  <p class="muted" style="font-size:13.5px">PDF बनाने के लिए “PDF / प्रिंट” दबाएँ और प्रिंट में <b>Save as PDF</b> (PDF के रूप में सेव करें) चुनें।</p>`}
+function printDoc(st){let el=document.getElementById('print');if(!el){el=document.createElement('div');el.id='print';document.body.appendChild(el)}
+  el.innerHTML=`<div class="phead"><h1>${esc(S.cfg.name)} कॉलोनी</h1><h2>${esc(st.label)}</h2><p>${dFmt(st.from)} से ${dFmt(st.to)} तक · ${st.by?'प्रकाशित: '+esc(st.by)+' · '+dFmt(String(st.at||'').slice(0,10)):'तैयार किया: '+dFmt(today())}</p></div>${stmtHtml(st,null)}
+  <div class="psign"><span>कोषाध्यक्ष: ____________________</span><span>अध्यक्ष: ____________________</span></div><p class="pfoot">यह हिसाब कॉलोनी मित्र ऐप की खाता बही से अपने आप बना है। मेंटेनेंस और चंदे की रकम महीने के हिसाब से जोड़ी गई है, किसी घर का नाम नहीं दिखाया गया।</p>`;
+  if(dlg.open)dlg.close();setTimeout(()=>window.print(),60)}
+Object.assign(ACT2,{
+  printStmt(){printDoc(statement(F.ap,F.ap==='month'?F.apm:F.apy))},
+  publishStmt(){if(!canPublish()){alertBox('हिसाब सिर्फ़ अध्यक्ष या कोषाध्यक्ष प्रकाशित कर सकते हैं।');return}
+    const st=statement(F.ap,F.ap==='month'?F.apm:F.apy);
+    confirmBox(`<b>${esc(st.label)}</b> सभी निवासियों को दिखेगा: शुरुआती रकम, कुल जमा, कुल खर्च, बची रकम और हर एंट्री का विवरण (बिल की फोटो नहीं)। मेंटेनेंस और चंदा महीने के कुल जोड़ में दिखेंगे, किसी घर का नाम नहीं।`,'हाँ, प्रकाशित करें',async()=>{
+      await db.doc('reports/'+st.id).set({...st,rows:st.rows.map(({e,...r})=>({...r,note:e&&e.note?e.note:''})),colony:S.cfg.name,by:(MEM.member_name||meLabel())+(MEM.post?' ('+MEM.post+')':''),at:new Date().toISOString()});
+      setTimeout(()=>ACT2.addMsg({to:'all',kind:'info',title:'हिसाब प्रकाशित: '+st.label,body:`${st.label} प्रकाशित कर दिया गया है।\nशुरुआती रकम ${rs(st.opening)} + कुल जमा ${rs(st.credit)} − कुल खर्च ${rs(st.debit)} = बची रकम ${rs(st.closing)}।\nपूरा हिसाब और PDF ऐप के “हिसाब-किताब” टैब में देखें।`}),80)})},
+  viewReport(id){const r=S.reports.find(x=>x.id===id);if(!r)return;
+    dlg.innerHTML=`<div class="dbody" style="max-width:900px"><h3>📄 ${esc(r.label)}</h3><p class="muted" style="margin:0;font-size:13.5px">प्रकाशित: ${esc(r.by||'')} · ${dFmt(String(r.at||'').slice(0,10))}</p>${stmtHtml({...r,rows:(r.rows||[]).map(x=>({...x,e:x.note?{note:x.note}:null}))},null)}<div class="dfoot"><button class="btn ghost" id="pp">📄 PDF / प्रिंट</button><button class="btn" data-close>बंद करें</button></div></div>`;
+    dlg.querySelector('#pp').onclick=()=>ACT2.printReport(id);dlg.showModal()},
+  printReport(id){const r=S.reports.find(x=>x.id===id);if(r)printDoc({...r,rows:(r.rows||[]).map(x=>({...x,e:x.note?{note:x.note}:null}))})},
+  delReport(id){const r=S.reports.find(x=>x.id===id);if(!r)return;confirmBox(`<b>${esc(r.label)}</b> निवासियों के ऐप से हट जाएगा। खाता बही की एंट्री नहीं हटेंगी।`,'हाँ, हटाएँ',()=>db.doc('reports/'+id).delete())}
+});
+(function bindAcctShell(){const prev=bindShell;bindShell=function(){prev();
+  const k=document.getElementById('apk');if(k)k.addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;F.ap=b.dataset.v;renderAll()});
+  const m=document.getElementById('apm');if(m)m.addEventListener('change',()=>{F.apm=m.value;renderAll()});
+  const y=document.getElementById('apy');if(y)y.addEventListener('change',()=>{F.apy=Number(y.value);renderAll()})}})();
 
 boot();
 </script>

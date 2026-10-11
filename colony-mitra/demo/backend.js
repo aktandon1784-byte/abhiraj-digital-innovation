@@ -20,7 +20,7 @@
   const me = () => session && session.user;
   const isOwner = () => !!me() && D.owners.includes(me().id);
   const CHIEF = ['अध्यक्ष', 'सचिव'];
-  const PUBLIC = ['config', 'notices', 'polls', 'pollvotes', 'services', 'svcvotes', 'committee', 'cameras', 'cctvlog', 'gallery', 'fees'];
+  const PUBLIC = ['config', 'notices', 'polls', 'pollvotes', 'services', 'svcvotes', 'committee', 'cameras', 'cctvlog', 'gallery', 'fees', 'reports'];
   const HOUSE = ['houses', 'payments', 'payclaims', 'complaints', 'vehicles', 'tenants', 'feepay', 'inbox'];
   const ADMIN_ONLY_KEYS = ['verified', 'verifiedBy', 'verifiedAt', 'adminNote', 'reverify'];
 
@@ -37,6 +37,13 @@
     const m = memberOf(cid);
     return CHIEF.includes(m && m.post) || !D.members.some(x => x.colony_id === cid && x.role === 'admin' && !x.blocked && CHIEF.includes(x.post));
   }
+  const PUB = ['अध्यक्ष', 'कोषाध्यक्ष'];
+  function canPublish(cid) {
+    if (isOwner()) return true; if (role(cid) !== 'admin') return false;
+    const m = memberOf(cid);
+    return PUB.includes(m && m.post) || !D.members.some(x => x.colony_id === cid && x.role === 'admin' && !x.blocked && PUB.includes(x.post));
+  }
+  const reportsGuard = (cid, c) => { if (c === 'reports' && !canPublish(cid)) rule('हिसाब सिर्फ़ अध्यक्ष या कोषाध्यक्ष प्रकाशित कर सकते हैं।') };
   const own = (c, id) => ['pollvotes', 'svcvotes', 'compvotes'].includes(c) && me() && id === me().id;
   const coll = (cid, c) => ((D.docs[cid] = D.docs[cid] || {})[c] = D.docs[cid][c] || {});
   const metaOf = (cid, c, id) => (((D.meta[cid] = D.meta[cid] || {})[c] = D.meta[cid][c] || {})[id] = D.meta[cid][c][id] || {});
@@ -139,6 +146,7 @@
         const cid = a.p_colony, c = a.p_collection, id = a.p_id, col = coll(cid, c), old = col[id];
         const nf = () => { throw { code: '42501', message: 'document not found or not allowed' } };
         if (!old || !canRead(cid, c, id, old) || !canWrite(cid, c, id, old)) nf();
+        reportsGuard(cid, c);
         const merged = { ...old, ...clone(a.p_patch) };
         if (!canWrite(cid, c, id, merged)) deny();
         col[id] = scope(cid, c, merged, old); save(); notify(cid, c); return clone(col[id]);
@@ -208,15 +216,17 @@
       async upsert(cid, c, id, data) {
         const col = coll(cid, c), old = col[id];
         if (old) { if (!canWrite(cid, c, id, old) || !canWrite(cid, c, id, data)) deny() } else if (!canInsert(cid, c, id, data)) deny();
+        reportsGuard(cid, c);
         col[id] = scope(cid, c, clone(data), old); if (!old) metaOf(cid, c, id).by = me().id; save(); notify(cid, c);
       },
       async insert(cid, c, id, data) {
         if (!canInsert(cid, c, id, data)) deny();
+        reportsGuard(cid, c);
         const col = coll(cid, c); if (col[id]) throw { code: '23505', message: 'duplicate' };
         col[id] = scope(cid, c, clone(data), null); metaOf(cid, c, id).by = me().id; save(); notify(cid, c);
       },
       async patch(cid, c, id, p) { return window.CS_BACKEND.rpc('doc_patch', { p_colony: cid, p_collection: c, p_id: id, p_patch: p }) },
-      async del(cid, c, id) { const col = coll(cid, c), old = col[id]; if (!old || !canWrite(cid, c, id, old)) return; delete col[id]; save(); notify(cid, c) },
+      async del(cid, c, id) { const col = coll(cid, c), old = col[id]; if (!old || !canWrite(cid, c, id, old)) return; reportsGuard(cid, c); delete col[id]; save(); notify(cid, c) },
       subscribe(cid, fn) { const l = { cid, fn }; listeners.add(l); return () => listeners.delete(l) }
     },
     files: {

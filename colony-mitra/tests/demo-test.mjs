@@ -77,6 +77,28 @@ const text=async pg=>pg.$eval('#main',e=>e.innerText);
  await pg.screenshot({path:'/tmp/adm-fees.png',fullPage:true});
  await ctx.close()}
 
+// ---------- treasurer publishes the monthly statement ----------
+{const {ctx,pg,errs}=await session('9999900003');
+ await go(pg,'acct');let tx=await text(pg);ok(tx.includes('कुल जमा (Credit)')&&tx.includes('कुल खर्च (Debit)')&&tx.includes('आख़िर में बची रकम')&&tx.includes('खाता बही'),'account book shows credit, debit, balance');
+ const before=await pg.evaluate(()=>[...document.querySelectorAll('.stat b')].map(b=>b.textContent));
+ await pg.click('[data-act="addExp"]');await pg.fill('#f_title','स्ट्रीट लाइट का बल्ब');await pg.fill('#f_amount','350');await pg.click('#frm [type=submit]');await pg.waitForTimeout(500);
+ tx=await text(pg);ok(tx.includes('स्ट्रीट लाइट का बल्ब')&&tx.includes('−₹350'),'expense entry appears and is subtracted');
+ const after=await pg.evaluate(()=>[...document.querySelectorAll('.stat b')].map(b=>b.textContent));ok(before[1]!==after[1],'fund balance updated automatically: '+before[1]+' → '+after[1]);
+ await pg.click('[data-act="publishStmt"]');await pg.click('#yes');await pg.waitForTimeout(500);
+ ok(await pg.$eval('#dlg',e=>e.open&&e.querySelector('#f_title')&&e.querySelector('#f_title').value.startsWith('हिसाब प्रकाशित')),'after publishing, message to all houses is prefilled');
+ await pg.click('#frm [type=submit]');await pg.waitForTimeout(500);await pg.keyboard.press('Escape');
+ await go(pg,'acct');tx=await text(pg);ok(tx.includes('प्रकाशित हिसाब'),'published statement listed');
+ await pg.click('[data-act="apk"],#apk [data-v="year"]');await pg.waitForTimeout(300);tx=await text(pg);ok(tx.includes('वित्त वर्ष 2026–27'),'yearly statement (April–March)');
+ await pg.evaluate(()=>{window.print=()=>{}});await pg.click('[data-act="printStmt"]');await pg.waitForTimeout(300);await pg.emulateMedia({media:'print'});
+ const pv=await pg.evaluate(()=>{const p=document.getElementById('print');return !!p&&getComputedStyle(p).display!=='none'&&getComputedStyle(document.getElementById('main')).display==='none'&&p.innerText.includes('कोषाध्यक्ष:')&&p.innerText.includes('कुल खर्च')});
+ ok(pv,'print view (PDF) shows statement with signature lines');
+ await pg.pdf({path:'/tmp/statement.pdf',format:'A4'});await pg.emulateMedia({media:'screen'});
+ ok(!errs.length,'no console errors (statement) '+errs.join(';'));await ctx.close()}
+// ---------- secretary-level admin cannot publish; resident can read ----------
+{const {ctx,pg}=await session('9999900002');await go(pg,'acct');const tx=await text(pg);ok(tx.includes('प्रकाशित हिसाब')&&tx.includes('PDF / प्रिंट'),'resident sees published statement list');
+ await pg.click('[data-act="viewReport"]');await pg.waitForTimeout(300);ok(await pg.$eval('#dlg',e=>e.open&&e.innerText.includes('स्ट्रीट लाइट का बल्ब')&&e.innerText.includes('कुल खर्च')),'resident opens published statement');
+ const r=await pg.evaluate(async()=>{try{await window.CS_BACKEND.docs.insert('demo-lv','reports','fake',{label:'x'});return 'allowed'}catch(e){return 'denied'}});ok(r==='denied','resident cannot publish a statement');
+ await ctx.close()}
 // ---------- resident A-1 again: sees the targeted message and verification ----------
 {const {ctx,pg}=await session('9999900002');
  await go(pg,'msgs');let tx=await text(pg);ok(tx.includes('A-1 के लिए जाँच')&&tx.includes('चंदा: सामुदायिक भवन'),'resident receives targeted and chanda messages');

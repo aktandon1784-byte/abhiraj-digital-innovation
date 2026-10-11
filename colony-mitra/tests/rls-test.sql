@@ -125,6 +125,7 @@ select t_ok($q$select doc_patch('11111111-1111-1111-1111-111111111111','tenants'
 select t_is((select data->>'verified' from docs where id='t2')='true', 'tenant verification saved for admin');
 select t_ok($q$select doc_patch('11111111-1111-1111-1111-111111111111','complaints','c3','{"status":"work","reply":"कल ठीक होगा"}')$q$, 'T updates complaint status');
 select t_is((select count(*) from member_audit)>=1, 'T reads audit log');
+select t_ok($q$insert into docs(colony_id,collection,id,data) values ('11111111-1111-1111-1111-111111111111','reports','month_2026-09','{"label":"सितंबर 2026","closing":1700}')$q$, 'कोषाध्यक्ष publishes a statement');
 update colonies set plan='large', paid_until='2099-01-01';
 commit;
 select t_is((select plan from colonies)='trial', 'committee cannot change own plan / paid_until');
@@ -137,6 +138,19 @@ select t_is(public.cs_is_chief('11111111-1111-1111-1111-111111111111'), 'A is ch
 select t_ok($q$insert into members(colony_id,name,phone10,role,post) values ('11111111-1111-1111-1111-111111111111','सचिव जी','9999900008','admin','सचिव')$q$, 'A adds सचिव as admin');
 select t_ok($q$update members set blocked=true where phone10='9999900004'$q$, 'A blocks resident 2');
 select t_is((select code from public.my_colonies())='LV1234', 'admin sees the join code');
+commit;
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a1","phone":"919999900008"}';
+select t_is(public.cs_role('11111111-1111-1111-1111-111111111111')='admin', 'new सचिव is admin');
+select t_err($q$insert into docs(colony_id,collection,id,data) values ('11111111-1111-1111-1111-111111111111','reports','year_x','{}')$q$, 'सचिव cannot publish statements');
+select t_err($q$delete from docs where collection='reports'$q$ || '; select 1/(select count(*)-1 from docs where collection=''reports'')', 'सचिव cannot delete statements');
+commit;
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000b1","phone":"919999900002"}';
+select t_is((select count(*) from docs where collection='reports')=1, 'resident can read published statement');
+select t_err($q$insert into docs(colony_id,collection,id,data) values ('11111111-1111-1111-1111-111111111111','reports','fake','{}')$q$, 'resident cannot publish statements');
 commit;
 select t_is((select count(*) from member_audit where new_role='admin' and new_post='सचिव' and actor_label like 'अध्यक्ष जी%')=1, 'audit records who added the admin');
 select t_is((select count(*) from member_audit where blocked = true and member_login='9999900004')=1, 'audit records blocking');
