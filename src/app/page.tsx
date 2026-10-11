@@ -407,6 +407,50 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* 2b. COLONY MITRA */}
+      <section id="colony-mitra" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+        <div className="relative rounded-2xl p-1 bg-gradient-to-b from-emerald-500/30 via-slate-800/40 to-slate-900 border border-slate-800/80 overflow-hidden shadow-2xl">
+          <div className="rounded-[15px] bg-[#0A101D] p-6 sm:p-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+            <div className="md:col-span-8 space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-emerald-950/80 border border-emerald-800/60 text-emerald-300">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>NEW APPLICATION</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-white font-heading">
+                Colony Mitra <span className="text-slate-400 font-bold">· कॉलोनी मित्र</span>
+              </h2>
+              <p className="text-sm sm:text-base text-slate-300 max-w-2xl leading-relaxed">
+                A Hindi-first colony and society management app: residents and tenants, maintenance with UPI payments, accounts, complaints, parking, CCTV, polls and committee details.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                <Link
+                  href="/colony-mitra"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/25 transition-all active:scale-95"
+                >
+                  <span>Explore Colony Mitra</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <a
+                  href="/colony-mitra/demo.html"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-slate-200 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 transition-all"
+                >
+                  <span>Try the Demo</span>
+                </a>
+              </div>
+            </div>
+            <div className="md:col-span-4 flex justify-center">
+              <img
+                src="/colony-mitra/app/icons/icon-512.png"
+                alt="Colony Mitra app icon"
+                width={160}
+                height={160}
+                className="w-32 h-32 sm:w-40 sm:h-40 rounded-[28px] shadow-2xl shadow-emerald-900/40"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 3. OUR SERVICES SECTION */}
       <section id="services" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 pb-5 border-b border-slate-800">

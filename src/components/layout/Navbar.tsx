@@ -150,6 +150,15 @@ export function Navbar() {
             </Link>
 
             <Link
+              href="/colony-mitra"
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                pathname === "/colony-mitra" ? "text-white bg-slate-900" : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+              }`}
+            >
+              Colony Mitra
+            </Link>
+
+            <Link
               href="/contact"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 pathname === "/contact" ? "text-white bg-slate-900" : "text-slate-300 hover:text-white hover:bg-slate-900/60"
@@ -229,6 +238,13 @@ export function Navbar() {
             className="block px-3 py-2 rounded-md text-base font-medium text-slate-200 hover:bg-slate-800"
           >
             Our Application (OPD Assistant AI)
+          </Link>
+          <Link
+            href="/colony-mitra"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-md text-base font-medium text-slate-200 hover:bg-slate-800"
+          >
+            Colony Mitra (कॉलोनी मित्र)
           </Link>
           <Link
             href="/contact"
