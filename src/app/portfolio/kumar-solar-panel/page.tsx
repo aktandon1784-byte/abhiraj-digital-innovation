@@ -133,22 +133,29 @@ export default function KumarSolarPanelCaseStudyPage() {
               </div>
             </div>
 
-            {/* Dual CTAs: Prominent Live Demo Link */}
+            {/* Dual CTAs: Prominent Live Demo Link & Product Page */}
             <div className="pt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
               <a
-                href="https://kumar-solar-panel-website.vercel.app"
+                href="https://kumar-solar-panel.vercel.app"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold text-white bg-[#1865F2] hover:bg-blue-600 shadow-xl shadow-blue-600/30 transition-all active:scale-95 group"
               >
-                <span>View Live Website (Demo)</span>
+                <span>View Live Demo</span>
                 <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </a>
+              <Link
+                href="/products/kumar-solar-panel"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold text-amber-300 bg-amber-950/50 hover:bg-amber-900/50 border border-amber-600/50 transition-all"
+              >
+                <Sun className="w-4 h-4 text-amber-400" />
+                <span>Product Overview Page</span>
+              </Link>
               <Link
                 href="/contact"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold text-slate-200 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 transition-all"
               >
-                <span>Request a Website Like This</span>
+                <span>Request a Project Like This</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -162,7 +169,7 @@ export default function KumarSolarPanelCaseStudyPage() {
                   <span>LIVE DEMO AVAILABLE</span>
                 </div>
                 <a
-                  href="https://kumar-solar-panel-website.vercel.app"
+                  href="https://kumar-solar-panel.vercel.app"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[11px] font-mono font-bold text-blue-700 hover:underline inline-flex items-center gap-1"
@@ -308,7 +315,7 @@ export default function KumarSolarPanelCaseStudyPage() {
               Experience the Live Project
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
-              Explore the live website demo deployed at <code>kumar-solar-panel-website.vercel.app</code> or talk to us about building a tailored digital presence for your organization.
+              Explore the live application demo deployed at <code>kumar-solar-panel.vercel.app</code> or review our dedicated product page.
             </p>
             <div className="pt-2 flex items-center gap-2 text-xs font-mono text-blue-400 justify-center md:justify-start">
               <Mail className="w-4 h-4" />
@@ -317,14 +324,20 @@ export default function KumarSolarPanelCaseStudyPage() {
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 flex-shrink-0">
             <a
-              href="https://kumar-solar-panel-website.vercel.app"
+              href="https://kumar-solar-panel.vercel.app"
               target="_blank"
               rel="noopener noreferrer"
               className="px-8 py-3.5 rounded-xl text-sm font-semibold text-white bg-[#1865F2] hover:bg-blue-600 shadow-lg shadow-blue-600/30 transition-all active:scale-95 inline-flex items-center gap-2"
             >
-              <span>Visit Live Website</span>
+              <span>Visit Live Demo</span>
               <ExternalLink className="w-4 h-4" />
             </a>
+            <Link
+              href="/products/kumar-solar-panel"
+              className="px-6 py-3.5 rounded-xl text-sm font-semibold text-amber-300 bg-amber-950/60 hover:bg-amber-900/60 border border-amber-600/40 transition-colors"
+            >
+              Product Page
+            </Link>
             <Link
               href="/"
               className="px-6 py-3.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 transition-colors"

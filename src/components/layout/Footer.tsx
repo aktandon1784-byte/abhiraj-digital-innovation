@@ -99,6 +99,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/products/kumar-solar-panel" className="hover:text-amber-400 transition-colors">
+                  Kumar Solar Panel
+                </Link>
+              </li>
+              <li>
                 <Link href="/about" className="hover:text-white transition-colors">
                   About
                 </Link>

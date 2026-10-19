@@ -150,6 +150,17 @@ export function Navbar() {
             </Link>
 
             <Link
+              href="/products/kumar-solar-panel"
+              className={`relative py-1 text-sm font-medium transition-colors ${
+                pathname.startsWith("/products/kumar-solar-panel")
+                  ? "text-amber-400 after:absolute after:bottom-[-4px] after:left-1/2 after:-translate-x-1/2 after:w-7 after:h-[2.5px] after:bg-amber-400 after:rounded-full"
+                  : "text-slate-300 hover:text-white"
+              }`}
+            >
+              Kumar Solar Panel
+            </Link>
+
+            <Link
               href="/portfolio"
               className={`relative py-1 text-sm font-medium transition-colors ${
                 pathname.startsWith("/portfolio")
@@ -243,6 +254,17 @@ export function Navbar() {
             className="block px-3 py-2 rounded-md text-base font-medium text-slate-200 hover:bg-slate-800"
           >
             Our Products
+          </Link>
+          <Link
+            href="/products/kumar-solar-panel"
+            onClick={() => setMobileMenuOpen(false)}
+            className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+              pathname.startsWith("/products/kumar-solar-panel")
+                ? "text-amber-300 bg-amber-950/40 font-semibold"
+                : "text-slate-200 hover:bg-slate-800"
+            }`}
+          >
+            Kumar Solar Panel
           </Link>
           <Link
             href="/portfolio"
