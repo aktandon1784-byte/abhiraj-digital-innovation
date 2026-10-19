@@ -34,11 +34,18 @@ import {
   Terminal,
   Building2,
   Bell,
+  Utensils,
+  Store,
+  Compass,
+  Boxes,
+  BookOpen,
+  Calculator,
 } from "lucide-react";
 import { OPDCardVisual } from "@/components/home/OPDCardVisual";
 import { GharMitraCardVisual } from "@/components/home/GharMitraCardVisual";
 import { KumarSolarCardVisual } from "@/components/home/KumarSolarCardVisual";
 import { ColonyMitraCardVisual } from "@/components/home/ColonyMitraCardVisual";
+import { ChatporaCardVisual } from "@/components/home/ChatporaCardVisual";
 import { PlayStoreIcon } from "@/components/home/PlayStoreIcon";
 import { HeroDevicesMockup } from "@/components/home/HeroDevicesMockup";
 
@@ -410,78 +417,72 @@ export default function HomePage() {
             </Link>
 
             {/* ----------------------------------------------------- */}
-            {/* CARD 3: KUMAR SOLAR PANEL WEBSITE */}
+            {/* CARD 3: KUMAR SOLAR PANEL MANAGEMENT PWA */}
             {/* ----------------------------------------------------- */}
-            <div className="group relative bg-[#FFFDEB] rounded-2xl border border-[#FDE68A] hover:border-amber-400 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 sm:p-5 flex flex-col justify-between overflow-hidden min-h-[365px] cursor-pointer">
-              {/* Primary Card Link covering the entire card */}
-              <Link
-                href="/portfolio/kumar-solar-panel"
-                className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                aria-label="View Kumar Solar Panel Website project details"
-              />
-
+            <div className="group relative bg-[#FFFDEB] rounded-2xl border border-[#FDE68A] hover:border-amber-400 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 sm:p-5 flex flex-col justify-between overflow-hidden min-h-[365px]">
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 h-full relative z-0">
                 {/* Left Column: Text & Features */}
                 <div className="sm:col-span-7 flex flex-col justify-between z-10 space-y-2">
                   <div>
-                    {/* Badge: CLIENT PROJECT */}
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#1865F2] text-white text-[10px] font-bold tracking-wide uppercase shadow-2xs">
-                      <Users className="w-3 h-3 flex-shrink-0" />
-                      <span>CLIENT PROJECT</span>
+                    {/* Badge: SOFTWARE PRODUCT */}
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-bold tracking-wide uppercase shadow-2xs">
+                      <Sun className="w-3 h-3 flex-shrink-0" />
+                      <span>SOLAR ERP &amp; PWA</span>
                     </div>
 
                     {/* Title */}
                     <div className="mt-2">
-                      <h3 className="text-lg sm:text-xl font-extrabold text-[#0B1930] group-hover:text-blue-700 transition-colors leading-tight font-heading">
-                        Kumar Solar Panel Website
+                      <h3 className="text-lg sm:text-xl font-extrabold text-[#0B1930] group-hover:text-amber-800 transition-colors leading-tight font-heading">
+                        Kumar Solar Panel Management PWA
                       </h3>
+                      <p className="text-xs font-semibold text-amber-700 leading-tight">
+                        Complete Solar Business Management Software
+                      </p>
                     </div>
 
                     {/* Description */}
                     <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed mt-1.5">
-                      A website project developed for Kumar Solar Panel Services, showcasing their solar solutions, services and business information.
+                      End-to-end solar business management system featuring product catalogues, live quotation builder with vector PDF export, real-time stock register, and double-entry accounting ledgers.
                     </p>
 
                     {/* 4 Feature Bullets */}
                     <div className="space-y-1.5 mt-2">
                       <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
-                        <Clock className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
-                        <span>Modern &amp; Professional Design</span>
+                        <FileText className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                        <span>Quotation Builder &amp; Vector PDF</span>
                       </div>
                       <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
-                        <Monitor className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
-                        <span>Responsive Website</span>
+                        <Boxes className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                        <span>Stock Register &amp; Warehouse Movements</span>
                       </div>
                       <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
-                        <Sun className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
-                        <span>Showcase of Solar Services</span>
+                        <BookOpen className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                        <span>Khata Bahi, Cash &amp; Bank Books</span>
                       </div>
                       <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
-                        <Sparkles className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
-                        <span>Built with Latest Technology</span>
+                        <Calculator className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                        <span>Solar Calculator &amp; Subsidy Estimator</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Bottom Actions Row (relative z-20 to allow direct interaction without duplicate click) */}
+                  {/* Bottom Actions Row */}
                   <div className="pt-2 flex items-center gap-2 relative z-20">
                     <Link
-                      href="/portfolio/kumar-solar-panel"
+                      href="/products/kumar-solar-panel-management"
                       className="flex-1 inline-flex items-center justify-between px-3 py-2 rounded-xl bg-white hover:bg-amber-50 border border-amber-300 text-slate-800 text-xs font-semibold shadow-2xs transition-colors"
                     >
-                      <span>Project Details</span>
+                      <span>Product Page</span>
                       <ChevronRight className="w-3.5 h-3.5 text-amber-600 group-hover:translate-x-0.5 transition-transform" />
                     </Link>
 
-                    <a
-                      href="https://kumar-solar-panel-website.vercel.app"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#1865F2] hover:bg-blue-600 text-white text-xs font-semibold shadow-md shadow-blue-500/20 transition-all active:scale-95 flex-shrink-0"
+                    <Link
+                      href="/demo/kumar-solar-panel"
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs font-bold shadow-md shadow-amber-500/20 transition-all active:scale-95 flex-shrink-0"
                     >
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <Sparkles className="w-3.5 h-3.5" />
                       <span>Live Demo</span>
-                    </a>
+                    </Link>
                   </div>
                 </div>
 
@@ -569,6 +570,99 @@ export default function HomePage() {
                 </div>
               </div>
             </Link>
+
+            {/* ----------------------------------------------------- */}
+            {/* CARD 5: CHATPORA */}
+            {/* ----------------------------------------------------- */}
+            <div className="group relative bg-[#FFF7ED] rounded-2xl border border-[#FED7AA] hover:border-orange-400 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 sm:p-5 flex flex-col justify-between overflow-hidden min-h-[365px]">
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 h-full relative z-0">
+                {/* Left Column: Text & Features */}
+                <div className="sm:col-span-7 flex flex-col justify-between z-10 space-y-2">
+                  <div>
+                    {/* Status Pill Badge */}
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FFB703] text-slate-900 text-[10px] font-bold tracking-wide uppercase shadow-2xs">
+                      <Smartphone className="w-3 h-3 flex-shrink-0" />
+                      <span>PWA PREVIEW</span>
+                    </div>
+
+                    {/* Title with Utensils Icon */}
+                    <div className="flex items-start gap-2 mt-2">
+                      <div className="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 flex-shrink-0 mt-0.5 group-hover:bg-orange-600 group-hover:text-white transition-colors">
+                        <Utensils className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg sm:text-xl font-extrabold text-[#0B1930] group-hover:text-orange-700 transition-colors leading-tight font-heading">
+                          Chatpora (चटपोरा)
+                        </h3>
+                        <p className="text-xs font-semibold text-orange-600 leading-tight">
+                          Local Food Ordering &amp; Delivery PWA
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Tagline */}
+                    <p className="text-[11px] font-medium text-orange-800 italic mt-1">
+                      “चटपोरा — हमर शहर, हमर स्वाद।”
+                    </p>
+
+                    {/* Description */}
+                    <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed mt-1.5">
+                      A local food ordering and delivery platform designed to connect customers with restaurants and delivery partners in the Baloda Bazar–Bhatapara region of Chhattisgarh.
+                    </p>
+
+                    {/* 4 Feature Bullets */}
+                    <div className="space-y-1.5 mt-2">
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <Compass className="w-3.5 h-3.5 text-orange-600 flex-shrink-0" />
+                        <span>Local Restaurant Discovery</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <Utensils className="w-3.5 h-3.5 text-orange-600 flex-shrink-0" />
+                        <span>Food Ordering Platform</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <Store className="w-3.5 h-3.5 text-orange-600 flex-shrink-0" />
+                        <span>Restaurant and Delivery Partner Portals</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
+                        <Smartphone className="w-3.5 h-3.5 text-orange-600 flex-shrink-0" />
+                        <span>Progressive Web App (PWA)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Actions Row (relative z-20 to allow direct interaction) */}
+                  <div className="pt-2 flex items-center gap-2 relative z-20">
+                    <a
+                      href="https://chatpora-pwa.vercel.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-orange-50 border border-orange-300 text-slate-800 text-xs font-semibold shadow-2xs transition-colors"
+                      title="Preview Chatpora food ordering platform"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-orange-600 flex-shrink-0" />
+                      <span>View Demo</span>
+                    </a>
+
+                    <a
+                      href="https://chatpora-pwa.vercel.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#1865F2] hover:bg-blue-600 text-white text-xs font-semibold shadow-md shadow-blue-500/20 transition-all active:scale-95 flex-shrink-0"
+                      title="Open Chatpora PWA application"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Open Chatpora PWA</span>
+                    </a>
+                  </div>
+                </div>
+
+                {/* Right Column: Visual Mockup */}
+                <div className="sm:col-span-5 flex items-center justify-center relative group-hover:scale-[1.02] transition-transform duration-300">
+                  <ChatporaCardVisual />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* ========================================================= */}

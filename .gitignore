@@ -17,9 +17,25 @@
 .env
 .env*.local
 .env.local
+.env.development
 .env.development.local
+.env.test
 .env.test.local
+.env.production
 .env.production.local
+.env.staging
+.env.staging.local
+.env.backup
+.env.private
+
+# Keep environment example and template files trackable
+!.env.example
+!.env*.example
+!.env.template
+!.env*.template
+
+# TypeScript build cache
+*.tsbuildinfo
 
 # Debug logs
 npm-debug.log*

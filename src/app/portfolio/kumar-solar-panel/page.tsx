@@ -316,21 +316,29 @@ export default function KumarSolarPanelCaseStudyPage() {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3 flex-shrink-0">
+            <Link
+              href="/products/kumar-solar-panel-management"
+              className="px-6 py-3.5 rounded-xl text-sm font-bold text-slate-950 bg-amber-500 hover:bg-amber-400 shadow-lg shadow-amber-500/20 transition-all active:scale-95 inline-flex items-center gap-2"
+            >
+              <span>Explore Software Product</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/demo/kumar-solar-panel"
+              className="px-6 py-3.5 rounded-xl text-sm font-semibold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors inline-flex items-center gap-2"
+            >
+              <span>Launch Interactive Demo</span>
+              <Sparkles className="w-4 h-4 text-amber-400" />
+            </Link>
             <a
               href="https://kumar-solar-panel-website.vercel.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-8 py-3.5 rounded-xl text-sm font-semibold text-white bg-[#1865F2] hover:bg-blue-600 shadow-lg shadow-blue-600/30 transition-all active:scale-95 inline-flex items-center gap-2"
+              className="px-5 py-3.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 transition-colors inline-flex items-center gap-1.5"
             >
-              <span>Visit Live Website</span>
-              <ExternalLink className="w-4 h-4" />
+              <span>Original Website</span>
+              <ExternalLink className="w-3.5 h-3.5" />
             </a>
-            <Link
-              href="/"
-              className="px-6 py-3.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 transition-colors"
-            >
-              Back to Home
-            </Link>
           </div>
         </div>
       </section>
