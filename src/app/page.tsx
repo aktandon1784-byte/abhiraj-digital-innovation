@@ -37,9 +37,6 @@ import {
   Utensils,
   Store,
   Compass,
-  Boxes,
-  BookOpen,
-  Calculator,
 } from "lucide-react";
 import { OPDCardVisual } from "@/components/home/OPDCardVisual";
 import { GharMitraCardVisual } from "@/components/home/GharMitraCardVisual";
@@ -417,72 +414,78 @@ export default function HomePage() {
             </Link>
 
             {/* ----------------------------------------------------- */}
-            {/* CARD 3: KUMAR SOLAR PANEL MANAGEMENT PWA */}
+            {/* CARD 3: KUMAR SOLAR PANEL WEBSITE */}
             {/* ----------------------------------------------------- */}
-            <div className="group relative bg-[#FFFDEB] rounded-2xl border border-[#FDE68A] hover:border-amber-400 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 sm:p-5 flex flex-col justify-between overflow-hidden min-h-[365px]">
+            <div className="group relative bg-[#FFFDEB] rounded-2xl border border-[#FDE68A] hover:border-amber-400 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-4 sm:p-5 flex flex-col justify-between overflow-hidden min-h-[365px] cursor-pointer">
+              {/* Primary Card Link covering the entire card */}
+              <Link
+                href="/portfolio/kumar-solar-panel"
+                className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                aria-label="View Kumar Solar Panel Website project details"
+              />
+
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 h-full relative z-0">
                 {/* Left Column: Text & Features */}
                 <div className="sm:col-span-7 flex flex-col justify-between z-10 space-y-2">
                   <div>
-                    {/* Badge: SOFTWARE PRODUCT */}
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-bold tracking-wide uppercase shadow-2xs">
-                      <Sun className="w-3 h-3 flex-shrink-0" />
-                      <span>SOLAR ERP &amp; PWA</span>
+                    {/* Badge: CLIENT PROJECT */}
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#1865F2] text-white text-[10px] font-bold tracking-wide uppercase shadow-2xs">
+                      <Users className="w-3 h-3 flex-shrink-0" />
+                      <span>CLIENT PROJECT</span>
                     </div>
 
                     {/* Title */}
                     <div className="mt-2">
-                      <h3 className="text-lg sm:text-xl font-extrabold text-[#0B1930] group-hover:text-amber-800 transition-colors leading-tight font-heading">
-                        Kumar Solar Panel Management PWA
+                      <h3 className="text-lg sm:text-xl font-extrabold text-[#0B1930] group-hover:text-blue-700 transition-colors leading-tight font-heading">
+                        Kumar Solar Panel Website
                       </h3>
-                      <p className="text-xs font-semibold text-amber-700 leading-tight">
-                        Complete Solar Business Management Software
-                      </p>
                     </div>
 
                     {/* Description */}
                     <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed mt-1.5">
-                      End-to-end solar business management system featuring product catalogues, live quotation builder with vector PDF export, real-time stock register, and double-entry accounting ledgers.
+                      A website project developed for Kumar Solar Panel Services, showcasing their solar solutions, services and business information.
                     </p>
 
                     {/* 4 Feature Bullets */}
                     <div className="space-y-1.5 mt-2">
                       <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
-                        <FileText className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-                        <span>Quotation Builder &amp; Vector PDF</span>
+                        <Clock className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                        <span>Modern &amp; Professional Design</span>
                       </div>
                       <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
-                        <Boxes className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-                        <span>Stock Register &amp; Warehouse Movements</span>
+                        <Monitor className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                        <span>Responsive Website</span>
                       </div>
                       <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
-                        <BookOpen className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-                        <span>Khata Bahi, Cash &amp; Bank Books</span>
+                        <Sun className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                        <span>Showcase of Solar Services</span>
                       </div>
                       <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-800">
-                        <Calculator className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-                        <span>Solar Calculator &amp; Subsidy Estimator</span>
+                        <Sparkles className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
+                        <span>Built with Latest Technology</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Bottom Actions Row */}
+                  {/* Bottom Actions Row (relative z-20 to allow direct interaction without duplicate click) */}
                   <div className="pt-2 flex items-center gap-2 relative z-20">
                     <Link
-                      href="/products/kumar-solar-panel-management"
+                      href="/portfolio/kumar-solar-panel"
                       className="flex-1 inline-flex items-center justify-between px-3 py-2 rounded-xl bg-white hover:bg-amber-50 border border-amber-300 text-slate-800 text-xs font-semibold shadow-2xs transition-colors"
                     >
-                      <span>Product Page</span>
+                      <span>Project Details</span>
                       <ChevronRight className="w-3.5 h-3.5 text-amber-600 group-hover:translate-x-0.5 transition-transform" />
                     </Link>
 
-                    <Link
-                      href="/demo/kumar-solar-panel"
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs font-bold shadow-md shadow-amber-500/20 transition-all active:scale-95 flex-shrink-0"
+                    <a
+                      href="https://kumar-solar-panel-website.vercel.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#1865F2] hover:bg-blue-600 text-white text-xs font-semibold shadow-md shadow-blue-500/20 transition-all active:scale-95 flex-shrink-0"
                     >
-                      <Sparkles className="w-3.5 h-3.5" />
+                      <ExternalLink className="w-3.5 h-3.5" />
                       <span>Live Demo</span>
-                    </Link>
+                    </a>
                   </div>
                 </div>
 
