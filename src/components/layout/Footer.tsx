@@ -133,6 +133,12 @@ export function Footer() {
               >
                 Explore OPD Assistant AI ➜
               </Link>
+              <Link
+                href="/colony-mitra"
+                className="block text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 transition-colors pt-1"
+              >
+                New: Colony Mitra (कॉलोनी मित्र) ➜
+              </Link>
             </div>
           </div>
         </div>

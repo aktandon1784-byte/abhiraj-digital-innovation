@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>कॉलोनी मित्र · सेटअप गाइड</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700&family=Tiro+Devanagari+Hindi&display=swap">
+<style>
+:root{--ink:#16211D;--muted:#5B6863;--bg:#F4F6F2;--card:#fff;--line:#DDE3DD;--blue:#0B6FBF;--ok:#1F7A3E;--warn:#9A6400;--bad:#B3261E}
+@media (prefers-color-scheme:dark){:root{--ink:#E7ECE9;--muted:#9DAAA4;--bg:#101614;--card:#18201D;--line:#2B3631;--blue:#74B3F5;--ok:#6FD08E;--warn:#EDBE5C;--bad:#F2867D;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Mukta,system-ui,sans-serif;font-size:17px;line-height:1.6}
+.wrap{max-width:860px;margin:0 auto;padding-inline:18px;padding-block:0 60px}
+.hero{color:#fff;padding:36px 18px 28px;background:linear-gradient(110deg,#00897B,#0B6FBF 50%,#6A2BC2)}
+.hero .wrap{padding-block:0}
+h1{font-family:"Tiro Devanagari Hindi",serif;font-weight:400;font-size:clamp(30px,5vw,44px);margin:0;line-height:1.15}
+h2{font-family:"Tiro Devanagari Hindi",serif;font-weight:400;font-size:28px;margin:40px 0 8px;display:flex;gap:10px;align-items:center}
+h2 .n{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--blue);color:#fff;font-family:Mukta,sans-serif;font-size:19px;font-weight:700}
+h3{font-size:19px;margin:20px 0 4px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+.ok{border-left:4px solid var(--ok)}.warn{border-left:4px solid var(--warn)}.bad{border-left:4px solid var(--bad)}
+code,kbd{font-size:.9em;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 6px;word-break:break-all}
+pre{background:#0E1714;color:#E7ECE9;border-radius:10px;padding:12px 14px;overflow-x:auto;font-size:14px;line-height:1.5}
+ol li,ul li{margin-bottom:6px}
+table{border-collapse:collapse;width:100%;font-size:15.5px}th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}th{color:var(--muted)}
+.scroll{overflow-x:auto}
+.toc a{color:inherit}.toc{columns:2;column-gap:24px}@media (max-width:600px){.toc{columns:1}}
+.tag{display:inline-block;font-size:13px;font-weight:700;padding:1px 9px;border-radius:99px;background:#E3F3E7;color:#1F7A3E}
+.tag.o{background:#FDF1D6;color:#9A6400}
+</style></head><body>
+<div class="hero"><div class="wrap"><div style="opacity:.9">अभिराज डिजिटल</div><h1>कॉलोनी मित्र · सेटअप गाइड</h1><p style="margin:6px 0 0;opacity:.95">शुरू से आख़िर तक, हर स्टेप हिंदी में। पहली बार में लगभग 1–2 घंटे लगेंगे।</p></div></div>
+<div class="wrap">
+
+<div class="card warn"><b>साफ़ बात:</b> ऐप का पूरा कोड, डेटाबेस और सुरक्षा नियम तैयार और जाँचे हुए हैं। OTP भेजने (Twilio) और WhatsApp भेजने (Meta) वाली कंपनियाँ अपनी चाबियाँ (keys) <b>सिर्फ़ खाते के मालिक</b> को देती हैं। इसलिए नीचे के अकाउंट आपको अपने नाम से बनाने होंगे और उनकी चाबियाँ भरनी होंगी। इन वेबसाइटों के बटन और मेन्यू के नाम समय के साथ थोड़े बदल सकते हैं। अगर कहीं अटकें, तो उसी स्टेप का स्क्रीनशॉट Claude को भेज दें।</div>
+
+<h2>📦 फ़ोल्डर में क्या है</h2>
+<div class="card scroll"><table>
+<tr><th>फ़ाइल / फ़ोल्डर</th><th>काम</th></tr>
+<tr><td><code>website/colony-mitra/</code></td><td>यह <b>पूरा फ़ोल्डर</b> आपकी Vercel वेबसाइट में जाएगा</td></tr>
+<tr><td><code>…/index.html</code></td><td>डाउनलोड / जानकारी वाला पेज (कीमत, फोटो, डेमो, इंस्टॉल बटन)</td></tr>
+<tr><td><code>…/demo.html</code></td><td>बिना लॉगिन चलने वाला डेमो (WhatsApp पर भी भेज सकते हैं)</td></tr>
+<tr><td><code>…/app/</code></td><td><b>असली ऐप</b>: लॉगिन, सारे टैब, फ़ोन में इंस्टॉल होने की सुविधा</td></tr>
+<tr><td><code>…/app/config.js</code></td><td>⚙️ <b>सिर्फ़ यही फ़ाइल आपको बदलनी है</b></td></tr>
+<tr><td><code>supabase/schema.sql</code></td><td>डेटाबेस और सुरक्षा नियम (एक बार चलाना है)</td></tr>
+<tr><td><code>supabase/functions/send-whatsapp/</code></td><td>अपने आप WhatsApp भेजने का सर्वर-कोड (वैकल्पिक)</td></tr>
+<tr><td><code>supabase/whatsapp-templates.txt</code></td><td>Meta में बनाने वाले 2 संदेश-टेम्पलेट</td></tr>
+</table></div>
+
+<h2>🗺️ कुल स्टेप</h2>
+<div class="card toc"><ol>
+<li><a href="#s1">Supabase अकाउंट और प्रोजेक्ट</a> <span class="tag">मुफ़्त</span></li>
+<li><a href="#s2">डेटाबेस बनाना (SQL चलाना)</a></li>
+<li><a href="#s3">config.js भरना</a></li>
+<li><a href="#s4">ईमेल OTP चालू करना</a> <span class="tag">मुफ़्त</span></li>
+<li><a href="#s5">मोबाइल SMS / WhatsApp OTP</a> <span class="tag o">थोड़ा खर्च</span></li>
+<li><a href="#s6">वेबसाइट पर अपलोड (GitHub → Vercel)</a></li>
+<li><a href="#s7">पहली बार ऐप चलाना</a></li>
+<li><a href="#s8">एंड्रॉयड APK बनाना</a> <span class="tag">मुफ़्त</span></li>
+<li><a href="#s9">अपने आप WhatsApp संदेश</a> <span class="tag o">वैकल्पिक</span></li>
+<li><a href="#s10">खर्च और समस्या-समाधान</a></li>
+</ol></div>
+
+<h2 id="s1"><span class="n">1</span>Supabase अकाउंट और प्रोजेक्ट</h2>
+<ol>
+<li><b>supabase.com</b> खोलें → <b>Start your project</b> → GitHub से साइन-इन करें।</li>
+<li><b>New project</b> दबाएँ। Name: <code>colony-mitra</code>। Database password: कोई मज़बूत पासवर्ड बनाकर <b>कहीं लिख लें</b>।</li>
+<li>Region में <b>South Asia (Mumbai)</b> चुनें, ताकि ऐप तेज़ चले। Plan: <b>Free</b>।</li>
+<li><b>Create new project</b> दबाएँ और 1–2 मिनट रुकें।</li>
+</ol>
+
+<h2 id="s2"><span class="n">2</span>डेटाबेस बनाना</h2>
+<ol>
+<li>बाएँ मेन्यू में <b>SQL Editor</b> खोलें → <b>New query</b>।</li>
+<li><code>supabase/schema.sql</code> फ़ाइल को Notepad में खोलें, <b>पूरा</b> कॉपी करें और यहाँ चिपका दें।</li>
+<li><b>Run</b> दबाएँ। नीचे <b>Success</b> लिखा आना चाहिए। (इसे दोबारा चलाने से कोई नुकसान नहीं होता।)</li>
+</ol>
+<div class="card ok">इससे बन जाते हैं: कॉलोनियाँ, सदस्य, सारा डेटा, फोटो रखने की जगह और सुरक्षा नियम। जैसे: निवासी हिसाब नहीं बदल सकता, दूसरे का वोट नहीं डाल सकता, बाहर का व्यक्ति कुछ नहीं देख सकता। ये सारे नियम जाँचे जा चुके हैं।</div>
+
+<h2 id="s3"><span class="n">3</span>config.js भरना</h2>
+<ol>
+<li>Supabase में ऊपर <b>Connect</b> बटन या <b>Project Settings → API</b> खोलें।</li>
+<li><b>Project URL</b> कॉपी करें (जैसे <code>https://abcd1234.supabase.co</code>)।</li>
+<li><b>anon public</b> key या <b>Publishable key</b> कॉपी करें। <b>service_role / secret key कभी नहीं डालनी।</b></li>
+<li><code>public/colony-mitra/app/config.js</code> खोलें और भरें:</li>
+</ol>
+<pre>SUPABASE_URL: "https://abcd1234.supabase.co",
+SUPABASE_ANON_KEY: "eyJhbGciOi....  या  sb_publishable_....",
+SUPPORT_WHATSAPP: "919876543210",   // आपका नंबर
+LOGIN_METHODS: ["email"],            // शुरू में सिर्फ़ ईमेल (मुफ़्त); स्टेप 5 के बाद "phone_sms" जोड़ें</pre>
+
+<h2 id="s4"><span class="n">4</span>ईमेल OTP चालू करना (मुफ़्त)</h2>
+<ol>
+<li>Supabase → <b>Authentication → Sign In / Providers</b> → <b>Email</b> चालू (Enabled) रखें।</li>
+<li><b>Authentication → Email Templates</b> खोलें। <b>Magic Link</b> और <b>Confirm signup</b> दोनों टेम्पलेट में संदेश बदलकर यह लिखें:
+<pre>&lt;h2&gt;कॉलोनी मित्र&lt;/h2&gt;
+&lt;p&gt;आपका लॉगिन OTP है: &lt;b style="font-size:24px"&gt;{{ .Token }}&lt;/b&gt;&lt;/p&gt;
+&lt;p&gt;यह OTP किसी को न बताएँ।&lt;/p&gt;</pre></li>
+<li><b>ज़रूरी:</b> Supabase की मुफ़्त ईमेल सेवा घंटे में बहुत कम ईमेल भेजती है। इसलिए <b>Authentication → Emails → SMTP Settings</b> में अपना SMTP डालें। जैसे <b>Brevo</b> (मुफ़्त प्लान में रोज़ लगभग 300 ईमेल), या Gmail का App Password।</li>
+<li><b>Authentication → URL Configuration</b> में Site URL डालें: <code>https://abhiraj-digital-innovation.vercel.app/colony-mitra/app/index.html</code></li>
+</ol>
+
+<h2 id="s5"><span class="n">5</span>मोबाइल SMS / WhatsApp OTP</h2>
+<ol>
+<li><b>twilio.com</b> पर अकाउंट बनाएँ और थोड़ा बैलेंस डालें।</li>
+<li>Twilio Console → <b>Verify → Services → Create new</b> → नाम <code>Colony Mitra</code> रखें। <b>Service SID</b> (VA… से शुरू) कॉपी करें। Console के होम पेज से <b>Account SID</b> और <b>Auth Token</b> भी कॉपी करें।</li>
+<li>Supabase → <b>Authentication → Sign In / Providers → Phone</b> → Enable करें → SMS provider में <b>Twilio Verify</b> चुनें → तीनों चीज़ें भरकर Save करें।</li>
+<li><b>WhatsApp OTP:</b> Twilio Verify सर्विस में <b>WhatsApp channel</b> चालू करें। Twilio इसके लिए अपना WhatsApp sender जोड़ने को कह सकता है, उनकी शर्तें पूरी करें।</li>
+<li><code>config.js</code> में <code>LOGIN_METHODS: ["phone_sms", "phone_whatsapp", "email"]</code> करें। जो चालू नहीं किया, उसे हटा दें।</li>
+</ol>
+<div class="card warn">भारत में SMS के लिए DLT नियम लागू होते हैं। Twilio Verify OTP संदेशों के लिए ये नियम ख़ुद संभालने का दावा करता है, फिर भी Twilio की वेबसाइट पर भारत के नियमों की ताज़ा जानकारी ज़रूर देख लें। हर OTP का खर्च Twilio की रेट-लिस्ट के हिसाब से लगेगा।</div>
+
+<h2 id="s6"><span class="n">6</span>वेबसाइट पर अपलोड</h2>
+<ol>
+<li><b>github.com</b> पर अपनी वेबसाइट <code>abhiraj-digital-innovation</code> की repository खोलें।</li>
+<li>फ़ोल्डर चुनें:
+  <ul>
+    <li>अगर उसमें <code>public</code> फ़ोल्डर है (React, Next.js या Vite वाली साइट), तो उसे खोलें।</li>
+    <li>अगर सिर्फ़ <code>index.html</code> जैसी फ़ाइलें हैं, तो सबसे ऊपर वाले मुख्य फ़ोल्डर में ही रहें।</li>
+  </ul></li>
+<li><b>Add file → Upload files</b> → <code>website/colony-mitra</code> <b>पूरा फ़ोल्डर</b> खींचकर डालें → <b>Commit changes</b>।</li>
+<li>Vercel 1–2 मिनट में अपने आप वेबसाइट अपडेट कर देगा। अब ये पते खुलेंगे:
+<pre>डाउनलोड पेज:  https://abhiraj-digital-innovation.vercel.app/colony-mitra
+असली ऐप:      https://abhiraj-digital-innovation.vercel.app/colony-mitra/app/index.html
+डेमो:          https://abhiraj-digital-innovation.vercel.app/colony-mitra/demo.html</pre></li>
+</ol>
+
+<h2 id="s7"><span class="n">7</span>पहली बार ऐप चलाना</h2>
+<ol>
+<li>असली ऐप का पता खोलें → <b>अपने नंबर या ईमेल से</b> OTP डालकर लॉगिन करें।</li>
+<li>स्क्रीन पर "नंबर किसी कॉलोनी में नहीं जुड़ा" आएगा। नीचे <b>"मैं इस ऐप का मालिक हूँ"</b> दबाएँ। <b>यह काम सबसे पहले आप ही करें</b>, क्योंकि जो पहले दबाएगा वही ऐप का मालिक बनेगा।</li>
+<li><b>👑 ऐप मालिक पैनल</b> खुलेगा → <b>नई कॉलोनी जोड़ें</b>: नाम "लक्ष्मण विहार", और अध्यक्ष या सचिव का नाम व मोबाइल नंबर।</li>
+<li><b>खोलें</b> दबाएँ → <b>एडमिन → सेटिंग्स</b> में ये भरें: मेंटेनेंस की रकम, आख़िरी तारीख (10), लेट फीस, कॉलोनी फंड का <b>UPI ID</b>, और संपर्क नंबर।</li>
+<li><b>घर व निवासी</b> में सारे घर जोड़ें (मालिक और किराएदार के नंबर के साथ)।</li>
+<li><b>एडमिन → लॉगिन वाले सदस्य → "घरों के नंबर से सबको जोड़ें"</b> दबाएँ। इससे सारे मालिक और किराएदार एक बार में निवासी बन जाएँगे। कमेटी वालों की भूमिका "👑 एडमिन" कर दें।</li>
+<li>कॉलोनी के WhatsApp ग्रुप में ऐप का लिंक भेज दें। लोग अपने नंबर से OTP डालकर लॉगिन करेंगे।</li>
+</ol>
+<div class="card ok"><b>भुगतान कैसे चलेगा:</b>
+<ol style="margin:6px 0 0">
+<li>निवासी "💳 अभी जमा करें" दबाता है, UPI QR स्कैन करता है या "UPI ऐप से भरें" बटन से पैसे भेजता है।</li>
+<li>फिर UTR नंबर लिखकर सूचना भेजता है।</li>
+<li>कमेटी को "🔔 भुगतान की पुष्टि बाकी" दिखता है। बैंक में पैसा देखकर <b>✓ पुष्टि</b> दबाते ही रसीद बन जाती है।</li>
+</ol>
+पैसा सीधे कॉलोनी के खाते में जाता है और बीच में कोई फीस नहीं कटती।</div>
+
+<h2 id="s8"><span class="n">8</span>एंड्रॉयड APK बनाना (मुफ़्त)</h2>
+<ol>
+<li><b>pwabuilder.com</b> खोलें → असली ऐप का पता डालें (<code>…/colony-mitra/app/index.html</code>) → <b>Start</b>।</li>
+<li><b>Package for stores → Android → Generate</b> → zip डाउनलोड करें।</li>
+<li>zip में मिलेंगे:
+  <ul>
+    <li><code>.apk</code> फ़ाइल: फ़ोन में इंस्टॉल करने के लिए</li>
+    <li><code>.aab</code> फ़ाइल: Play Store के लिए</li>
+    <li><code>signing.keystore</code>: इसे <b>बहुत संभालकर रखें</b>, अगले अपडेट के लिए यही चाहिए होगी</li>
+  </ul></li>
+<li><code>.apk</code> का नाम बदलकर <code>colony-mitra.apk</code> करें और GitHub में <code>colony-mitra</code> फ़ोल्डर में अपलोड करें।</li>
+<li><code>colony-mitra/index.html</code> में नीचे <code>APK_URL: "colony-mitra.apk"</code> करें। इससे "Download APK" बटन चालू हो जाएगा।</li>
+<li>zip में <code>assetlinks.json</code> भी होगी। उसे अपनी साइट में <code>.well-known/assetlinks.json</code> पर डालें (Next.js में <code>public/.well-known/</code>)। इससे APK बिना ब्राउज़र-पट्टी के, पूरी स्क्रीन पर खुलेगा।</li>
+<li>Play Store पर डालना हो तो Google Play Console अकाउंट बनाएँ (लगभग $25, एक बार) और <code>.aab</code> फ़ाइल अपलोड करें।</li>
+</ol>
+
+<h2 id="s9"><span class="n">9</span>अपने आप WhatsApp संदेश (वैकल्पिक)</h2>
+<p>ऐप का "WhatsApp पर भेजें" बटन <b>बिना किसी सेटअप के, मुफ़्त</b> चलता है: WhatsApp खुलता है और भेजने वाला ख़ुद "Send" दबाता है। <b>अपने आप</b> भेजने के लिए:</p>
+<ol>
+<li><b>developers.facebook.com</b> → My Apps → Create App → <b>WhatsApp</b> जोड़ें। Business verification पूरा करें।</li>
+<li>WhatsApp → API Setup से <b>Phone number ID</b> और एक <b>Permanent access token</b> (System User token) लें।</li>
+<li><code>supabase/whatsapp-templates.txt</code> वाले 2 टेम्पलेट बनाएँ और उनके मंज़ूर (Approved) होने का इंतज़ार करें।</li>
+<li>Supabase → <b>Edge Functions → Deploy a new function → Via Editor</b> → नाम <code>send-whatsapp</code> रखें → <code>supabase/functions/send-whatsapp/index.ts</code> का पूरा कोड चिपकाएँ → <b>Deploy</b> दबाएँ।</li>
+<li>Edge Functions → <b>Secrets</b> में डालें: <code>WA_TOKEN</code>, <code>WA_PHONE_ID</code>, और <code>WA_LANG</code> = <code>hi</code>।</li>
+<li><code>config.js</code> में <code>WHATSAPP_API: true</code> करें। अब रसीद और रिमाइंडर में "🤖 अपने आप WhatsApp भेजें" बटन आ जाएगा।</li>
+</ol>
+
+<h2 id="s10"><span class="n">10</span>खर्च और समस्या-समाधान</h2>
+<div class="card scroll"><table>
+<tr><th>चीज़</th><th>खर्च (अंदाज़न)</th></tr>
+<tr><td>Supabase (डेटाबेस, लॉगिन, फोटो)</td><td>मुफ़्त प्लान: कई छोटी कॉलोनियों के लिए काफ़ी। बढ़ने पर Pro लगभग $25/महीना</td></tr>
+<tr><td>Vercel (वेबसाइट)</td><td>मुफ़्त (आपके पास पहले से है)</td></tr>
+<tr><td>ईमेल OTP (Brevo / Gmail SMTP)</td><td>मुफ़्त</td></tr>
+<tr><td>SMS / WhatsApp OTP (Twilio)</td><td>हर OTP पर कुछ रुपये, Twilio रेट-लिस्ट देखें</td></tr>
+<tr><td>अपने आप WhatsApp संदेश (Meta)</td><td>हर संदेश पर Meta का शुल्क (Utility संदेश सस्ते होते हैं)</td></tr>
+<tr><td>UPI भुगतान</td><td>मुफ़्त, सीधे कॉलोनी के खाते में</td></tr>
+<tr><td>APK (PWABuilder)</td><td>मुफ़्त · Play Store डालना हो तो लगभग $25 एक बार</td></tr>
+</table></div>
+<h3>OTP नहीं आ रहा</h3><ul><li><b>ईमेल:</b> Spam फ़ोल्डर देखें, SMTP सेटिंग जाँचें (स्टेप 4.3), और टेम्पलेट में <code>{{ .Token }}</code> लिखा है या नहीं देखें।</li><li><b>SMS:</b> Twilio में बैलेंस है या नहीं देखें, और Supabase Phone provider में तीनों key सही हैं या नहीं।</li></ul>
+<h3>"आपका नंबर किसी कॉलोनी में नहीं जुड़ा"</h3><p>एडमिन वह नंबर <b>एडमिन → लॉगिन वाले सदस्य</b> में जोड़ें। नंबर पूरे 10 अंकों का होना चाहिए।</p>
+<h3>ऐप "सेट नहीं हुआ" दिखा रहा है</h3><p><code>config.js</code> में URL और key सही से भरें (स्टेप 3)।</p>
+<h3>Supabase प्रोजेक्ट रुक (Pause) गया</h3><p>मुफ़्त प्रोजेक्ट लगभग एक हफ़्ते तक इस्तेमाल न होने पर रुक जाता है। Supabase dashboard में <b>Restore</b> दबाएँ। रोज़ इस्तेमाल होने पर यह नहीं होता।</p>
+<h3>बैकअप</h3><p>हर महीने Supabase → <b>Table Editor → docs → Export to CSV</b> करके फ़ाइल संभाल लें।</p>
+<h3>नई कॉलोनी को बेचना</h3><p>ऐप मालिक पैनल से नई कॉलोनी बनाएँ और उनके अध्यक्ष का नंबर डालें। हर कॉलोनी का डेटा पूरी तरह अलग रहता है। पैनल में "प्लान / भुगतान" से तारीख डालें, और पैसे न मिलें तो कॉलोनी "बंद" कर दें।</p>
+
+<div class="card" style="margin-top:30px"><b>किसी स्टेप में दिक्कत?</b> उस स्क्रीन का फोटो लेकर Claude को भेजें और लिखें कि आप किस स्टेप पर हैं।</div>
+</div></body></html>

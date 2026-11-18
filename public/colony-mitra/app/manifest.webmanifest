@@ -1,0 +1,18 @@
+{
+  "name": "कॉलोनी मित्र",
+  "short_name": "कॉलोनी मित्र",
+  "description": "कॉलोनी का पूरा रजिस्टर: घर, किराएदार, मेंटेनेंस, हिसाब, शिकायतें, पार्किंग और CCTV",
+  "lang": "hi",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F3F5F1",
+  "theme_color": "#0B6FBF",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

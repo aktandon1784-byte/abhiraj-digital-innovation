@@ -1,244 +1,255 @@
 import React from "react";
 import type { Metadata } from "next";
-import { canonicalUrl, SITE_NAME } from "@/lib/seo";
+import { pageSeo } from "@/lib/seo";
 import Link from "next/link";
+import { Mukta } from "next/font/google";
 import {
-  Building2,
-  Smartphone,
-  Clock,
-  Sparkles,
-  ShieldCheck,
-  Users,
-  Bell,
-  CreditCard,
-  MessageSquare,
-  FileText,
-  AlertCircle,
-  CheckCircle2,
-  Info,
-  ArrowRight,
-  ArrowDown,
-  Layers,
-  HelpCircle,
-  Mail,
   Home,
-  Compass,
+  Wallet,
+  BookOpen,
+  Car,
+  Cctv,
+  Megaphone,
+  Vote,
+  Wrench,
+  Users,
+  Images,
+  Smartphone,
+  Download,
+  Eye,
+  ShieldCheck,
+  QrCode,
+  MessageCircle,
+  CheckCircle2,
+  Mail,
 } from "lucide-react";
-import { ColonyMitraCardVisual } from "@/components/home/ColonyMitraCardVisual";
+import { colonyMitra } from "@/lib/colonyMitra";
+import { siteConfig } from "@/lib/config";
+
+const mukta = Mukta({
+  subsets: ["devanagari", "latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
+const pageTitle = "कॉलोनी मित्र (Colony Mitra) · कॉलोनी / सोसाइटी ऐप";
+const pageDescription =
+  "कॉलोनी का पूरा रजिस्टर एक ऐप में: घर-किराएदार, मेंटेनेंस (UPI भुगतान), हिसाब-किताब, शिकायतें, पार्किंग, CCTV और पोल। पूरी तरह हिंदी में।";
 
 export const metadata: Metadata = {
-  title: {
-    absolute: "Colony Mitra (कॉलोनी मित्र) — Residential Colony & Society Platform | Abhiraj Digital Innovation",
-  },
-  description:
-    "Colony Mitra (कॉलोनी मित्र) is an upcoming Residential Colony and Society Management application, currently in active architecture and development by Abhiraj Digital Innovation.",
-  openGraph: {
-    title: "Colony Mitra (कॉलोनी मित्र) — Residential Colony & Society Platform",
-    description:
-      "A centralized digital platform designed to simplify residential society coordination, resident directories, and community operations.",
-    url: canonicalUrl("/colony-mitra"),
-    siteName: SITE_NAME,
-    type: "website",
-  },
-  alternates: { canonical: canonicalUrl("/colony-mitra") },
+  title: pageTitle,
+  description: pageDescription,
+  ...pageSeo("/colony-mitra", { title: pageTitle, description: pageDescription }),
 };
 
+const features = [
+  { icon: Home, title: "घर व किराएदार", desc: "मालिक, किराएदार, पुलिस वेरिफिकेशन का पूरा रिकॉर्ड" },
+  { icon: Wallet, title: "मेंटेनेंस 1–10 तारीख", desc: "समय पर / देर से / बकाया अलग रंग में, लेट फीस, रसीद" },
+  { icon: QrCode, title: "UPI से भुगतान", desc: "QR स्कैन करें, पैसा सीधे कॉलोनी खाते में, कमेटी पुष्टि करे" },
+  { icon: BookOpen, title: "हिसाब-किताब", desc: "आय-खर्च की रोकड़ बही, बिल की फोटो के साथ" },
+  { icon: Car, title: "पार्किंग", desc: "गाड़ी नंबर डालें, मालिक का पता तुरंत" },
+  { icon: Cctv, title: "CCTV / सुरक्षा", desc: "कैमरे चालू या खराब, फुटेज देखने का अनुरोध" },
+  { icon: Megaphone, title: "शिकायत / सुझाव", desc: "निवासी लिखें, कमेटी जवाब दे, स्थिति सबको दिखे" },
+  { icon: Vote, title: "पोल / वोटिंग", desc: "हर फ़ैसले पर सबकी राय, एक व्यक्ति एक वोट" },
+  { icon: Wrench, title: "सेवाएँ", desc: "प्लंबर, कामवाली, दूध वाले के भरोसेमंद नंबर" },
+  { icon: Users, title: "कमेटी सदस्य", desc: "कौन किस पद पर, किससे किस काम के लिए बात करें" },
+  { icon: Images, title: "फोटो गैलरी", desc: "त्योहार और कार्यक्रमों की यादें" },
+  { icon: ShieldCheck, title: "OTP लॉगिन, सुरक्षित डेटा", desc: "हर कॉलोनी का डेटा अलग, सिर्फ़ जुड़े हुए लोग देख सकें" },
+];
+
+const screens = [
+  { src: "/colony-mitra/screens/home.jpg", cap: "होम: सब कुछ एक नज़र में" },
+  { src: "/colony-mitra/screens/maint.jpg", cap: "मेंटेनेंस: किसने दिया, किसका बाकी" },
+  { src: "/colony-mitra/screens/ledger.jpg", cap: "6 महीने का खाता" },
+  { src: "/colony-mitra/screens/acct.jpg", cap: "हिसाब-किताब" },
+  { src: "/colony-mitra/screens/parking.jpg", cap: "पार्किंग: गाड़ी से मालिक खोजें" },
+  { src: "/colony-mitra/screens/cctv.jpg", cap: "CCTV और सुरक्षा" },
+  { src: "/colony-mitra/screens/comp.jpg", cap: "शिकायत / सुझाव" },
+  { src: "/colony-mitra/screens/team.jpg", cap: "कमेटी सदस्य" },
+];
+
+const faqs = [
+  {
+    q: "क्या हर निवासी को पैसे देने होंगे?",
+    a: "नहीं। कमेटी पूरी कॉलोनी का एक प्लान लेती है, जिसका ख़र्च कॉलोनी फंड से जाता है। निवासियों के लिए ऐप मुफ़्त है।",
+  },
+  {
+    q: "लॉगिन कैसे करें?",
+    a: "कमेटी आपका मोबाइल नंबर ऐप में जोड़ती है। फिर उसी नंबर या ईमेल पर आए OTP से लॉगिन करें।",
+  },
+  {
+    q: "हमारी कॉलोनी का डेटा सुरक्षित रहेगा?",
+    a: "हाँ। हर कॉलोनी का डेटा अलग रहता है और सिर्फ़ उसी कॉलोनी के जुड़े हुए लोग देख सकते हैं। निवासी हिसाब या किसी और का रिकॉर्ड नहीं बदल सकते।",
+  },
+  {
+    q: "क्या iPhone पर चलेगा?",
+    a: "हाँ। “फ़ोन में ऐप जोड़ें” वाला तरीका एंड्रॉयड और iPhone दोनों पर चलता है। APK फ़ाइल सिर्फ़ एंड्रॉयड के लिए है।",
+  },
+  {
+    q: "बुज़ुर्ग लोग चला पाएँगे?",
+    a: "ऐप पूरी तरह हिंदी में है, बड़े अक्षर और रंगीन बटन हैं। ज़रूरत हो तो हम कॉलोनी में आकर समझाते भी हैं।",
+  },
+];
+
 export default function ColonyMitraPage() {
-  const intendedUsers = [
-    {
-      title: "Colony Residents & Homeowners",
-      desc: "Residents seeking timely society circulars, organized record access, and straightforward communication with management committees.",
-      icon: Home,
-    },
-    {
-      title: "Resident Welfare Associations (RWA)",
-      desc: "Elected governing bodies needing a structured digital hub to publish notices, manage resolutions, and maintain clear records.",
-      icon: Users,
-    },
-    {
-      title: "Gated Communities & Societies",
-      desc: "Residential complexes, townships, and housing societies seeking to replace informal chat groups with reliable digital workflows.",
-      icon: Building2,
-    },
-    {
-      title: "Society Administrators & Facility Staff",
-      desc: "On-ground administrative personnel managing maintenance requests, vendor logs, and common community resources.",
-      icon: ShieldCheck,
-    },
-  ];
-
-  const plannedWorkflows = [
-    {
-      step: "01",
-      title: "Centralized Notice Board",
-      badge: "PLANNED MODULE",
-      desc: "Official broadcasts, meeting agendas, and emergency advisories published with persistent archive access.",
-      icon: Bell,
-      color: "purple",
-    },
-    {
-      step: "02",
-      title: "Resident & Household Directory",
-      badge: "PLANNED MODULE",
-      desc: "Verified flat and plot directory with privacy-preserving contact preferences for smooth inter-resident coordination.",
-      icon: Users,
-      color: "indigo",
-    },
-    {
-      step: "03",
-      title: "Society Maintenance Framework",
-      badge: "PLANNED MODULE",
-      desc: "Transparent maintenance fee tracking, receipt generation, and expense visibility for community peace of mind.",
-      icon: CreditCard,
-      color: "sky",
-    },
-    {
-      step: "04",
-      title: "Grievance Redressal & Helpdesk",
-      badge: "PLANNED MODULE",
-      desc: "Ticketed issue reporting for electrical, plumbing, sanitation, or civil concerns with tracking from submission to resolution.",
-      icon: MessageSquare,
-      color: "emerald",
-    },
-  ];
-
-  const plannedRoadmap = [
-    {
-      title: "Visitor Check-in & Gate Security",
-      status: "ROADMAP SPECIFICATION",
-      desc: "Future gatekeeper integration for pre-approved guests, delivery verification, and entry authorization.",
-      icon: ShieldCheck,
-    },
-    {
-      title: "Facility & Amenity Scheduling",
-      status: "ROADMAP SPECIFICATION",
-      desc: "Planned reservation system for clubhouse, community hall, and shared recreational zones.",
-      icon: Compass,
-    },
-    {
-      title: "Document Vault & Society Bylaws",
-      status: "ROADMAP SPECIFICATION",
-      desc: "Secure cloud repository for society registration documents, audit reports, and governing rules.",
-      icon: FileText,
-    },
-    {
-      title: "Automated SMS & WhatsApp Alerts",
-      status: "ROADMAP SPECIFICATION",
-      desc: "Multi-channel notifications for time-sensitive emergency alerts and payment reminder schedules.",
-      icon: Bell,
-    },
-  ];
-
-  const faqs = [
-    {
-      question: "What problem does Colony Mitra aim to solve?",
-      answer:
-        "Most residential societies and colonies rely on informal WhatsApp groups and paper notices, leading to lost announcements, lack of accountability for complaints, and confusion over maintenance balances. Colony Mitra is being conceptualized to bring these fragmented interactions into one organized, transparent digital platform.",
-    },
-    {
-      question: "Is Colony Mitra currently live or ready for public download?",
-      answer:
-        "No. Colony Mitra is currently in the active architecture, UI/UX prototyping, and system design phase by Abhiraj Digital Innovation. It is not yet available for public download or live production use. Live deployment and Google Play Store distribution will be announced upon conclusion of alpha and beta testing.",
-    },
-    {
-      question: "Can our residential society participate in early pilot testing?",
-      answer:
-        "Yes. We welcome conversations with residential welfare associations, society presidents, and colony secretaries who wish to provide feedback on requirements or explore early pilot onboarding. Please reach out to our team through our contact page.",
-    },
-  ];
+  const btnPrimary =
+    "inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-base font-bold text-[#3B2A00] bg-gradient-to-br from-amber-200 to-amber-400 hover:from-amber-100 hover:to-amber-300 shadow-lg shadow-amber-500/20 transition-all active:scale-95";
+  const btnGhost =
+    "inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-base font-semibold text-slate-100 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 transition-all";
 
   return (
-    <div className="relative space-y-16 sm:space-y-24 py-10 lg:py-16 bg-grid-pattern">
-      {/* Ambient Lighting Glow */}
+    <div className={`${mukta.className} relative py-10 lg:py-16 space-y-20 sm:space-y-28 bg-grid-pattern`}>
       <div className="ambient-hero-glow" aria-hidden="true" />
 
-      {/* ========================================================= */}
-      {/* 1. HERO SECTION                                           */}
-      {/* ========================================================= */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-        {/* Breadcrumb Navigation */}
-        <div className="mb-6 flex items-center gap-2 text-xs font-mono text-slate-400">
-          <Link href="/" className="hover:text-blue-400 transition-colors">
-            ABHIRAJ DIGITAL INNOVATION
-          </Link>
-          <span>/</span>
-          <Link href="/#products-projects" className="hover:text-blue-400 transition-colors">
-            PRODUCTS
-          </Link>
-          <span>/</span>
-          <span className="text-indigo-400 font-semibold">COLONY MITRA (कॉलोनी मित्र)</span>
-        </div>
-
+      {/* Hero */}
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-          {/* Left Column: Narrative & Status */}
-          <div className="lg:col-span-7 space-y-5">
-            {/* Identity Badge */}
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full text-xs font-mono bg-indigo-950/80 border border-indigo-800/60 text-indigo-300">
-              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
-              <span>UPCOMING PRODUCT • IN ACTIVE ARCHITECTURE</span>
+          <div className="lg:col-span-7 space-y-6">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm bg-emerald-950/70 border border-emerald-800/60 text-emerald-300">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>नया ऐप · कॉलोनी और सोसाइटी के लिए · पूरी तरह हिंदी में</span>
             </div>
-
-            <div className="space-y-2">
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight font-heading">
-                Colony Mitra <span className="text-indigo-400">(कॉलोनी मित्र)</span>
-              </h1>
-              <div className="text-xl sm:text-2xl font-bold text-indigo-300">
-                Residential Colony &amp; Society Management Platform
+            <div className="flex items-center gap-4">
+              <img
+                src="/colony-mitra/app/icons/icon-192.png"
+                alt=""
+                width={72}
+                height={72}
+                className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-2xl shadow-xl shadow-blue-900/40"
+              />
+              <div>
+                <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
+                  {colonyMitra.name}
+                </h1>
+                <p className="text-sm font-mono uppercase tracking-[0.2em] text-blue-400">{colonyMitra.nameEn}</p>
               </div>
-              <p className="text-sm sm:text-base font-medium text-slate-300">
-                Category: <strong>Residential Community Tech</strong> • Product of{" "}
-                <strong>Abhiraj Digital Innovation</strong>
-              </p>
             </div>
-
-            <p className="text-sm sm:text-base text-slate-300 max-w-2xl leading-relaxed">
-              <strong className="text-white">Colony Mitra (कॉलोनी मित्र)</strong> is an upcoming digital platform engineered to bring structure, transparency, and effortless coordination to residential societies, gated townships, and colony communities. By centralizing official announcements, resident records, and maintenance workflows, Colony Mitra aims to eliminate the disorder of unorganized chat groups and paper circulars.
+            <p className="text-lg sm:text-xl text-slate-300 max-w-2xl leading-relaxed">
+              आपकी कॉलोनी का पूरा रजिस्टर, अब एक ऐप में। घर-किराएदार, मेंटेनेंस का हिसाब, UPI से भुगतान, शिकायतें, पार्किंग और CCTV, सब कुछ मोबाइल पर। रसीद बुक और रजिस्टर की ज़रूरत ख़त्म।
             </p>
-
-            {/* Platform & Status Badges */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-200">
-                <Smartphone className="w-4 h-4 text-indigo-400" />
-                <span>Planned Platform: <strong>Android App &amp; Web Dashboard</strong></span>
-              </div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-amber-300">
-                <Clock className="w-3.5 h-3.5 text-amber-400" />
-                <span>Development Status: <strong>In Active Development</strong></span>
-              </div>
-            </div>
-
-            {/* Action CTAs */}
-            <div className="pt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-              <a
-                href="#planned-architecture"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/25 transition-all"
-              >
-                <span>Explore Planned Architecture</span>
-                <ArrowDown className="w-4 h-4" />
+            <div className="flex flex-col sm:flex-row gap-3">
+              <a href={colonyMitra.appUrl} className={btnPrimary}>
+                <Smartphone className="w-5 h-5" />
+                <span>ऐप खोलें / इंस्टॉल करें</span>
               </a>
-              <Link
-                href="/contact"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold text-slate-200 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 transition-all"
-              >
-                <span>Partner or Inquire for Pilot</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+              <a href={colonyMitra.demoUrl} target="_blank" rel="noopener" className={btnGhost}>
+                <Eye className="w-5 h-5" />
+                <span>डेमो देखें</span>
+              </a>
+            </div>
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-400 pt-2">
+              {["एंड्रॉयड और iPhone दोनों पर", "बुज़ुर्ग भी आसानी से चला सकें", "पहला महीना मुफ़्त"].map((t) => (
+                <span key={t} className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  {t}
+                </span>
+              ))}
             </div>
           </div>
+          <div className="lg:col-span-5 flex justify-center gap-4 items-end">
+            <div className="w-52 sm:w-60 rounded-[28px] border-[7px] border-slate-800 overflow-hidden shadow-2xl shadow-blue-950/60 bg-slate-900">
+              <img src="/colony-mitra/screens/home.jpg" alt="कॉलोनी मित्र ऐप का होम पेज" className="w-full block" />
+            </div>
+            <div className="hidden sm:block w-44 mb-8 rounded-[24px] border-[6px] border-slate-800 overflow-hidden shadow-2xl bg-slate-900 opacity-90">
+              <img src="/colony-mitra/screens/maint.jpg" alt="मेंटेनेंस पेज" className="w-full block" />
+            </div>
+          </div>
+        </div>
+      </section>
 
-          {/* Right Column: Visual Showcase Mockup */}
-          <div className="lg:col-span-5 flex justify-center">
-            <div className="w-full max-w-md bg-[#F5F3FF] rounded-3xl border-2 border-[#DDD6FE] p-6 shadow-2xl relative overflow-hidden">
-              <div className="mb-3 flex items-center justify-between">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-700 text-white text-[10px] font-bold tracking-wide uppercase">
-                  <span>CONCEPT VISUAL</span>
-                </div>
-                <span className="text-[11px] font-mono font-bold text-indigo-800">IN ACTIVE DESIGN</span>
+      {/* Features */}
+      <section id="features" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-white">एक ऐप, कॉलोनी के सारे काम</h2>
+        <p className="text-slate-400 mt-2 mb-8 text-lg">कमेटी का काम आसान, और निवासियों को हर बात की साफ़ जानकारी।</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {features.map(({ icon: Icon, title, desc }) => (
+            <div key={title} className="flex gap-4 p-5 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-blue-700/60 transition-colors">
+              <div className="flex-none w-12 h-12 rounded-xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                <Icon className="w-6 h-6" />
               </div>
-              <ColonyMitraCardVisual />
-              <div className="mt-4 pt-3 border-t border-indigo-200/80 text-center">
-                <p className="text-xs text-indigo-950 font-semibold">
-                  A Unified Digital Platform for Residential Society Governance
+              <div>
+                <h3 className="text-lg font-bold text-white">{title}</h3>
+                <p className="text-slate-400 text-[15px] leading-relaxed">{desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Screenshots */}
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-white">ऐप कैसा दिखता है</h2>
+        <p className="text-slate-400 mt-2 mb-6 text-lg">बाएँ-दाएँ सरकाकर देखें →</p>
+        <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory">
+          {screens.map((s) => (
+            <figure key={s.src} className="flex-none w-52 snap-start">
+              <div className="rounded-[24px] border-[6px] border-slate-800 overflow-hidden bg-slate-900 max-h-[440px]">
+                <img src={s.src} alt={s.cap} loading="lazy" className="w-full block" />
+              </div>
+              <figcaption className="text-sm text-slate-400 text-center mt-2">{s.cap}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
+
+      {/* Download */}
+      <section id="download" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+        <div className="rounded-2xl p-1 bg-gradient-to-b from-blue-500/30 via-slate-800/40 to-slate-900 border border-slate-800/80">
+          <div className="rounded-[15px] bg-[#0A101D] p-6 sm:p-10 space-y-8">
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-white">ऐप डाउनलोड करें</h2>
+              <p className="text-slate-400 mt-2 text-lg">अपने फ़ोन के हिसाब से तरीका चुनें।</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="p-6 rounded-2xl bg-slate-900/80 border-2 border-blue-600/60 space-y-4">
+                <span className="inline-block text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800">
+                  ⭐ सबसे आसान · सलाह
+                </span>
+                <h3 className="text-2xl font-bold text-white">📲 फ़ोन में ऐप जोड़ें</h3>
+                <p className="text-slate-400">एंड्रॉयड और iPhone दोनों पर। कोई फ़ाइल डाउनलोड नहीं करनी पड़ती।</p>
+                <ol className="list-decimal pl-5 space-y-1.5 text-slate-300">
+                  <li>नीचे का बटन दबाएँ, ऐप खुल जाएगा।</li>
+                  <li>
+                    <b>एंड्रॉयड (Chrome):</b> ऊपर ⋮ मेन्यू → <b>“ऐप इंस्टॉल करें”</b> या “होम स्क्रीन पर जोड़ें”।
+                  </li>
+                  <li>
+                    <b>iPhone (Safari):</b> नीचे शेयर बटन ⬆️ → <b>“Add to Home Screen”</b>।
+                  </li>
+                  <li>होम स्क्रीन पर ऐप का आइकन आ जाएगा।</li>
+                </ol>
+                <a href={colonyMitra.appUrl} className={btnPrimary}>
+                  <Smartphone className="w-5 h-5" />
+                  <span>ऐप खोलें और इंस्टॉल करें</span>
+                </a>
+              </div>
+              <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
+                <span className="inline-block text-xs font-bold px-2.5 py-1 rounded-full bg-blue-950 text-blue-300 border border-blue-800">
+                  सिर्फ़ एंड्रॉयड
+                </span>
+                <h3 className="text-2xl font-bold text-white">🤖 APK फ़ाइल डाउनलोड करें</h3>
+                <p className="text-slate-400">असली एंड्रॉयड ऐप की फ़ाइल।</p>
+                <ol className="list-decimal pl-5 space-y-1.5 text-slate-300">
+                  <li>नीचे का बटन दबाकर फ़ाइल डाउनलोड करें।</li>
+                  <li>
+                    फ़ाइल खोलें। फ़ोन पूछे तो <b>“इस स्रोत से ऐप की अनुमति दें”</b> चालू करें।
+                  </li>
+                  <li>
+                    <b>“Install”</b> दबाएँ।
+                  </li>
+                </ol>
+                {colonyMitra.apkUrl ? (
+                  <a href={colonyMitra.apkUrl} download className={btnGhost}>
+                    <Download className="w-5 h-5" />
+                    <span>Download APK</span>
+                  </a>
+                ) : (
+                  <span className={`${btnGhost} opacity-60 cursor-not-allowed`} aria-disabled="true">
+                    <Download className="w-5 h-5" />
+                    <span>APK जल्द आ रही है</span>
+                  </span>
+                )}
+                <p className="text-sm text-slate-500">
+                  फ़ोन “अनजान ऐप” की चेतावनी दिखा सकता है। यह ऐप सिर्फ़ इसी वेबसाइट से डाउनलोड करें।
                 </p>
               </div>
             </div>
@@ -246,279 +257,70 @@ export default function ColonyMitraPage() {
         </div>
       </section>
 
-      {/* ========================================================= */}
-      {/* 2. TRANSPARENT DEVELOPMENT STATUS & REALITY NOTICE         */}
-      {/* ========================================================= */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="p-6 sm:p-8 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
-              <AlertCircle className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-xs font-mono font-semibold uppercase tracking-wider text-amber-400">
-                Development Status &amp; Scope Transparency
-              </div>
-              <h2 className="text-base sm:text-lg font-bold text-white">
-                Under Active Conceptualization &amp; Architecture
-              </h2>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm text-slate-300 leading-relaxed pt-2 border-t border-slate-800">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 font-bold text-indigo-400">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Currently In Progress</span>
-              </div>
-              <p className="text-slate-400">
-                Colony Mitra is undergoing domain modeling, user journey mapping, committee workflow analysis, and wireframe creation. The architecture is being built specifically around regional society governance needs in India.
+      {/* Pricing */}
+      <section id="price" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-white">कीमत: कॉलोनी के हिसाब से</h2>
+        <p className="text-slate-400 mt-2 mb-8 text-lg">
+          पूरी कॉलोनी का एक प्लान, जिसे कमेटी कॉलोनी फंड से देती है। निवासियों से अलग से कुछ नहीं लिया जाता।
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {colonyMitra.plans.map((p) => (
+            <div
+              key={p.name}
+              className={`relative p-6 rounded-2xl bg-slate-900/80 space-y-2 ${p.highlight ? "border-2 border-amber-400/80" : "border border-slate-800"}`}
+            >
+              {p.highlight && (
+                <span className="absolute -top-3 left-5 text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-400 text-[#3B2A00]">
+                  सबसे लोकप्रिय
+                </span>
+              )}
+              <h3 className="text-xl font-bold text-white">{p.name}</h3>
+              <p className="text-slate-400">{p.houses}</p>
+              <p className="text-4xl font-extrabold text-white tabular-nums">
+                {p.price}
+                <span className="text-base font-medium text-slate-400"> / महीना</span>
               </p>
+              <ul className="text-slate-300 space-y-1 pt-2">
+                <li>✓ सारी सुविधाएँ</li>
+                <li>✓ WhatsApp रसीद और रिमाइंडर</li>
+                <li>✓ फ़ोन पर मदद और ट्रेनिंग</li>
+              </ul>
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 font-bold text-amber-300">
-                <Info className="w-4 h-4" />
-                <span>Planned Modules (Not Yet In Production)</span>
-              </div>
-              <p className="text-slate-400">
-                Live resident authentication, automated maintenance payment processing, visitor gate check-ins, push notification dispatch, and Google Play Store release are scheduled upcoming phases.
-              </p>
-            </div>
-          </div>
+          ))}
         </div>
+        <p className="mt-5 p-4 rounded-xl bg-slate-900/70 border border-slate-800 text-slate-300">
+          🎁 <b>पहला महीना मुफ़्त।</b> सालाना प्लान पर 2 महीने मुफ़्त। एक बार की सेटअप फीस ₹2,999 (घर, किराएदार और गाड़ियों का डेटा भरना और ट्रेनिंग)।
+        </p>
       </section>
 
-      {/* ========================================================= */}
-      {/* 3. PURPOSE & PROBLEM SOLVED                               */}
-      {/* ========================================================= */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-10 space-y-2">
-          <div className="text-xs font-mono uppercase tracking-wider text-indigo-400 font-semibold">
-            The Problem We Aim to Solve
-          </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-white font-heading">
-            Modernizing Residential Society Operations
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-300 max-w-2xl mx-auto">
-            Traditional housing societies face recurring administrative obstacles that degrade community living.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
-              <AlertCircle className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-white">Scattered Communication</h3>
-            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-              Crucial committee notices, water supply schedules, and urgent alerts get drowned in informal messaging group noise and memes.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-              <CreditCard className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-white">Opaque Maintenance Records</h3>
-            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-              Paper registers and disconnected spreadsheets create friction between residents and treasurers regarding dues, payments, and receipts.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-              <MessageSquare className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-white">Untracked Complaints</h3>
-            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-              Maintenance grievances—such as broken streetlights, lift failures, or plumbing leaks—are reported verbally and frequently forgotten.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ========================================================= */}
-      {/* 4. INTENDED USERS                                         */}
-      {/* ========================================================= */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-10 space-y-2">
-          <div className="text-xs font-mono uppercase tracking-wider text-indigo-400 font-semibold">
-            User Ecosystem
-          </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-white font-heading">
-            Designed for Colony Stakeholders
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto">
-            Tailored roles and interfaces planned for every member of the residential community.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {intendedUsers.map((user) => {
-            const Icon = user.icon;
-            return (
-              <div
-                key={user.title}
-                className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-indigo-500/50 transition-colors space-y-3"
-              >
-                <div className="w-9 h-9 rounded-xl bg-indigo-950 border border-indigo-800 flex items-center justify-center text-indigo-400">
-                  <Icon className="w-4 h-4" />
-                </div>
-                <h3 className="text-sm font-bold text-white">{user.title}</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">{user.desc}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ========================================================= */}
-      {/* 5. PLANNED ARCHITECTURE & CORE WORKFLOWS                  */}
-      {/* ========================================================= */}
-      <section id="planned-architecture" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
-        <div className="text-center max-w-3xl mx-auto mb-12 space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono bg-indigo-950/70 border border-indigo-800/60 text-indigo-300">
-            <Layers className="w-3.5 h-3.5" />
-            <span>ARCHITECTURE SPECIFICATION</span>
-          </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-white font-heading">
-            Planned Features &amp; Workflows
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-300 max-w-2xl mx-auto">
-            The core functional modules designed for the initial release phase of Colony Mitra.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {plannedWorkflows.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={item.title}
-                className="p-6 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between space-y-4"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-950 border border-indigo-800 flex items-center justify-center text-indigo-400">
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <span className="text-[10px] font-mono font-bold tracking-wider px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-                      {item.badge}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-xs font-mono text-indigo-400 font-bold">{item.step}</span>
-                    <h3 className="text-lg font-bold text-white mt-0.5">{item.title}</h3>
-                  </div>
-                  <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">{item.desc}</p>
-                </div>
-                <div className="pt-2 border-t border-slate-800/80 flex items-center gap-2 text-xs text-indigo-400">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Specification defined • Implementation scheduled</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ========================================================= */}
-      {/* 6. FUTURE EXPANSION ROADMAP                               */}
-      {/* ========================================================= */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="p-6 sm:p-10 rounded-3xl bg-slate-900/50 border border-slate-800 space-y-8">
-          <div className="text-center max-w-2xl mx-auto space-y-2">
-            <div className="text-xs font-mono uppercase tracking-wider text-indigo-400 font-semibold">
-              Future Roadmap
-            </div>
-            <h2 className="text-xl sm:text-3xl font-extrabold text-white font-heading">
-              Planned Expansion Capabilities
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-400">
-              Advanced features earmarked for future development iterations post-pilot validation.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {plannedRoadmap.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div key={item.title} className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-2">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-950/80 flex items-center justify-center text-indigo-400">
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <h3 className="text-xs sm:text-sm font-bold text-slate-200">{item.title}</h3>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">{item.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ========================================================= */}
-      {/* 7. FREQUENTLY ASKED QUESTIONS                             */}
-      {/* ========================================================= */}
-      <section className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8 space-y-2">
-          <div className="text-xs font-mono uppercase tracking-wider text-indigo-400 font-semibold">
-            Common Inquiries
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-heading">
-            Frequently Asked Questions
-          </h2>
-        </div>
-
-        <div className="space-y-4">
-          {faqs.map((faq) => (
-            <div key={faq.question} className="p-5 sm:p-6 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-2">
-              <h3 className="text-sm sm:text-base font-bold text-white flex items-start gap-2.5">
-                <HelpCircle className="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" />
-                <span>{faq.question}</span>
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed pl-6.5">
-                {faq.answer}
-              </p>
-            </div>
+      {/* FAQ */}
+      <section id="faq" className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-6">अक्सर पूछे जाने वाले सवाल</h2>
+        <div className="space-y-3">
+          {faqs.map((f) => (
+            <details key={f.q} className="group p-5 rounded-xl bg-slate-900/70 border border-slate-800">
+              <summary className="cursor-pointer font-semibold text-white text-lg">{f.q}</summary>
+              <p className="mt-2 text-slate-400">{f.a}</p>
+            </details>
           ))}
         </div>
       </section>
 
-      {/* ========================================================= */}
-      {/* 8. ENGAGEMENT & VERIFIED CONTACT CTA                      */}
-      {/* ========================================================= */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">
-        <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-indigo-950/70 via-slate-900/90 to-slate-950 border border-indigo-800/50 shadow-2xl text-center space-y-5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-indigo-900/60 border border-indigo-700/60 text-indigo-200">
-            <Building2 className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Colony Mitra Early Collaboration</span>
-          </div>
-
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-white font-heading max-w-xl mx-auto">
-            Interested in Shaping Colony Mitra for Your Society?
-          </h2>
-
-          <p className="text-xs sm:text-sm text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            We are actively gathering inputs from residential committee members and colony managers to ensure the final product meets everyday community demands. Connect with our development team today.
-          </p>
-
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              href="/contact"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all active:scale-95"
-            >
-              <span>Contact Abhiraj Digital Innovation</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <a
-              href="mailto:abhirajdigitalinnovation@gmail.com"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 transition-all"
-            >
-              <Mail className="w-4 h-4 text-indigo-400" />
-              <span>abhirajdigitalinnovation@gmail.com</span>
-            </a>
-          </div>
+      {/* Contact */}
+      <section className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
+        <h2 className="text-3xl font-extrabold text-white">अपनी कॉलोनी में कॉलोनी मित्र शुरू करवाएँ</h2>
+        <p className="text-slate-400 text-lg">कमेटी के लिए मुफ़्त डेमो और पहला महीना मुफ़्त।</p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <a href={`mailto:${siteConfig.contact.email}?subject=${encodeURIComponent("कॉलोनी मित्र ऐप")}`} className={btnPrimary}>
+            <Mail className="w-5 h-5" />
+            <span>{siteConfig.contact.email}</span>
+          </a>
+          <Link href="/contact" className={btnGhost}>
+            <MessageCircle className="w-5 h-5" />
+            <span>संपर्क करें</span>
+          </Link>
         </div>
+        <p className="text-xs text-slate-500 pt-4">डेमो और तस्वीरों में नमूना (उदाहरण) डेटा है।</p>
       </section>
     </div>
   );
