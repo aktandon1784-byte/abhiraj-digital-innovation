@@ -2,7 +2,7 @@
 
 **Site:** https://abhirajdigitalinnovation.com
 **Audit date:** 18 November 2026
-**Code audited:** `live-site` branch (the branch whose `DEPLOY_TRIGGER.md` says it triggers the Cloudflare deployment). The `main` branch is older than production (it has no `/gharmitra` or `/portfolio` pages), so it was not used as the base.
+**Code audited:** the `live-site` branch, which production is deployed from (its `DEPLOY_TRIGGER.md` says it triggers the Cloudflare deployment). The fix was built there and then merged with `main`, because the owner asked for the pull request to target `main`. `main`'s Colony Mitra work is kept: the Colony Mitra app page, the homepage Colony Mitra section, and the nav and footer links.
 
 > Indexing is decided by Google. These fixes remove the technical defects found; they do not guarantee that every page will be indexed or that it will happen on a particular date.
 
@@ -123,7 +123,7 @@ Other checks:
 
 ## 9. Deployment status
 
-**Not deployed.** The changes are in a pull request into `live-site`. Cloudflare builds production from that branch, so merging the pull request is the deployment step. No Cloudflare credentials or wrangler config are in this repository, and nothing in Cloudflare was changed.
+**Not deployed.** The changes are in pull request #4 into `main`. Production is built from `live-site`, so merging into `main` does not by itself change the live site. Getting it live means either pointing the Cloudflare production branch at `main` or bringing `main` into `live-site`. No Cloudflare credentials or wrangler config are in this repository, and nothing in Cloudflare was changed.
 
 ## 10. Outstanding issues and follow-up
 
