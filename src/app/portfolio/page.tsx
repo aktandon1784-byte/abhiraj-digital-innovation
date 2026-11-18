@@ -1,5 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
+import { pageSeo } from "@/lib/seo";
 import Link from "next/link";
 import {
   ExternalLink,
@@ -20,10 +21,14 @@ import { GharMitraCardVisual } from "@/components/home/GharMitraCardVisual";
 import { KumarSolarCardVisual } from "@/components/home/KumarSolarCardVisual";
 import { ColonyMitraCardVisual } from "@/components/home/ColonyMitraCardVisual";
 
+const pageTitle = "Portfolio & Products | Abhiraj Digital Innovation";
+const pageDescription =
+  "Explore digital products and client web projects developed by Abhiraj Digital Innovation, including OPD Assistant AI, GharMitra, Kumar Solar Panel Website, and Colony Mitra.";
+
 export const metadata: Metadata = {
-  title: "Portfolio & Products | Abhiraj Digital Innovation",
-  description:
-    "Explore digital products and client web projects developed by Abhiraj Digital Innovation, including OPD Assistant AI, GharMitra, Kumar Solar Panel Website, and Colony Mitra.",
+  title: { absolute: pageTitle },
+  description: pageDescription,
+  ...pageSeo("/portfolio", { title: pageTitle, description: pageDescription }),
 };
 
 export default function PortfolioPage() {

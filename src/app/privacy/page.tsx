@@ -1,11 +1,17 @@
 import React from "react";
 import type { Metadata } from "next";
+import { pageSeo } from "@/lib/seo";
 import Link from "next/link";
 import { ShieldCheck, Mail } from "lucide-react";
 
+const pageTitle = "Privacy Policy | Abhiraj Digital Innovation";
+const pageDescription =
+  "Privacy Policy and patient confidentiality guidelines for Abhiraj Digital Innovation and OPD Assistant AI.";
+
 export const metadata: Metadata = {
-  title: "Privacy Policy | Abhiraj Digital Innovation",
-  description: "Privacy Policy and patient confidentiality guidelines for Abhiraj Digital Innovation and OPD Assistant AI.",
+  title: { absolute: pageTitle },
+  description: pageDescription,
+  ...pageSeo("/privacy", { title: pageTitle, description: pageDescription }),
 };
 
 export default function PrivacyPage() {
