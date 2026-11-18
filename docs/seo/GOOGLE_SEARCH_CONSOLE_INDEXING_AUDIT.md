@@ -123,7 +123,7 @@ Other checks:
 
 ## 9. Deployment status
 
-**Not deployed.** The changes are in pull request #4 into `main`. Production is built from `live-site`, so merging into `main` does not by itself change the live site. Getting it live means either pointing the Cloudflare production branch at `main` or bringing `main` into `live-site`. No Cloudflare credentials or wrangler config are in this repository, and nothing in Cloudflare was changed.
+**Not deployed.** The changes are in pull request #4 into `main`. The repository suggests Cloudflare builds production from `live-site`. If so, merging into `main` does not change the live site by itself, and going live needs either Cloudflare's production branch set to `main` or `main` merged into `live-site`. If Cloudflare's production branch is already `main`, merging deploys right away. Check this under Workers → abhiraj-digital-innovation → Settings → Build before merging. No Cloudflare credentials or wrangler config are in this repository, and nothing in Cloudflare was changed.
 
 ## 10. Outstanding issues and follow-up
 
