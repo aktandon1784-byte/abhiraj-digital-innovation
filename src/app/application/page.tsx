@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 
 export default function ApplicationRedirectPage() {
-  redirect("/opd-assistant-ai");
+  permanentRedirect("/opd-assistant-ai");
 }

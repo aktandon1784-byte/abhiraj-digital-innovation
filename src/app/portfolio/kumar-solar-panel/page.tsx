@@ -1,5 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
+import { pageSeo } from "@/lib/seo";
 import Link from "next/link";
 import {
   Sun,
@@ -20,10 +21,14 @@ import {
 } from "lucide-react";
 import { KumarSolarCardVisual } from "@/components/home/KumarSolarCardVisual";
 
+const pageTitle = "Kumar Solar Panel Website Case Study | Portfolio | Abhiraj Digital Innovation";
+const pageDescription =
+  "Client project case study of the Kumar Solar Panel Website designed and developed by Abhiraj Digital Innovation, featuring modern responsive design and clean energy showcase.";
+
 export const metadata: Metadata = {
-  title: "Kumar Solar Panel Website Case Study | Portfolio | Abhiraj Digital Innovation",
-  description:
-    "Client project case study of the Kumar Solar Panel Website designed and developed by Abhiraj Digital Innovation, featuring modern responsive design and clean energy showcase.",
+  title: { absolute: pageTitle },
+  description: pageDescription,
+  ...pageSeo("/portfolio/kumar-solar-panel", { title: pageTitle, description: pageDescription }),
 };
 
 export default function KumarSolarPanelCaseStudyPage() {
