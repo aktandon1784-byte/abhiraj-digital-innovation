@@ -10,6 +10,7 @@
     "test:seo": "node --test tests/seo.test.mjs"
   },
   "dependencies": {
+    "@opennextjs/cloudflare": "^1.20.18",
     "clsx": "^2.1.1",
     "lucide-react": "^1.16.0",
     "next": "^15.2.0",
@@ -27,6 +28,7 @@
     "eslint-config-next": "^15.2.0",
     "postcss": "^8.5.0",
     "tailwindcss": "^4.0.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "wrangler": "^4.165.0"
   }
 }
