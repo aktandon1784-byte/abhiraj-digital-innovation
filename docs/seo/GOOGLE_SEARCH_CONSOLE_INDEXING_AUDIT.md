@@ -125,6 +125,15 @@ Other checks:
 
 **Not deployed.** The changes are in a pull request into `live-site`. Cloudflare builds production from that branch, so merging the pull request is the deployment step. No Cloudflare credentials or wrangler config are in this repository, and nothing in Cloudflare was changed.
 
+### Cloudflare Workers configuration
+
+Preview builds on non-production branches failed with "Wrangler configuration is missing a `previews` block". Before this change the repository had no Wrangler file, so `npx wrangler deploy` auto-configured OpenNext on every build. `wrangler.jsonc` now commits the same configuration: name, `main`, assets, and the `WORKER_SELF_REFERENCE` and `IMAGES` bindings. On top of that it adds:
+
+- `build.command`, so that `npx wrangler deploy` still builds the OpenNext bundle itself.
+- An empty `previews` block. Previews do not inherit production settings, so they get no bindings and cannot reach production resources.
+
+The production branch (`live-site`) and the deploy command (`npx wrangler deploy`) are unchanged.
+
 ## 10. Outstanding issues and follow-up
 
 1. **Merge the pull request** to deploy, then run the live test command above.
