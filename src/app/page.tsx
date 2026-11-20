@@ -41,6 +41,24 @@ import { KumarSolarCardVisual } from "@/components/home/KumarSolarCardVisual";
 import { ColonyMitraCardVisual } from "@/components/home/ColonyMitraCardVisual";
 import { PlayStoreIcon } from "@/components/home/PlayStoreIcon";
 import { HeroDevicesMockup } from "@/components/home/HeroDevicesMockup";
+import type { Metadata } from "next";
+import { pageSeo, SITE_NAME, SITE_URL } from "@/lib/seo";
+import { siteConfig } from "@/lib/config";
+
+const homeTitle = "Abhiraj Digital Innovation | Digital Applications & Mobile App Development";
+
+export const metadata: Metadata = {
+  ...pageSeo("/", { title: homeTitle, description: siteConfig.description }),
+};
+
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: SITE_NAME,
+  url: `${SITE_URL}/`,
+  email: siteConfig.contact.email,
+  description: siteConfig.description,
+};
 
 export default function HomePage() {
   const services = [
@@ -151,6 +169,10 @@ export default function HomePage() {
 
   return (
     <div className="relative pb-16 bg-[#060B18]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
       {/* Ambient Lighting Glow */}
       <div className="ambient-hero-glow" aria-hidden="true" />
 

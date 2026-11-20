@@ -1,5 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
+import { pageSeo } from "@/lib/seo";
 import Link from "next/link";
 import {
   Smartphone,
@@ -14,10 +15,14 @@ import {
   Mail,
 } from "lucide-react";
 
+const pageTitle = "Services | Abhiraj Digital Innovation";
+const pageDescription =
+  "Explore digital development services offered by Abhiraj Digital Innovation: Mobile Application Development (Android), Software Development, and Website Development.";
+
 export const metadata: Metadata = {
-  title: "Services | Abhiraj Digital Innovation",
-  description:
-    "Explore digital development services offered by Abhiraj Digital Innovation: Mobile Application Development (Android), Software Development, and Website Development.",
+  title: { absolute: pageTitle },
+  description: pageDescription,
+  ...pageSeo("/services", { title: pageTitle, description: pageDescription }),
 };
 
 export default function ServicesPage() {

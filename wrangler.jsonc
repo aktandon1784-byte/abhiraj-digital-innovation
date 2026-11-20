@@ -1,0 +1,41 @@
+// Cloudflare Workers configuration for the Next.js site (built with OpenNext).
+// It matches what `npx wrangler deploy` previously auto-generated, so the
+// production deploy command and bindings stay the same, plus:
+//   - build.command: lets `npx wrangler deploy` / `npx wrangler preview` build the
+//     OpenNext bundle themselves (autoconfig no longer runs once this file exists)
+//   - previews: required by Workers Builds for non-production branch Previews.
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "abhiraj-digital-innovation",
+	"main": ".open-next/worker.js",
+	"compatibility_date": "2026-11-20",
+	"compatibility_flags": [
+		"nodejs_compat",
+		"global_fetch_strictly_public"
+	],
+	"build": {
+		"command": "npx opennextjs-cloudflare build"
+	},
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"services": [
+		{
+			// Self-reference service binding; the service name must match the worker name.
+			// See https://opennext.js.org/cloudflare/caching
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "abhiraj-digital-innovation"
+		}
+	],
+	"images": {
+		// See https://opennext.js.org/cloudflare/howtos/image
+		"binding": "IMAGES"
+	},
+	// Previews do not inherit production settings
+	// (https://developers.cloudflare.com/workers/previews/configuration/).
+	// Kept empty on purpose: Previews get no bindings, so they cannot reach the
+	// production Worker (WORKER_SELF_REFERENCE) or any production resource.
+	// The site uses no KV, D1, R2 or secrets.
+	"previews": {}
+}

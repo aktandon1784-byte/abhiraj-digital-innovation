@@ -1,5 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
+import { pageSeo } from "@/lib/seo";
 import Link from "next/link";
 import {
   Home,
@@ -27,10 +28,14 @@ import {
 } from "lucide-react";
 import { GharMitraCardVisual } from "@/components/home/GharMitraCardVisual";
 
+const pageTitle = "GharMitra (घर मित्र) — Home Services Marketplace | Abhiraj Digital Innovation";
+const pageDescription =
+  "GharMitra (घर मित्र) is an upcoming Home Services Marketplace Android mobile application for household maintenance and services, currently in active development by Abhiraj Digital Innovation for Baloda Bazar District, Chhattisgarh.";
+
 export const metadata: Metadata = {
-  title: "GharMitra (घर मित्र) — Home Services Marketplace | Abhiraj Digital Innovation",
-  description:
-    "GharMitra (घर मित्र) is an upcoming Home Services Marketplace Android mobile application for household maintenance and services, currently in active development by Abhiraj Digital Innovation for Baloda Bazar District, Chhattisgarh.",
+  title: { absolute: pageTitle },
+  description: pageDescription,
+  ...pageSeo("/gharmitra", { title: pageTitle, description: pageDescription }),
 };
 
 export default function GharMitraPage() {

@@ -1,5 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
+import { pageSeo } from "@/lib/seo";
 import Link from "next/link";
 import {
   Smartphone,
@@ -35,10 +36,14 @@ import {
 import { OPDAssistantLogo } from "@/components/brand/OPDAssistantLogo";
 import { PlansAndDownloadSection } from "@/components/opd/PlansAndDownloadSection";
 
+const pageTitle = "OPD Assistant AI Medical Chat Box | Product of Abhiraj Digital Innovation";
+const pageDescription =
+  "OPD Assistant AI is an AI-assisted Medical Chat Box and Clinical Reference & Decision-Support Application designed to assist qualified healthcare professionals with structured clinical information.";
+
 export const metadata: Metadata = {
-  title: "OPD Assistant AI Medical Chat Box | Product of Abhiraj Digital Innovation",
-  description:
-    "OPD Assistant AI is an AI-assisted Medical Chat Box and Clinical Reference & Decision-Support Application designed to assist qualified healthcare professionals with structured clinical information.",
+  title: { absolute: pageTitle },
+  description: pageDescription,
+  ...pageSeo("/opd-assistant-ai", { title: pageTitle, description: pageDescription }),
 };
 
 export default function OPDAssistantAIPage() {

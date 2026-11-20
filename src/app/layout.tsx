@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { siteConfig } from "@/lib/config";
+import { SITE_URL } from "@/lib/seo";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -29,7 +30,8 @@ export const metadata: Metadata = {
     template: "%s | Abhiraj Digital Innovation",
   },
   description: siteConfig.description,
-  metadataBase: new URL(siteConfig.domain.baseUrl),
+  // Always the production non-www origin, so canonical/OG URLs never fall back to localhost.
+  metadataBase: new URL(SITE_URL),
   robots: {
     index: true,
     follow: true,

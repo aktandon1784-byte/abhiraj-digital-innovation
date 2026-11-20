@@ -1,5 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
+import { canonicalUrl, SITE_NAME } from "@/lib/seo";
 import Link from "next/link";
 import {
   Building2,
@@ -26,17 +27,20 @@ import {
 import { ColonyMitraCardVisual } from "@/components/home/ColonyMitraCardVisual";
 
 export const metadata: Metadata = {
-  title: "Colony Mitra (कॉलोनी मित्र) — Residential Colony & Society Platform | Abhiraj Digital Innovation",
+  title: {
+    absolute: "Colony Mitra (कॉलोनी मित्र) — Residential Colony & Society Platform | Abhiraj Digital Innovation",
+  },
   description:
     "Colony Mitra (कॉलोनी मित्र) is an upcoming Residential Colony and Society Management application, currently in active architecture and development by Abhiraj Digital Innovation.",
   openGraph: {
     title: "Colony Mitra (कॉलोनी मित्र) — Residential Colony & Society Platform",
     description:
       "A centralized digital platform designed to simplify residential society coordination, resident directories, and community operations.",
-    url: "https://abhirajdigitalinnovation.com/colony-mitra",
-    siteName: "Abhiraj Digital Innovation",
+    url: canonicalUrl("/colony-mitra"),
+    siteName: SITE_NAME,
     type: "website",
   },
+  alternates: { canonical: canonicalUrl("/colony-mitra") },
 };
 
 export default function ColonyMitraPage() {
