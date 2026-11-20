@@ -1,5 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
+import { pageSeo } from "@/lib/seo";
 import Link from "next/link";
 import { Mukta } from "next/font/google";
 import {
@@ -31,10 +32,14 @@ const mukta = Mukta({
   display: "swap",
 });
 
+const pageTitle = "कॉलोनी मित्र (Colony Mitra) · कॉलोनी / सोसाइटी ऐप";
+const pageDescription =
+  "कॉलोनी का पूरा रजिस्टर एक ऐप में: घर-किराएदार, मेंटेनेंस (UPI भुगतान), हिसाब-किताब, शिकायतें, पार्किंग, CCTV और पोल। पूरी तरह हिंदी में।";
+
 export const metadata: Metadata = {
-  title: "कॉलोनी मित्र (Colony Mitra) · कॉलोनी / सोसाइटी ऐप",
-  description:
-    "कॉलोनी का पूरा रजिस्टर एक ऐप में: घर-किराएदार, मेंटेनेंस (UPI भुगतान), हिसाब-किताब, शिकायतें, पार्किंग, CCTV और पोल। पूरी तरह हिंदी में।",
+  title: pageTitle,
+  description: pageDescription,
+  ...pageSeo("/colony-mitra", { title: pageTitle, description: pageDescription }),
 };
 
 const features = [

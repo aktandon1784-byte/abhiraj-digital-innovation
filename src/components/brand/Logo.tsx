@@ -23,54 +23,53 @@ export function BrandLogo({ className = "", showWordmark = true, size = "md" }: 
   return (
     <Link
       href="/"
-      className={`inline-flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg p-1 transition-opacity hover:opacity-95 ${className}`}
+      className={`inline-flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg py-1 transition-opacity hover:opacity-95 ${className}`}
       aria-label="Abhiraj Digital Innovation - Home"
     >
-      {/* Precision Geometric Monogram Icon: Abstract A-D-I Vector Interlock */}
+      {/* Precision Geometric Monogram Icon: Bold Stylized 'A' Vector from Reference */}
       <svg
         width={iconDimensions}
         height={iconDimensions}
-        viewBox="0 0 48 48"
+        viewBox="0 0 44 44"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="flex-shrink-0"
         aria-hidden="true"
       >
-        <rect width="48" height="48" rx="10" fill="#0B132B" stroke="#1E293B" strokeWidth="1.5" />
-        {/* Geometric Hexagonal/Nexus Core */}
         <path
-          d="M24 9L36 16V30L24 37L12 30V16L24 9Z"
-          stroke="#1E3A8A"
-          strokeWidth="1.5"
-          strokeDasharray="2 2"
+          d="M8 38L22 6L36 38H28L22 23L16 38H8Z"
+          fill="url(#logo_grad_a)"
         />
-        {/* Outer 'A' and 'D' Dynamic Struts in Cobalt Blue */}
         <path
-          d="M16 33L24 14L32 33"
-          stroke="#2563EB"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          d="M17.5 28.5L22 17L26.5 28.5H17.5Z"
+          fill="#060B18"
         />
-        {/* Horizontal Beam / Digital Bridge */}
         <path
-          d="M19 26H29"
-          stroke="#0284C7"
-          strokeWidth="2"
-          strokeLinecap="round"
+          d="M22 23L29 38H36L22 6V23Z"
+          fill="url(#logo_grad_b)"
+          fillOpacity="0.85"
         />
-        {/* Core Innovation Node in Sky Accent */}
-        <circle cx="24" cy="20" r="3" fill="#38BDF8" />
+        <defs>
+          <linearGradient id="logo_grad_a" x1="8" y1="6" x2="36" y2="38" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#38BDF8" />
+            <stop offset="0.5" stopColor="#2563EB" />
+            <stop offset="1" stopColor="#1D4ED8" />
+          </linearGradient>
+          <linearGradient id="logo_grad_b" x1="22" y1="6" x2="36" y2="38" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#60A5FA" />
+            <stop offset="1" stopColor="#1E40AF" />
+          </linearGradient>
+        </defs>
       </svg>
 
       {/* Corporate Wordmark */}
       {showWordmark && (
-        <div className="flex flex-col leading-none">
-          <span className="font-bold tracking-tight text-white font-sans text-base sm:text-lg group-hover:text-blue-400 transition-colors">
-            ABHIRAJ
+        <div className="flex flex-col leading-tight">
+          <span className="font-bold tracking-tight text-white font-sans text-sm sm:text-base group-hover:text-blue-300 transition-colors">
+            Abhiraj Digital Innovation
           </span>
-          <span className="text-[10px] tracking-[0.18em] uppercase text-slate-400 font-medium mt-0.5">
-            Digital Innovation
+          <span className="text-[11px] text-slate-400 font-normal">
+            Ideas Today, Better Tomorrow.
           </span>
         </div>
       )}

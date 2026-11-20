@@ -35,3 +35,11 @@ yarn-error.log*
 *.pem
 .vscode
 .idea
+
+.vercel
+*.tsbuildinfo
+
+# OpenNext / Wrangler build output
+.open-next
+.wrangler
+.dev.vars*

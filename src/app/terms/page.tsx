@@ -1,11 +1,17 @@
 import React from "react";
 import type { Metadata } from "next";
+import { pageSeo } from "@/lib/seo";
 import Link from "next/link";
 import { AlertTriangle, Mail } from "lucide-react";
 
+const pageTitle = "Terms & Conditions | Abhiraj Digital Innovation";
+const pageDescription =
+  "Terms and conditions of use for Abhiraj Digital Innovation and OPD Assistant AI.";
+
 export const metadata: Metadata = {
-  title: "Terms & Conditions | Abhiraj Digital Innovation",
-  description: "Terms and conditions of use for Abhiraj Digital Innovation and OPD Assistant AI.",
+  title: { absolute: pageTitle },
+  description: pageDescription,
+  ...pageSeo("/terms", { title: pageTitle, description: pageDescription }),
 };
 
 export default function TermsPage() {
